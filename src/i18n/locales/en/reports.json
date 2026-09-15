@@ -66,6 +66,10 @@
     "pendingAging": {
       "label": "Pending Aging",
       "description": "Pending requests grouped by their authoritative activation age."
+    },
+    "carryover": {
+      "label": "Carry-over",
+      "description": "Carried days per person and leave type for a balance year: what was carried, used, is still available and has expired."
     }
   },
   "filters": {
@@ -85,6 +89,8 @@
     "sort": "Sort by",
     "direction": "Direction",
     "includeInactive": "Include inactive users",
+    "balanceYear": "Balance year",
+    "currentBalanceYear": "Current year",
     "grouplessHint": "Workforce group and Leave type do not apply to users without a workforce group, so both are cleared and disabled for this exception type."
   },
   "errors": {
@@ -109,6 +115,7 @@
     "status": "Status",
     "exceptionCode": "Exception type",
     "includeInactiveUsers": "Inactive users included",
+    "balanceYear": "Balance year",
     "sort": "Sort field",
     "direction": "Direction",
     "definition": "Report",
@@ -121,6 +128,7 @@
     "totalAllocation": "Total allocation",
     "totalApprovedUsage": "Approved usage",
     "totalRemaining": "Remaining",
+    "totalCarryoverAvailable": "Carried days available",
     "exceptions": "Exceptions",
     "chargedDays": "Charged days",
     "storedDays": "Stored days",
@@ -133,6 +141,12 @@
     "bucketCounts": "Age buckets",
     "provenanceCounts": "Activation provenance",
     "uncappedRows": "Rows without an allowance cap",
+    "totalCarried": "Carried",
+    "totalUsed": "Carried days used",
+    "totalPendingClaim": "Held by pending requests",
+    "totalExpired": "Expired",
+    "totalAvailable": "Still available",
+    "rowsByStatus": "Rows by carry-over status",
     "totalsByPresence": "Totals by presence",
     "requestsByPresence": "Requests by presence",
     "chargedDaysByPresence": "Charged days by presence",
@@ -177,6 +191,16 @@
       "wfh": "Working-from-home days",
       "scaleMax": "Scale maximum",
       "empty": "No charged days in this window."
+    },
+    "carryover": {
+      "description": "Days carried into the balance year for each leave type across the whole applied view: used, still available and expired.",
+      "barLabel": "{{leaveType}}: {{carried}} carried, {{used}} used, {{available}} available, {{expired}} expired",
+      "carried": "Carried",
+      "used": "Used",
+      "available": "Available",
+      "expired": "Expired",
+      "pendingClaim": "Held by pending requests",
+      "empty": "No carried days are in this view."
     }
   },
   "pagination": {
@@ -194,6 +218,7 @@
     "approvedUsage": "Approved usage",
     "adjustments": "Adjustments",
     "remaining": "Remaining",
+    "carryoverAvailable": "Carried available",
     "exceptions": "Exceptions",
     "membershipBasis": "Membership basis",
     "requests": "Requests",
@@ -214,7 +239,15 @@
     "activationProvenance": "Activation provenance",
     "bucket": "Age bucket",
     "activatedAt": "Activated at",
-    "decidedAt": "Decided at"
+    "decidedAt": "Decided at",
+    "sourceYear": "Carried from",
+    "capDays": "Cap",
+    "carriedDays": "Carried",
+    "usedDays": "Used",
+    "pendingClaimDays": "Held by pending",
+    "expiredDays": "Expired",
+    "availableDays": "Available",
+    "expiresOn": "Expires on"
   },
   "sort": {
     "userName": "User name",
@@ -226,7 +259,9 @@
     "severity": "Severity",
     "code": "Exception code",
     "ageDays": "Age in days",
-    "submittedAt": "Submitted at"
+    "submittedAt": "Submitted at",
+    "carriedDays": "Carried days",
+    "availableDays": "Available carried days"
   },
   "values": {
     "PENDING": "Pending",
@@ -262,7 +297,10 @@
     "LEGACY_RECONSTRUCTED_REQUESTS": "Reconstructed legacy requests",
     "UNKNOWN_CHARGED_DATE_REQUESTS": "Requests with unknown charged dates",
     "INACTIVE_REQUESTER_PENDING_REQUESTS": "Pending requests from deactivated users",
-    "PENDING_REQUESTS_WITHOUT_ACTIVATED_STEP": "Pending requests without an activated step"
+    "PENDING_REQUESTS_WITHOUT_ACTIVATED_STEP": "Pending requests without an activated step",
+    "ACTIVE": "Active",
+    "EXPIRED": "Expired",
+    "NONE": "No carry-over"
   },
   "band": {
     "matchedLabel": "Rows matched",

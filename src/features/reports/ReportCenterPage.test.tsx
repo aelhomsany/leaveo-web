@@ -44,6 +44,7 @@ function balanceResponse(
       totalApprovedUsage: 77,
       totalAdjustments: 0,
       totalRemaining: 21,
+      totalCarryoverAvailable: 2,
       exceptionCount: 0,
       uncappedRowCount: 0,
       totalsByPresence: { OFF: { rowCount: 1, allocation: 25, approvedUsage: 4, remaining: 21 } },
@@ -65,6 +66,7 @@ function balanceResponse(
         approvedUsage: 4,
         adjustments: 0,
         remaining: 21,
+        carryoverAvailable: 2,
         exceptionCodes: [],
       },
     ],
@@ -212,6 +214,62 @@ const definitionFixtures: Record<
       },
     } as ReportQueryResponse,
   },
+  CARRYOVER: {
+    header: 'Expires on',
+    cell: 'Mar 31, 2026',
+    response: {
+      definitionKey: 'CARRYOVER',
+      schemaVersion: 1,
+      appliedView: { timezone: 'America/New_York', balanceYear: 2026, includeInactiveUsers: false },
+      displayTimezone: 'America/New_York',
+      asOf: '2026-08-24T12:00:00Z',
+      ordering: [{ field: 'userName', direction: 'ASC' }],
+      summary: {
+        summaryType: 'CARRYOVER',
+        rowCount: 1,
+        userCount: 1,
+        leaveTypeCount: 1,
+        totalCarried: 5,
+        totalUsed: 1,
+        totalPendingClaim: 0,
+        totalExpired: 4,
+        totalAvailable: 0,
+        rowsByStatus: { EXPIRED: 1 },
+        carriedByLeaveType: [],
+      },
+      rows: [
+        {
+          rowType: 'CARRYOVER',
+          userId: 5,
+          userName: 'Jordan Lee',
+          userStatus: 'ACTIVE',
+          workforceGroupId: 8,
+          workforceGroupName: 'Cairo',
+          leaveTypeId: 3,
+          leaveTypeName: 'Annual leave',
+          leaveTypeDisplayOrder: 1,
+          sourceYear: 2025,
+          targetYear: 2026,
+          capDays: 5,
+          carriedDays: 5,
+          usedDays: 1,
+          pendingClaimDays: 0,
+          expiredDays: 4,
+          availableDays: 0,
+          expiresOn: '2026-03-31',
+          status: 'EXPIRED',
+        },
+      ],
+      page: 0,
+      size: 50,
+      total: 1,
+      provenance: {
+        basis: 'CARRYOVER_GRANT_OR_PROJECTION',
+        incomplete: false,
+        excludedCounts: {},
+      },
+    } as ReportQueryResponse,
+  },
   PENDING_AGING: {
     header: 'Activated at',
     cell: 'Current pending step activation',
@@ -332,9 +390,14 @@ describe('ReportCenterPage', () => {
         'REQUEST_DETAIL',
         'EXCEPTION',
         'PENDING_AGING',
+        'CARRYOVER',
       ])
     // 77 is the server's whole-result total; the single row shows 4. Summing rows fails.
     expect(await screen.findByTestId('report-summary-totalApprovedUsage')).toHaveTextContent('77')
+    // Plan RESTO: carried days are their own total; `remaining` stays this year's allowance.
+    expect(screen.getByTestId('report-summary-totalCarryoverAvailable')).toHaveTextContent('2')
+    expect(screen.getByRole('columnheader', { name: 'Carried available' })).toBeInTheDocument()
+    expect(screen.getByTestId('report-summary-totalRemaining')).toHaveTextContent('21')
     const row = screen.getByTestId('report-row-0')
     expect(within(row).getByText('Jordan Lee')).toBeInTheDocument()
     expect(within(row).getByText('4')).toBeInTheDocument()
@@ -504,6 +567,55 @@ describe('ReportCenterPage', () => {
       expect(screen.getByTestId('report-analytics-body')).toBeVisible()
     })
 
+    it('[P0] Plan RESTO: stacks used, available and expired carried days per leave type from the server figures', async () => {
+      const base = definitionFixtures.CARRYOVER.response
+      vi.spyOn(apiClient, 'queryReport').mockResolvedValue({
+        ...base,
+        summary: {
+          ...base.summary,
+          carriedByLeaveType: [
+            // carried is deliberately not used + available + expired: the label prints the server's.
+            { leaveTypeId: 3, leaveTypeName: 'Annual leave', rowCount: 4, carried: 20, used: 6, pendingClaim: 2, available: 9, expired: 3 },
+            { leaveTypeId: 6, leaveTypeName: 'Study', rowCount: 1, carried: 0, used: 0, pendingClaim: 0, available: 0, expired: 0 },
+          ],
+        } as unknown as ReportQueryResponse['summary'],
+      } as ReportQueryResponse)
+
+      renderPage()
+
+      const analytics = await screen.findByTestId('report-analytics')
+      expect(analytics).toHaveTextContent(/carried into the balance year/)
+      const annual = within(analytics).getByTestId('report-analytics-carryover-3')
+      expect(
+        within(annual).getByRole('img', {
+          name: 'Annual leave: 20 carried, 6 used, 9 available, 3 expired',
+        }),
+      ).toBeInTheDocument()
+      expect(annual).toHaveTextContent('Held by pending requests2')
+      expect(annual.querySelectorAll('rect')).toHaveLength(3)
+      // A type with nothing carried draws an empty track rather than a zero-width sliver.
+      expect(
+        within(analytics).getByTestId('report-analytics-carryover-6').querySelectorAll('rect'),
+      ).toHaveLength(0)
+      // Colour is never the only cue: the legend names each segment.
+      const legend = within(analytics).getAllByRole('list').at(-1)!
+      expect(within(legend).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+        'Used',
+        'Available',
+        'Expired',
+      ])
+    })
+
+    it('[P1] Plan RESTO: says so when no days were carried into the view', async () => {
+      vi.spyOn(apiClient, 'queryReport').mockResolvedValue(definitionFixtures.CARRYOVER.response)
+
+      renderPage()
+
+      expect(await screen.findByTestId('report-analytics')).toHaveTextContent(
+        'No carried days are in this view.',
+      )
+    })
+
     it('[P1] renders no analytics card when the summary carries no chart series', async () => {
       vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
 
@@ -582,6 +694,48 @@ describe('ReportCenterPage', () => {
     expect(request).not.toHaveProperty('includeInactiveUsers')
     // Page size is server configuration; sending a fixed 50 can exceed a deployment max.
     expect(request).not.toHaveProperty('size')
+  })
+
+  it('[P0] Plan RESTO: sends the balance year and a carry-over status, never a request status', async () => {
+    const querySpy = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByTestId('report-row-0')
+    expect(screen.queryByLabelText('Balance year')).not.toBeInTheDocument()
+    await user.selectOptions(screen.getByLabelText('Report definition'), 'REQUEST_DETAIL')
+    await user.selectOptions(screen.getByLabelText('Status'), 'APPROVED')
+    await user.selectOptions(screen.getByLabelText('Report definition'), 'CARRYOVER')
+
+    // The request status did not survive the switch: the server rejects it for Carry-over.
+    const status = screen.getByLabelText('Status')
+    expect(status).toHaveValue('')
+    expect(within(status).getAllByRole('option').map((option) => option.getAttribute('value')))
+      .toEqual(['', 'ACTIVE', 'EXPIRED', 'NONE'])
+    expect(screen.queryByLabelText('From')).not.toBeInTheDocument()
+
+    const lastYear = String(new Date().getUTCFullYear() - 1)
+    await user.selectOptions(screen.getByLabelText('Balance year'), lastYear)
+    await user.selectOptions(status, 'EXPIRED')
+    await user.selectOptions(screen.getByLabelText('Sort by'), 'availableDays')
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
+
+    await waitFor(() => expect(querySpy).toHaveBeenCalledTimes(2))
+    const [definition, request] = querySpy.mock.calls.at(-1)!
+    expect(definition).toBe('CARRYOVER')
+    expect(request).toMatchObject({
+      balanceYear: Number(lastYear),
+      status: 'EXPIRED',
+      sort: 'availableDays',
+      includeInactiveUsers: false,
+    })
+    expect(request).not.toHaveProperty('from')
+
+    // Leaving Carry-over drops the year: the server refuses it on any other definition.
+    await user.selectOptions(screen.getByLabelText('Report definition'), 'BALANCE_SNAPSHOT')
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
+    await waitFor(() => expect(querySpy).toHaveBeenCalledTimes(3))
+    expect(querySpy.mock.calls.at(-1)![1]).not.toHaveProperty('balanceYear')
   })
 
   it('[P0] blocks Apply and explains the gap when a required date range is incomplete', async () => {

@@ -30,8 +30,9 @@ import {
   DEFAULT_REPORT_DEFINITION,
   REPORT_DEFINITIONS,
   REPORT_EXCEPTION_OPTIONS,
-  REPORT_STATUS_OPTIONS,
+  balanceYearOptions,
   reportDefinitionFor,
+  statusOptionsFor,
   type ReportDefinition,
   type ReportFilterKey,
 } from './reportDefinitions'
@@ -59,6 +60,7 @@ type DraftReportView = {
   status: string
   exceptionCode: string
   includeInactiveUsers: boolean
+  balanceYear: string
   sort: string
   direction: 'ASC' | 'DESC'
 }
@@ -79,6 +81,7 @@ function initialDraft(timezone: string): DraftReportView {
     status: '',
     exceptionCode: '',
     includeInactiveUsers: false,
+    balanceYear: '',
     sort: DEFAULT_REPORT_DEFINITION.defaultSort,
     direction: DEFAULT_REPORT_DEFINITION.defaultDirection,
   }
@@ -124,6 +127,10 @@ function requestFromDraft(
   if (supports(definition, 'includeInactiveUsers')) {
     request.includeInactiveUsers = draft.includeInactiveUsers
   }
+  // Omitted means the current balance year, which the server resolves and echoes back.
+  if (supports(definition, 'balanceYear') && draft.balanceYear) {
+    request.balanceYear = Number(draft.balanceYear)
+  }
 
   return request
 }
@@ -141,11 +148,17 @@ function resetForDefinition(
       ? draft.workforceGroupId
       : '',
     leaveTypeId: supports(definition, 'leaveType') ? draft.leaveTypeId : '',
-    status: supports(definition, 'status') ? draft.status : '',
+    // Request and carry-over statuses are different sets, so a status only survives a switch
+    // when the new definition offers it too.
+    status:
+      supports(definition, 'status') && statusOptionsFor(definition).includes(draft.status)
+        ? draft.status
+        : '',
     exceptionCode: supports(definition, 'exceptionCode') ? draft.exceptionCode : '',
     includeInactiveUsers: supports(definition, 'includeInactiveUsers')
       ? draft.includeInactiveUsers
       : false,
+    balanceYear: supports(definition, 'balanceYear') ? draft.balanceYear : '',
     sort: definition.defaultSort,
     direction: definition.defaultDirection,
   }
@@ -282,6 +295,7 @@ export function ReportCenterPage() {
   })
   const definition = reportDefinitionFor(draft.definitionKey)
   const timezoneOptions = useMemo(() => availableTimezones(timezone), [timezone])
+  const yearOptions = useMemo(() => balanceYearOptions(), [])
 
   const executeQuery = useCallback(
     async (next: AppliedQuery) => {
@@ -657,6 +671,25 @@ export function ReportCenterPage() {
               </select>
             </div>
 
+            {supports(definition, 'balanceYear') && (
+              <div className="form-group">
+                <label htmlFor="report-balance-year">{t('reports:filters.balanceYear')}</label>
+                <select
+                  id="report-balance-year"
+                  value={draft.balanceYear}
+                  disabled={isReportPending}
+                  onChange={(event) => updateDraft('balanceYear', event.target.value)}
+                >
+                  <option value="">{t('reports:filters.currentBalanceYear')}</option>
+                  {yearOptions.map((year) => (
+                    <option key={year} value={String(year)}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {supports(definition, 'dateRange') && (
               <>
                 <div className="form-group">
@@ -738,7 +771,7 @@ export function ReportCenterPage() {
                   onChange={(event) => updateDraft('status', event.target.value)}
                 >
                   <option value="">{t('reports:filters.allStatuses')}</option>
-                  {REPORT_STATUS_OPTIONS.map((status) => (
+                  {statusOptionsFor(definition).map((status) => (
                     <option key={status} value={status}>
                       {t(`reports:values.${status}`)}
                     </option>

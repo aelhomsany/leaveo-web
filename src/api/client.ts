@@ -119,6 +119,7 @@ export type ReportDefinitionKey =
   | 'REQUEST_DETAIL'
   | 'EXCEPTION'
   | 'PENDING_AGING'
+  | 'CARRYOVER'
 
 // Optionality mirrors `components["schemas"]["OnboardingResponse"]` in api/generated/types.ts.
 // Declaring these as required here while the generated contract marks them optional meant

@@ -6,6 +6,7 @@ import { formatDate, formatValue, type ReportFormatContext } from './reportForma
 
 type BalanceByLeaveType = components['schemas']['BalanceByLeaveType']
 type LeaveUsageDay = components['schemas']['LeaveUsageDay']
+type CarriedByLeaveType = components['schemas']['CarriedByLeaveType']
 
 type Props = {
   summary: ReportQueryResponse['summary'] | undefined
@@ -43,7 +44,11 @@ export function ReportAnalytics({ summary, incomplete, format }: Props) {
     record?.summaryType === 'LEAVE_USAGE' && Array.isArray(record.chargedDaysByDate)
       ? (record.chargedDaysByDate as LeaveUsageDay[])
       : null
-  if (!balances && !days) return null
+  const carried =
+    record?.summaryType === 'CARRYOVER' && Array.isArray(record.carriedByLeaveType)
+      ? (record.carriedByLeaveType as CarriedByLeaveType[])
+      : null
+  if (!balances && !days && !carried) return null
 
   const presenceTotals = record?.chargedDayCountsByPresence as
     | Record<string, number>
@@ -63,7 +68,9 @@ export function ReportAnalytics({ summary, incomplete, format }: Props) {
           <p className="reports-card-subtitle">
             {balances
               ? t('reports:analytics.balance.description')
-              : t('reports:analytics.usage.description')}
+              : carried
+                ? t('reports:analytics.carryover.description')
+                : t('reports:analytics.usage.description')}
           </p>
         </div>
         <button
@@ -86,6 +93,7 @@ export function ReportAnalytics({ summary, incomplete, format }: Props) {
           <p className="reports-analytics-note">{t('reports:analytics.incomplete')}</p>
         )}
         {balances && <BalanceRings balances={balances} format={format} />}
+        {carried && <CarryoverBars items={carried} format={format} />}
         {days && (
           <UsageTrend
             days={days}
@@ -274,6 +282,114 @@ function UsageTrend({
           <span className="reports-legend-line" aria-hidden="true" />
           {t('reports:analytics.usage.wfh')}
         </li>
+      </ul>
+    </>
+  )
+}
+
+const CARRYOVER_SEGMENTS = ['used', 'available', 'expired'] as const
+
+/**
+ * Plan RESTO: a stacked bar per leave type on one shared scale, so a longer bar means more days
+ * carried. The segment widths are the only client arithmetic; every number printed is the
+ * server's own figure for the whole applied view.
+ */
+function CarryoverBars({
+  items,
+  format,
+}: {
+  items: CarriedByLeaveType[]
+  format: ReportFormatContext
+}) {
+  const { t } = useTranslation(['reports'])
+  const extent = (item: CarriedByLeaveType) =>
+    Math.max(item.carried ?? 0, (item.used ?? 0) + (item.available ?? 0) + (item.expired ?? 0))
+  const scale = items.reduce((widest, item) => Math.max(widest, extent(item)), 0)
+  if (items.length === 0 || scale === 0) {
+    return <p className="reports-analytics-note">{t('reports:analytics.carryover.empty')}</p>
+  }
+
+  return (
+    <>
+      <ul className="reports-carryover">
+        {items.map((item) => {
+          const name = item.leaveTypeName ?? ''
+          let offset = 0
+          return (
+            <li
+              key={item.leaveTypeId}
+              className="reports-carryover-item"
+              data-testid={`report-analytics-carryover-${item.leaveTypeId}`}
+            >
+              {/* User data is never translated; dir="auto" keeps an LTR name intact in RTL. */}
+              <p className="reports-carryover-name" dir="auto">
+                {name}
+              </p>
+              <svg
+                className="reports-carryover-bar"
+                viewBox="0 0 100 10"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label={t('reports:analytics.carryover.barLabel', {
+                  leaveType: name,
+                  carried: formatValue(format, item.carried ?? 0),
+                  used: formatValue(format, item.used ?? 0),
+                  available: formatValue(format, item.available ?? 0),
+                  expired: formatValue(format, item.expired ?? 0),
+                })}
+              >
+                {CARRYOVER_SEGMENTS.map((segment) => {
+                  const width = (Math.max(item[segment] ?? 0, 0) / scale) * 100
+                  const x = offset
+                  offset += width
+                  return width > 0 ? (
+                    <rect
+                      key={segment}
+                      className={`reports-carryover-${segment}`}
+                      x={x}
+                      y={0}
+                      width={width}
+                      height={10}
+                    />
+                  ) : null
+                })}
+              </svg>
+              <dl>
+                <div>
+                  <dt>{t('reports:analytics.carryover.carried')}</dt>
+                  <dd>{formatValue(format, item.carried)}</dd>
+                </div>
+                <div>
+                  <dt>{t('reports:analytics.carryover.used')}</dt>
+                  <dd>{formatValue(format, item.used)}</dd>
+                </div>
+                <div>
+                  <dt>{t('reports:analytics.carryover.pendingClaim')}</dt>
+                  <dd>{formatValue(format, item.pendingClaim)}</dd>
+                </div>
+                <div>
+                  <dt>{t('reports:analytics.carryover.available')}</dt>
+                  <dd>{formatValue(format, item.available)}</dd>
+                </div>
+                <div>
+                  <dt>{t('reports:analytics.carryover.expired')}</dt>
+                  <dd>{formatValue(format, item.expired)}</dd>
+                </div>
+              </dl>
+            </li>
+          )
+        })}
+      </ul>
+      <ul className="reports-legend">
+        {CARRYOVER_SEGMENTS.map((segment) => (
+          <li key={segment}>
+            <span
+              className={`reports-legend-swatch reports-carryover-${segment}`}
+              aria-hidden="true"
+            />
+            {t(`reports:analytics.carryover.${segment}`)}
+          </li>
+        ))}
       </ul>
     </>
   )

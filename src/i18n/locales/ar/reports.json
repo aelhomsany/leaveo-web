@@ -66,6 +66,10 @@
     "pendingAging": {
       "label": "عمر الطلبات المعلقة",
       "description": "الطلبات المعلقة مجمعة حسب عمر التفعيل المعتمد."
+    },
+    "carryover": {
+      "label": "الأيام المرحّلة",
+      "description": "الأيام المرحّلة لكل موظف ونوع إجازة في سنة رصيد: ما رُحّل وما استُخدم وما زال متاحًا وما انتهت صلاحيته."
     }
   },
   "filters": {
@@ -85,6 +89,8 @@
     "sort": "الترتيب حسب",
     "direction": "الاتجاه",
     "includeInactive": "تضمين المستخدمين غير النشطين",
+    "balanceYear": "سنة الرصيد",
+    "currentBalanceYear": "السنة الحالية",
     "grouplessHint": "لا ينطبق عاملا تصفية مجموعة العمل ونوع الإجازة على المستخدمين غير المنضمين إلى مجموعة؛ لذلك يُمسحان ويُعطّلان عند اختيار هذا النوع من الاستثناءات."
   },
   "errors": {
@@ -109,6 +115,7 @@
     "status": "الحالة",
     "exceptionCode": "نوع الاستثناء",
     "includeInactiveUsers": "تم تضمين المستخدمين غير النشطين",
+    "balanceYear": "سنة الرصيد",
     "sort": "حقل الترتيب",
     "direction": "الاتجاه",
     "definition": "التقرير",
@@ -121,6 +128,7 @@
     "totalAllocation": "إجمالي الاستحقاق",
     "totalApprovedUsage": "الاستخدام المعتمد",
     "totalRemaining": "المتبقي",
+    "totalCarryoverAvailable": "المتاح من الأيام المرحّلة",
     "exceptions": "الاستثناءات",
     "chargedDays": "الأيام المحتسبة",
     "storedDays": "الأيام المخزنة",
@@ -133,6 +141,12 @@
     "bucketCounts": "فئات العمر",
     "provenanceCounts": "مصدر التفعيل",
     "uncappedRows": "صفوف بلا حد أقصى للرصيد",
+    "totalCarried": "المرحّل",
+    "totalUsed": "المستخدم من المرحّل",
+    "totalPendingClaim": "محجوز لطلبات معلّقة",
+    "totalExpired": "منتهي الصلاحية",
+    "totalAvailable": "ما زال متاحًا",
+    "rowsByStatus": "الصفوف حسب حالة الترحيل",
     "totalsByPresence": "الإجماليات حسب الحضور",
     "requestsByPresence": "الطلبات حسب الحضور",
     "chargedDaysByPresence": "الأيام المحتسبة حسب الحضور",
@@ -177,6 +191,16 @@
       "wfh": "أيام العمل من المنزل",
       "scaleMax": "الحد الأقصى للمقياس",
       "empty": "لا توجد أيام محتسبة في هذا النطاق."
+    },
+    "carryover": {
+      "description": "الأيام المرحّلة إلى سنة الرصيد لكل نوع إجازة في كامل العرض المطبق: المستخدم وما زال متاحًا والمنتهي الصلاحية.",
+      "barLabel": "{{leaveType}}: رُحّل {{carried}}، استُخدم {{used}}، متاح {{available}}، انتهت صلاحية {{expired}}",
+      "carried": "المرحّل",
+      "used": "المستخدم",
+      "available": "المتاح",
+      "expired": "منتهي الصلاحية",
+      "pendingClaim": "محجوز لطلبات معلّقة",
+      "empty": "لا توجد أيام مرحّلة في هذا العرض."
     }
   },
   "pagination": {
@@ -194,6 +218,7 @@
     "approvedUsage": "الاستخدام المعتمد",
     "adjustments": "التعديلات",
     "remaining": "المتبقي",
+    "carryoverAvailable": "المتاح من المرحّل",
     "exceptions": "الاستثناءات",
     "membershipBasis": "أساس العضوية",
     "requests": "الطلبات",
@@ -214,7 +239,15 @@
     "activationProvenance": "مصدر التفعيل",
     "bucket": "فئة العمر",
     "activatedAt": "وقت التفعيل",
-    "decidedAt": "وقت القرار"
+    "decidedAt": "وقت القرار",
+    "sourceYear": "مرحّل من",
+    "capDays": "الحد الأقصى",
+    "carriedDays": "المرحّل",
+    "usedDays": "المستخدم",
+    "pendingClaimDays": "محجوز لطلبات معلّقة",
+    "expiredDays": "منتهي الصلاحية",
+    "availableDays": "المتاح",
+    "expiresOn": "تنتهي صلاحيته في"
   },
   "sort": {
     "userName": "اسم المستخدم",
@@ -226,7 +259,9 @@
     "severity": "درجة الخطورة",
     "code": "رمز الاستثناء",
     "ageDays": "العمر بالأيام",
-    "submittedAt": "وقت التقديم"
+    "submittedAt": "وقت التقديم",
+    "carriedDays": "الأيام المرحّلة",
+    "availableDays": "الأيام المرحّلة المتاحة"
   },
   "values": {
     "PENDING": "قيد الانتظار",
@@ -262,7 +297,10 @@
     "LEGACY_RECONSTRUCTED_REQUESTS": "طلبات قديمة مُعاد بناؤها",
     "UNKNOWN_CHARGED_DATE_REQUESTS": "طلبات بتواريخ محتسبة غير معروفة",
     "INACTIVE_REQUESTER_PENDING_REQUESTS": "طلبات معلّقة من مستخدمين مُعطَّلين",
-    "PENDING_REQUESTS_WITHOUT_ACTIVATED_STEP": "طلبات معلّقة بلا خطوة مفعّلة"
+    "PENDING_REQUESTS_WITHOUT_ACTIVATED_STEP": "طلبات معلّقة بلا خطوة مفعّلة",
+    "ACTIVE": "سارٍ",
+    "EXPIRED": "منتهي الصلاحية",
+    "NONE": "لا يوجد ترحيل"
   },
   "band": {
     "matchedLabel": "الصفوف المطابقة",

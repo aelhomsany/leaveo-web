@@ -7,6 +7,7 @@ export type ReportFilterKey =
   | 'status'
   | 'exceptionCode'
   | 'includeInactiveUsers'
+  | 'balanceYear'
 
 export type ReportColumn = {
   key: string
@@ -28,6 +29,8 @@ export type ReportDefinition = {
   sortFields: readonly string[]
   columns: readonly ReportColumn[]
   summaryFields: readonly ReportSummaryField[]
+  /** Values the status filter offers; request statuses unless a definition says otherwise. */
+  statusOptions?: readonly string[]
 }
 
 export const REPORT_DEFINITIONS: readonly ReportDefinition[] = [
@@ -48,6 +51,8 @@ export const REPORT_DEFINITIONS: readonly ReportDefinition[] = [
       { key: 'approvedUsage', labelKey: 'columns.approvedUsage' },
       { key: 'adjustments', labelKey: 'columns.adjustments' },
       { key: 'remaining', labelKey: 'columns.remaining' },
+      // Plan RESTO: carried days sit beside `remaining`, which keeps meaning this year's allowance.
+      { key: 'carryoverAvailable', labelKey: 'columns.carryoverAvailable' },
       { key: 'exceptionCodes', labelKey: 'columns.exceptions' },
     ],
     summaryFields: [
@@ -55,6 +60,7 @@ export const REPORT_DEFINITIONS: readonly ReportDefinition[] = [
       { key: 'totalAllocation', labelKey: 'summary.totalAllocation' },
       { key: 'totalApprovedUsage', labelKey: 'summary.totalApprovedUsage' },
       { key: 'totalRemaining', labelKey: 'summary.totalRemaining' },
+      { key: 'totalCarryoverAvailable', labelKey: 'summary.totalCarryoverAvailable' },
       { key: 'exceptionCount', labelKey: 'summary.exceptions' },
       // Disclosure fields: the server sends these so a reader can tell "no allowance"
       // from "zero allowance", and so WFH is never read as absence. Dropping them
@@ -179,6 +185,40 @@ export const REPORT_DEFINITIONS: readonly ReportDefinition[] = [
       { key: 'provenanceCounts', labelKey: 'summary.provenanceCounts' },
     ],
   },
+  {
+    // Plan RESTO: one row per person x leave type for a balance year.
+    key: 'CARRYOVER',
+    labelKey: 'definitions.carryover.label',
+    descriptionKey: 'definitions.carryover.description',
+    filters: ['balanceYear', 'workforceGroup', 'leaveType', 'status', 'includeInactiveUsers'],
+    defaultSort: 'userName',
+    defaultDirection: 'ASC',
+    sortFields: ['userName', 'carriedDays', 'availableDays'],
+    columns: [
+      { key: 'userName', labelKey: 'columns.userName' },
+      { key: 'workforceGroupName', labelKey: 'columns.workforceGroup' },
+      { key: 'leaveTypeName', labelKey: 'columns.leaveType' },
+      { key: 'sourceYear', labelKey: 'columns.sourceYear' },
+      { key: 'capDays', labelKey: 'columns.capDays' },
+      { key: 'carriedDays', labelKey: 'columns.carriedDays' },
+      { key: 'usedDays', labelKey: 'columns.usedDays' },
+      { key: 'pendingClaimDays', labelKey: 'columns.pendingClaimDays' },
+      { key: 'expiredDays', labelKey: 'columns.expiredDays' },
+      { key: 'availableDays', labelKey: 'columns.availableDays' },
+      { key: 'expiresOn', labelKey: 'columns.expiresOn' },
+      { key: 'status', labelKey: 'columns.status' },
+    ],
+    summaryFields: [
+      { key: 'userCount', labelKey: 'summary.users' },
+      { key: 'totalCarried', labelKey: 'summary.totalCarried' },
+      { key: 'totalUsed', labelKey: 'summary.totalUsed' },
+      { key: 'totalPendingClaim', labelKey: 'summary.totalPendingClaim' },
+      { key: 'totalExpired', labelKey: 'summary.totalExpired' },
+      { key: 'totalAvailable', labelKey: 'summary.totalAvailable' },
+      { key: 'rowsByStatus', labelKey: 'summary.rowsByStatus' },
+    ],
+    statusOptions: ['ACTIVE', 'EXPIRED', 'NONE'],
+  },
 ] as const
 
 // Partial on purpose: ReportDefinitionKey is hand-declared in api/client.ts, so a key
@@ -197,6 +237,17 @@ export function reportDefinitionFor(key: string | undefined): ReportDefinition {
 }
 
 export const REPORT_STATUS_OPTIONS = ['PENDING', 'APPROVED', 'DECLINED'] as const
+
+export function statusOptionsFor(definition: ReportDefinition): readonly string[] {
+  return definition.statusOptions ?? REPORT_STATUS_OPTIONS
+}
+
+/** Years the balance-year filter offers, newest first; the server accepts 2000-2100. */
+export function balanceYearOptions(now: Date = new Date()): number[] {
+  // UTC because the server keys balances on the UTC year.
+  const current = now.getUTCFullYear()
+  return [current + 1, current, current - 1, current - 2, current - 3]
+}
 
 export const REPORT_EXCEPTION_OPTIONS = [
   'NEGATIVE_REMAINING',
