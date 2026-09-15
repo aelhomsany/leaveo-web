@@ -737,6 +737,28 @@
       "selectSubject": "Select a target",
       "effectiveFrom": "Effective date"
     },
+    "carryover": {
+      "day": "Day",
+      "deadline": "Use carried days by",
+      "deadlineHint": "Of the following year. Carried days not used by then expire.",
+      "enabled": "Carry unused days into the next year",
+      "legend": "Carry-over",
+      "maxDays": "Maximum days",
+      "month": "Month",
+      "noLimit": "No limit",
+      "repeat": "Carried days can carry over again",
+      "selectDay": "Select a day",
+      "selectMonth": "Select a month",
+      "summaryNoLimit": "Carries all unused days · until {{date}}",
+      "summaryOff": "No carry-over",
+      "summaryRepeat": "carries again",
+      "summary_zero": "Carries up to {{count}} days · until {{date}}",
+      "summary_one": "Carries up to {{count}} day · until {{date}}",
+      "summary_two": "Carries up to {{count}} days · until {{date}}",
+      "summary_few": "Carries up to {{count}} days · until {{date}}",
+      "summary_many": "Carries up to {{count}} days · until {{date}}",
+      "summary_other": "Carries up to {{count}} days · until {{date}}"
+    },
     "modes": {
       "annual": "Annual allowance",
       "unlimited": "Unlimited"
@@ -763,7 +785,13 @@
       "balance": "{{used}} used, {{allowance}} proposed, {{remaining}} remaining",
       "unknownMember": "Affected member",
       "noImpacts": "No individual balances change in this scope.",
-      "balanceUnlimited": "{{used}} used, unlimited allowance"
+      "balanceUnlimited": "{{used}} used, unlimited allowance",
+      "carryover_zero": "carries nothing into next year",
+      "carryover_one": "carries {{count}} day into next year",
+      "carryover_two": "carries {{count}} days into next year",
+      "carryover_few": "carries {{count}} days into next year",
+      "carryover_many": "carries {{count}} days into next year",
+      "carryover_other": "carries {{count}} days into next year"
     },
     "confirm": {
       "title": "Confirm Policy Publication",

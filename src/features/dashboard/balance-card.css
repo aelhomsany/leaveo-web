@@ -71,6 +71,28 @@
   margin-block-start: var(--space-xs);
 }
 
+/* Plan RESTO: carried days sit under this year's figures, separated by a rule, with their own bar. */
+.balance-carryover {
+  margin-block-start: var(--space-sm);
+  padding-block-start: var(--space-sm);
+  border-block-start: 1px dashed var(--color-border);
+}
+
+.balance-bar-bg--carryover {
+  margin-block-start: 0;
+}
+
+.balance-bar--carryover {
+  opacity: 0.6;
+}
+
+.balance-total-available {
+  margin-block-start: var(--space-xs);
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-label-weight);
+  line-height: var(--font-caption-line-height);
+}
+
 .balance-uncapped {
   margin-block-start: var(--space-md);
   color: var(--color-working-policy);

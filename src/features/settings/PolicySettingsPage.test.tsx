@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   MemoryRouter,
@@ -53,6 +53,11 @@ const draft = {
   effectiveFrom: "2027-01-01",
   revision: 0,
   consumed: false,
+  carryoverEnabled: false,
+  carryoverMaxDays: null,
+  carryoverDeadlineMonth: null,
+  carryoverDeadlineDay: null,
+  carryoverRepeat: false,
 } as const;
 const overview = {
   leaveTypes: [],
@@ -315,7 +320,7 @@ describe("PolicySettingsPage", () => {
     await user.click(
       await screen.findByRole("button", { name: /publish policy/i }),
     );
-    await user.click(screen.getByRole("checkbox"));
+    await user.click(within(screen.getByRole("dialog")).getByRole("checkbox"));
     await user.click(
       screen.getByRole("button", { name: /confirm publication/i }),
     );
@@ -511,7 +516,7 @@ describe("PolicySettingsPage", () => {
     await user.click(
       await screen.findByRole("button", { name: /publish policy/i }),
     );
-    await user.click(screen.getByRole("checkbox"));
+    await user.click(within(screen.getByRole("dialog")).getByRole("checkbox"));
     await user.click(
       screen.getByRole("button", { name: /confirm publication/i }),
     );
@@ -531,6 +536,56 @@ describe("PolicySettingsPage", () => {
       "aria-invalid",
       "true",
     );
+  });
+
+  it("[P1] Plan RESTO: No limit clears and disables the maximum, and review sends no maximum", async () => {
+    mockBase();
+    vi.mocked(api.getPolicyDraft).mockResolvedValue({
+      ...draft,
+      carryoverEnabled: true,
+      carryoverMaxDays: 5,
+      carryoverDeadlineMonth: 3,
+      carryoverDeadlineDay: 31,
+    });
+    const update = vi.spyOn(api, "updatePolicyDraft").mockResolvedValue(draft);
+    vi.spyOn(api, "previewPolicy").mockResolvedValue(preview);
+    const user = userEvent.setup();
+    renderPage();
+
+    const max = await screen.findByLabelText(/maximum days/i);
+    expect(max).toHaveValue(5);
+    await user.click(screen.getByLabelText(/no limit/i));
+    expect(max).toHaveValue(null);
+    expect(max).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: /review impact/i }));
+    await waitFor(() => expect(update).toHaveBeenCalled());
+    expect(update.mock.calls[0][1]).toMatchObject({
+      carryoverEnabled: true,
+      carryoverDeadlineMonth: 3,
+      carryoverDeadlineDay: 31,
+    });
+    expect(update.mock.calls[0][1].carryoverMaxDays).toBeUndefined();
+  });
+
+  it("[P1] Plan RESTO: the deadline day list follows the month and drops a day the month lacks", async () => {
+    mockBase();
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByLabelText(/carry unused days/i));
+    const month = screen.getByLabelText(/^month$/i);
+    const day = screen.getByLabelText(/^day$/i);
+    // Enabling proposes 31 March.
+    expect(month).toHaveValue("3");
+    expect(day).toHaveValue("31");
+
+    await user.selectOptions(month, "4");
+    expect(day).toHaveValue("");
+    // One placeholder option plus the month's days; February never offers the 29th.
+    expect(day.querySelectorAll("option")).toHaveLength(31);
+    await user.selectOptions(month, "2");
+    expect(day.querySelectorAll("option")).toHaveLength(29);
   });
 
   it("[P1] shows a distinct capability-unavailable message with no reload/retry CTA when the policy gate is off", async () => {

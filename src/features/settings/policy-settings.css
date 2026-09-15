@@ -75,6 +75,43 @@
   align-items: flex-start;
   gap: var(--space-sm);
 }
+/* Plan RESTO: the carry-over rule, shown only for an annual allowance. */
+.policy-carryover {
+  display: grid;
+  gap: var(--space-sm);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.policy-carryover legend {
+  padding-inline: var(--space-xs);
+  font-weight: 600;
+}
+.policy-editor .policy-carryover-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.policy-editor .policy-carryover-check input {
+  inline-size: auto;
+}
+.policy-carryover-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm);
+}
+.policy-carryover-row .form-field {
+  flex: 1 1 10rem;
+}
+.policy-carryover-hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--font-caption-size);
+  line-height: var(--font-caption-line-height);
+}
 @media (max-width: 900px) {
   .policy-workspace {
     grid-template-columns: minmax(0, 1fr);

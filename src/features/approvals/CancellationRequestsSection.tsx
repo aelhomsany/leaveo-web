@@ -214,6 +214,16 @@ function CancellationCard({
           count: cancellation.daysToRestore ?? 0,
           year: isolate(cancellation.balanceYear ?? 0),
         })}
+        {(cancellation.carryoverDaysToRestore ?? 0) > 0
+          ? ` ${t('approvals:cancellations.consequenceCarryover', {
+              count: cancellation.carryoverDaysToRestore ?? 0,
+            })}`
+          : null}
+        {(cancellation.daysForfeited ?? 0) > 0
+          ? ` ${t('approvals:cancellations.consequenceForfeited', {
+              count: cancellation.daysForfeited ?? 0,
+            })}`
+          : null}
       </p>
 
       {cancellation.reason ? (

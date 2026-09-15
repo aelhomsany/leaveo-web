@@ -40,6 +40,7 @@ type CancelTarget = {
   leaveTypeName: string
   dateRange: string
   daysToRestore: number
+  daysForfeited: number
 }
 
 function statusFilterFrom(value: string | null): MyLeavesStatusFilter {
@@ -295,6 +296,7 @@ export function MyLeavesPage() {
         ),
         // The server's own arithmetic. The SPA never derives what a cancellation gives back.
         daysToRestore: request.cancellation?.daysToRestore ?? 0,
+        daysForfeited: request.cancellation?.daysForfeited ?? 0,
       })
     },
     [i18n.language],
@@ -606,6 +608,7 @@ export function MyLeavesPage() {
           leaveTypeName={cancelTarget.leaveTypeName}
           dateRange={cancelTarget.dateRange}
           daysToRestore={cancelTarget.daysToRestore}
+          daysForfeited={cancelTarget.daysForfeited}
           reason={cancelReason}
           onReasonChange={setCancelReason}
           onConfirm={(reason) => {

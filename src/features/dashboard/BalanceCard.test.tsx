@@ -81,6 +81,57 @@ describe('BalanceCard', () => {
     expect(screen.queryByText('1 working days used')).not.toBeInTheDocument()
   })
 
+  it('Plan RESTO: shows carried days, their deadline and the total, in the server numbers', () => {
+    render(
+      <BalanceCard
+        balance={{
+          ...cappedBalance,
+          totalAvailableDays: 19,
+          carryover: {
+            sourceYear: 2025,
+            capDays: 5,
+            carriedDays: 5,
+            usedDays: 1,
+            remainingDays: 4,
+            expiredDays: 0,
+            expiresOn: '2026-03-31',
+            expired: false,
+          },
+        }}
+      />,
+    )
+
+    // The year is bidi-isolated, so the match allows the isolation marks around it.
+    expect(screen.getByText(/^Carried from \W*2025\W*: 4 days left$/)).toBeInTheDocument()
+    expect(screen.getByText(/Use carried days by/)).toHaveTextContent('Mar 31, 2026')
+    expect(screen.getByText('19 days available in total')).toBeInTheDocument()
+    expect(screen.getByTestId('balance-carryover-bar-annual-leave')).toHaveStyle({ width: '20%' })
+  })
+
+  it('Plan RESTO: names expired carried days instead of a deadline once it has passed', () => {
+    render(
+      <BalanceCard
+        balance={{
+          ...cappedBalance,
+          totalAvailableDays: 15,
+          carryover: {
+            sourceYear: 2025,
+            capDays: null,
+            carriedDays: 5,
+            usedDays: 2,
+            remainingDays: 0,
+            expiredDays: 3,
+            expiresOn: '2026-03-31',
+            expired: true,
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByText(/3 carried days expired on/)).toBeInTheDocument()
+    expect(screen.queryByText(/Use carried days by/)).not.toBeInTheDocument()
+  })
+
   it('omits the progressbar when allocation has no valid range', () => {
     render(
       <BalanceCard

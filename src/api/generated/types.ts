@@ -2404,6 +2404,14 @@ export interface components {
             subjectPublicId?: string;
             /** Format: date */
             effectiveFrom: string;
+            carryoverEnabled?: boolean;
+            /** Format: int32 */
+            carryoverMaxDays?: number;
+            /** Format: int32 */
+            carryoverDeadlineMonth?: number;
+            /** Format: int32 */
+            carryoverDeadlineDay?: number;
+            carryoverRepeat?: boolean;
         };
         PolicyDraftResponse: {
             policyPublicId?: string;
@@ -2423,6 +2431,14 @@ export interface components {
             /** Format: int64 */
             revision?: number;
             consumed?: boolean;
+            carryoverEnabled?: boolean;
+            /** Format: int32 */
+            carryoverMaxDays?: number;
+            /** Format: int32 */
+            carryoverDeadlineMonth?: number;
+            /** Format: int32 */
+            carryoverDeadlineDay?: number;
+            carryoverRepeat?: boolean;
         };
         PublishPolicyRequest: {
             /** Format: int64 */
@@ -2457,6 +2473,11 @@ export interface components {
             proposedAllowance?: number;
             /** Format: int32 */
             projectedRemaining?: number;
+            /**
+             * Format: int32
+             * @description Days this member would carry into the next year if they took no more leave; null when the draft does not carry over or the allowance is unlimited.
+             */
+            projectedCarryoverDays?: number | null;
         };
         PolicyPreviewResponse: {
             draftPublicId?: string;
@@ -2485,6 +2506,17 @@ export interface components {
             affectedMemberCount?: number;
             impacts?: components["schemas"]["PolicyMemberImpact"][];
             conflicts?: string[];
+            carryoverEnabled?: boolean;
+            /**
+             * Format: int32
+             * @description Null means no limit.
+             */
+            carryoverMaxDays?: number | null;
+            /** Format: int32 */
+            carryoverDeadlineMonth?: number | null;
+            /** Format: int32 */
+            carryoverDeadlineDay?: number | null;
+            carryoverRepeat?: boolean;
         };
         CalendarPrivacyRuleInput: {
             /** @enum {string} */
@@ -2537,6 +2569,8 @@ export interface components {
             page?: number;
             /** Format: int32 */
             size?: number;
+            /** Format: int32 */
+            balanceYear?: number;
         };
         ProblemDetail: {
             /** Format: uri */
@@ -2568,6 +2602,8 @@ export interface components {
             includeInactiveUsers?: boolean;
             sort?: string;
             direction?: string;
+            /** Format: int32 */
+            balanceYear?: number;
         };
         BalanceByLeaveType: {
             /** Format: int64 */
@@ -2608,6 +2644,8 @@ export interface components {
             adjustments?: number;
             /** Format: int32 */
             remaining?: number;
+            /** Format: int32 */
+            carryoverAvailable?: number;
             exceptionCodes?: string[];
         } & {
             /**
@@ -2632,6 +2670,8 @@ export interface components {
             /** Format: int64 */
             totalRemaining?: number;
             /** Format: int64 */
+            totalCarryoverAvailable?: number;
+            /** Format: int64 */
             exceptionCount?: number;
             /** Format: int64 */
             uncappedRowCount?: number;
@@ -2645,6 +2685,91 @@ export interface components {
              * @enum {string}
              */
             summaryType: "BALANCE_SNAPSHOT";
+        };
+        CarriedByLeaveType: {
+            /** Format: int64 */
+            leaveTypeId?: number;
+            leaveTypeName?: string;
+            /** Format: int64 */
+            rowCount?: number;
+            /** Format: int64 */
+            carried?: number;
+            /** Format: int64 */
+            used?: number;
+            /** Format: int64 */
+            pendingClaim?: number;
+            /** Format: int64 */
+            available?: number;
+            /** Format: int64 */
+            expired?: number;
+        };
+        CarryoverRow: Omit<components["schemas"]["ReportRow"], "rowType"> & {
+            /** Format: int64 */
+            userId?: number;
+            userName?: string;
+            userStatus?: string;
+            /** Format: int64 */
+            workforceGroupId?: number;
+            workforceGroupName?: string;
+            /** Format: int64 */
+            leaveTypeId?: number;
+            leaveTypeName?: string;
+            /** Format: int32 */
+            leaveTypeDisplayOrder?: number;
+            /** Format: int32 */
+            sourceYear?: number;
+            /** Format: int32 */
+            targetYear?: number;
+            /** Format: int32 */
+            capDays?: number;
+            /** Format: int32 */
+            carriedDays?: number;
+            /** Format: int32 */
+            usedDays?: number;
+            /** Format: int32 */
+            pendingClaimDays?: number;
+            /** Format: int32 */
+            expiredDays?: number;
+            /** Format: int32 */
+            availableDays?: number;
+            /** Format: date */
+            expiresOn?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "EXPIRED" | "NONE";
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            rowType: "CARRYOVER";
+        };
+        CarryoverSummary: Omit<WithRequired<components["schemas"]["ReportSummary"], "summaryType">, "summaryType"> & {
+            /** Format: int64 */
+            rowCount?: number;
+            /** Format: int64 */
+            userCount?: number;
+            /** Format: int64 */
+            leaveTypeCount?: number;
+            /** Format: int64 */
+            totalCarried?: number;
+            /** Format: int64 */
+            totalUsed?: number;
+            /** Format: int64 */
+            totalPendingClaim?: number;
+            /** Format: int64 */
+            totalExpired?: number;
+            /** Format: int64 */
+            totalAvailable?: number;
+            rowsByStatus?: {
+                [key: string]: number;
+            };
+            carriedByLeaveType?: components["schemas"]["CarriedByLeaveType"][];
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            summaryType: "CARRYOVER";
         };
         ExceptionReportRow: Omit<components["schemas"]["ReportRow"], "rowType"> & {
             code?: string;
@@ -3106,6 +3231,8 @@ export interface components {
             blockedReason?: "ALREADY_CANCELLED" | "DECLINED" | "REVIEW_PENDING" | "PRIOR_BALANCE_YEAR" | "NOT_REQUESTER";
             /** Format: int32 */
             daysToRestore?: number;
+            /** Format: int32 */
+            daysForfeited?: number;
             /** @enum {string} */
             reviewStatus?: "COMPLETED" | "PENDING" | "APPROVED" | "DECLINED";
         };
@@ -3160,6 +3287,10 @@ export interface components {
             /** Format: int32 */
             daysToRestore?: number;
             /** Format: int32 */
+            carryoverDaysToRestore?: number;
+            /** Format: int32 */
+            daysForfeited?: number;
+            /** Format: int32 */
             balanceYear?: number;
             /** Format: date-time */
             decidedAt?: string;
@@ -3203,6 +3334,14 @@ export interface components {
             /** Format: int32 */
             balanceYear?: number;
             chargedDates?: string[];
+            /** Format: int32 */
+            carryoverDaysToUse?: number;
+            /** Format: int32 */
+            currentDaysToUse?: number;
+            /** Format: int32 */
+            availableDays?: number;
+            /** Format: date */
+            carryoverExpiresOn?: string;
         };
         CreateImportJobRequest: {
             /** @description Fixed import template identifier: PEOPLE_AND_ASSIGNMENTS or ENTITLEMENTS_AND_OPENING_BALANCES */
@@ -3411,6 +3550,10 @@ export interface components {
             deltaDays?: number;
             /** Format: int32 */
             afterRemainingDays?: number;
+            /** Format: int32 */
+            carryoverCarriedBefore?: number;
+            /** Format: int32 */
+            carryoverCarriedAfter?: number;
         };
         ResetPasswordRequest: {
             token?: string;
@@ -3535,6 +3678,14 @@ export interface components {
             subjectPublicId?: string;
             /** Format: date */
             effectiveFrom: string;
+            carryoverEnabled?: boolean;
+            /** Format: int32 */
+            carryoverMaxDays?: number;
+            /** Format: int32 */
+            carryoverDeadlineMonth?: number;
+            /** Format: int32 */
+            carryoverDeadlineDay?: number;
+            carryoverRepeat?: boolean;
         };
         UpdatePublicHolidayRequest: {
             /** Format: date */
@@ -3676,6 +3827,14 @@ export interface components {
             /** Format: date-time */
             publishedAt?: string;
             impactSummary?: components["schemas"]["ImpactSummary"];
+            carryoverEnabled?: boolean;
+            /** Format: int32 */
+            carryoverMaxDays?: number;
+            /** Format: int32 */
+            carryoverDeadlineMonth?: number;
+            /** Format: int32 */
+            carryoverDeadlineDay?: number;
+            carryoverRepeat?: boolean;
         };
         DraftSummary: {
             draftPublicId?: string;
@@ -3931,6 +4090,48 @@ export interface components {
              * @description Remaining working days; null when uncapped.
              */
             remainingDays?: number | null;
+            /** @description Days carried over from last year; null when this leave type did not carry over. */
+            carryover?: components["schemas"]["CarryoverBalanceResponse"];
+            /**
+             * Format: int32
+             * @description Remaining working days plus carried days still usable; null when uncapped.
+             */
+            totalAvailableDays?: number | null;
+        };
+        CarryoverBalanceResponse: {
+            /**
+             * Format: int32
+             * @description The year the days were carried from.
+             */
+            sourceYear?: number;
+            /**
+             * Format: int32
+             * @description The maximum that applied when the days were carried; null means no limit.
+             */
+            capDays?: number | null;
+            /** Format: int32 */
+            carriedDays?: number;
+            /**
+             * Format: int32
+             * @description Carried days already spent by approved leave.
+             */
+            usedDays?: number;
+            /**
+             * Format: int32
+             * @description Carried days still usable today; 0 once the deadline has passed.
+             */
+            remainingDays?: number;
+            /**
+             * Format: int32
+             * @description Carried days the deadline took.
+             */
+            expiredDays?: number;
+            /**
+             * Format: date
+             * @description Last day a request can be submitted using these days.
+             */
+            expiresOn?: string;
+            expired?: boolean;
         };
         SlackStatusResponse: {
             workspaceConnected?: boolean;
@@ -4153,6 +4354,11 @@ export interface components {
             balanceAfterApproval?: number;
             balanceSufficient?: boolean;
             /** Format: int32 */
+            balanceCarryoverAvailable?: number;
+            /** Format: int32 */
+            carryoverDaysToUse?: number;
+            carryoverExpiresOn?: string;
+            /** Format: int32 */
             overlappingApprovedAbsences?: number;
             submittedAt?: string;
             decidedOnBehalf?: boolean;
@@ -4199,6 +4405,10 @@ export interface components {
             requestedAt?: string;
             /** Format: int32 */
             daysToRestore?: number;
+            /** Format: int32 */
+            carryoverDaysToRestore?: number;
+            /** Format: int32 */
+            daysForfeited?: number;
             /** Format: int32 */
             balanceYear?: number;
         };
@@ -7995,7 +8205,18 @@ type RequiredSchema<K extends keyof components["schemas"]> = Required<components
 
 export type ApprovalCapabilityResponse = RequiredSchema<"ApprovalCapabilityResponse">;
 export type ApprovalStepEvidenceResponse = RequiredSchema<"ApprovalStepEvidenceResponse">;
-export type BalanceCardResponse = RequiredSchema<"BalanceCardResponse">;
+// Plan RESTO: `carryover` is absent for a leave type with no carried days and `capDays` is null when
+// the rule had no limit.
+export type CarryoverBalanceResponse = Omit<RequiredSchema<"CarryoverBalanceResponse">, "capDays"> & {
+    capDays: number | null;
+};
+export type BalanceCardResponse = Omit<
+    RequiredSchema<"BalanceCardResponse">,
+    "carryover" | "totalAvailableDays"
+> & {
+    carryover?: CarryoverBalanceResponse | null;
+    totalAvailableDays?: number | null;
+};
 // Story 16.2: privacy-redacted fields are ABSENT from the response, not blanked, so they must be
 // optional here. RequiredSchema<> would type them as always-present and let a component read
 // `absence.leaveTypeName` with no guard — the compile error is the point.
@@ -8143,9 +8364,23 @@ export type PendingApprovalResponse = Omit<
     submittedAt?: string | null;
     approvalEvidence?: ApprovalStepEvidenceResponse[];
     decisionFacts?: components["schemas"]["DecisionFactsV1"] | null;
+    // Plan RESTO: set only for an annual allowance.
+    balanceCarryoverAvailable?: number | null;
+    carryoverDaysToUse?: number | null;
+    carryoverExpiresOn?: string | null;
 };
 export type PreviewLeaveRequestRequest = components["schemas"]["PreviewLeaveRequestRequest"];
-export type PreviewLeaveRequestResponse = RequiredSchema<"PreviewLeaveRequestResponse">;
+// Plan RESTO: the carry-over split is only computed for an annual allowance; null otherwise.
+export type PreviewLeaveRequestResponse = Omit<
+    RequiredSchema<"PreviewLeaveRequestResponse">,
+    "carryoverDaysToUse" | "currentDaysToUse" | "availableDays" | "carryoverExpiresOn" | "balanceYear"
+> & {
+    carryoverDaysToUse?: number | null;
+    currentDaysToUse?: number | null;
+    availableDays?: number | null;
+    carryoverExpiresOn?: string | null;
+    balanceYear?: number | null;
+};
 export type ProblemDetail = {
     type?: string;
     title?: string;
@@ -8306,11 +8541,21 @@ export type ReorderLeaveTypesRequest = components["schemas"]["ReorderLeaveTypesR
 export type UpdateLeaveTypeRequest = components["schemas"]["UpdateLeaveTypeRequest"];
 export type CreatePolicyDraftRequest = components["schemas"]["CreatePolicyDraftRequest"];
 export type UpdatePolicyDraftRequest = components["schemas"]["UpdatePolicyDraftRequest"];
-export type PolicyDraftResponse = RequiredSchema<"PolicyDraftResponse">;
+// Plan RESTO: a rule with carry-over off sends no maximum or deadline, and "no limit" is a null
+// maximum.
+type NullableCarryoverRule = {
+    carryoverMaxDays: number | null;
+    carryoverDeadlineMonth: number | null;
+    carryoverDeadlineDay: number | null;
+};
+type CarryoverRuleKeys = "carryoverMaxDays" | "carryoverDeadlineMonth" | "carryoverDeadlineDay";
+export type PolicyDraftResponse = Omit<RequiredSchema<"PolicyDraftResponse">, CarryoverRuleKeys> &
+    NullableCarryoverRule;
 export type PublishPolicyRequest = components["schemas"]["PublishPolicyRequest"];
 export type PolicyPreviewResponse = RequiredSchema<"PolicyPreviewResponse">;
 export type PolicyPublicationResponse = RequiredSchema<"PolicyPublicationResponse">;
-export type PolicyHistoryItem = RequiredSchema<"PolicyHistoryItem">;
+export type PolicyHistoryItem = Omit<RequiredSchema<"PolicyHistoryItem">, CarryoverRuleKeys> &
+    NullableCarryoverRule;
 export type PolicySettingsOverviewResponse = RequiredSchema<"PolicySettingsOverviewResponse">;
 export type CreateImportJobRequest = components["schemas"]["CreateImportJobRequest"];
 /**

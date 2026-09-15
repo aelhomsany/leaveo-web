@@ -31,6 +31,7 @@ const NO_CANCELLATION: LeaveCancellationCapability = {
   mode: 'NONE',
   blockedReason: null,
   daysToRestore: 0,
+  daysForfeited: 0,
   reviewStatus: null,
 }
 
@@ -63,6 +64,7 @@ function selfService(daysToRestore: number): LeaveCancellationCapability {
     mode: 'SELF_SERVICE',
     blockedReason: null,
     daysToRestore,
+    daysForfeited: 0,
     reviewStatus: null,
   }
 }
@@ -73,6 +75,7 @@ function adminReview(daysToRestore: number): LeaveCancellationCapability {
     mode: 'ADMIN_REVIEW',
     blockedReason: null,
     daysToRestore,
+    daysForfeited: 0,
     reviewStatus: null,
   }
 }
@@ -86,6 +89,7 @@ function blocked(
     mode: 'NONE',
     blockedReason,
     daysToRestore: 0,
+    daysForfeited: 0,
     reviewStatus,
   }
 }
@@ -188,6 +192,18 @@ describe('My Leaves cancellation', () => {
     expect(screen.getByTestId('cancel-leave-body')).toHaveTextContent(
       '4 working days go back to your balance.',
     )
+  })
+
+  it('[P1] Plan RESTO: names carried days that expired and will not come back when cancelling', async () => {
+    const user = userEvent.setup()
+    renderMyLeaves([
+      request({ id: 22, status: 'APPROVED', cancellation: { ...selfService(2), daysForfeited: 1 } }),
+    ])
+
+    await clickCancel(user, 22)
+    const body = screen.getByTestId('cancel-leave-body')
+    expect(body).toHaveTextContent('2 working days go back to your balance.')
+    expect(body).toHaveTextContent('1 carried day is not returned because it has expired.')
   })
 
   it('[P0] blocks the review modal until a reason is typed', async () => {

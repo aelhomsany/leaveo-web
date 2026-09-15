@@ -737,6 +737,28 @@
       "selectSubject": "اختر هدفًا",
       "effectiveFrom": "تاريخ السريان"
     },
+    "carryover": {
+      "day": "اليوم",
+      "deadline": "استخدام الأيام المرحَّلة حتى",
+      "deadlineHint": "من السنة التالية. تنتهي صلاحية الأيام المرحَّلة غير المستخدمة بعد هذا التاريخ.",
+      "enabled": "ترحيل الأيام غير المستخدمة إلى السنة التالية",
+      "legend": "ترحيل الأيام",
+      "maxDays": "الحد الأقصى للأيام",
+      "month": "الشهر",
+      "noLimit": "بلا حد",
+      "repeat": "يمكن ترحيل الأيام المرحَّلة مرة أخرى",
+      "selectDay": "اختر يومًا",
+      "selectMonth": "اختر شهرًا",
+      "summaryNoLimit": "ترحيل كل الأيام غير المستخدمة · حتى {{date}}",
+      "summaryOff": "بلا ترحيل",
+      "summaryRepeat": "تُرحَّل مرة أخرى",
+      "summary_zero": "ترحيل {{count}} يوم كحد أقصى · حتى {{date}}",
+      "summary_one": "ترحيل يوم واحد كحد أقصى · حتى {{date}}",
+      "summary_two": "ترحيل يومين كحد أقصى · حتى {{date}}",
+      "summary_few": "ترحيل {{count}} أيام كحد أقصى · حتى {{date}}",
+      "summary_many": "ترحيل {{count}} يومًا كحد أقصى · حتى {{date}}",
+      "summary_other": "ترحيل {{count}} يوم كحد أقصى · حتى {{date}}"
+    },
     "modes": {
       "annual": "استحقاق سنوي",
       "unlimited": "غير محدود"
@@ -763,7 +785,13 @@
       "balance": "مستخدم {{used}}، مقترح {{allowance}}، متبقٍ {{remaining}}",
       "unknownMember": "عضو متأثر",
       "noImpacts": "لا تتغير أي أرصدة فردية في هذا النطاق.",
-      "balanceUnlimited": "{{used}} مستخدمة، مخصص غير محدود"
+      "balanceUnlimited": "{{used}} مستخدمة، مخصص غير محدود",
+      "carryover_zero": "لا يُرحَّل شيء إلى السنة التالية",
+      "carryover_one": "يُرحَّل يوم واحد إلى السنة التالية",
+      "carryover_two": "يُرحَّل يومان إلى السنة التالية",
+      "carryover_few": "تُرحَّل {{count}} أيام إلى السنة التالية",
+      "carryover_many": "يُرحَّل {{count}} يومًا إلى السنة التالية",
+      "carryover_other": "يُرحَّل {{count}} يوم إلى السنة التالية"
     },
     "confirm": {
       "title": "تأكيد نشر السياسة",

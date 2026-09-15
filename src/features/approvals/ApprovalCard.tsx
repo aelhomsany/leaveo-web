@@ -4,7 +4,7 @@ import type { PendingApprovalResponse } from '../../api/generated/types'
 import { WorkingDayExplainer } from '../../components/ui/WorkingDayExplainer'
 import { CheckIcon } from '../../components/ui/icons'
 import { LeaveTypeTag } from '../dashboard/LeaveTypeTag'
-import { formatDateRange } from '../dashboard/leaveRequestFormatting'
+import { formatDate, formatDateRange } from '../dashboard/leaveRequestFormatting'
 import { ApprovalProgress } from './ApprovalProgress'
 
 type ApprovalCoverage = {
@@ -129,10 +129,20 @@ export function ApprovalCard({
     approval.balanceRemaining != null &&
     approval.balanceAfterApproval != null
   ) {
-    balanceText = t('approvals:balance.consequence', {
-      before: isolate(approval.balanceRemaining),
-      after: isolate(approval.balanceAfterApproval),
-    })
+    // Plan RESTO: balanceRemaining already includes usable carried days; the carried share and its
+    // deadline are named so the approver knows part of the balance is about to expire.
+    balanceText =
+      (approval.balanceCarryoverAvailable ?? 0) > 0
+        ? t('approvals:balance.consequenceWithCarryover', {
+            before: isolate(approval.balanceRemaining),
+            carried: isolate(approval.balanceCarryoverAvailable),
+            date: isolate(formatDate(approval.carryoverExpiresOn ?? '', i18n.language)),
+            after: isolate(approval.balanceAfterApproval),
+          })
+        : t('approvals:balance.consequence', {
+            before: isolate(approval.balanceRemaining),
+            after: isolate(approval.balanceAfterApproval),
+          })
   }
 
   const overlappingAbsences = coverage.overlappingAbsences

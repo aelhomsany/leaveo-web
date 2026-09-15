@@ -10,6 +10,8 @@ type CancelLeaveModalProps = {
   leaveTypeName: string
   dateRange: string
   daysToRestore: number
+  /** Plan RESTO: carried days that expired since the leave was charged and will not come back. */
+  daysForfeited: number
   reason: string
   onReasonChange: (reason: string) => void
   onConfirm: (reason: string) => void
@@ -33,6 +35,7 @@ export function CancelLeaveModal({
   leaveTypeName,
   dateRange,
   daysToRestore,
+  daysForfeited,
   reason,
   onReasonChange,
   onConfirm,
@@ -65,6 +68,12 @@ export function CancelLeaveModal({
       : variant === 'CANCEL'
         ? t('leaves:cancel.approvedBody', { count: daysToRestore })
         : t('leaves:cancel.reviewBody')
+  // Only cancelling names forfeited days: withdrawing charged nothing, and a review's outcome is
+  // the Organization Admin's to decide.
+  const forfeitedBody =
+    variant === 'CANCEL' && daysForfeited > 0
+      ? t('leaves:cancel.forfeitedBody', { count: daysForfeited })
+      : null
   const confirmLabel =
     variant === 'WITHDRAW'
       ? t('leaves:cancel.confirmWithdraw')
@@ -90,6 +99,7 @@ export function CancelLeaveModal({
       </p>
       <p className="cancel-modal-body" data-testid="cancel-leave-body">
         {body}
+        {forfeitedBody ? <> {forfeitedBody}</> : null}
       </p>
 
       {needsReason ? (

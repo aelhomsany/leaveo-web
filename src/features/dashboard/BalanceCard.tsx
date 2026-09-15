@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { BalanceCardResponse } from '../../api/generated/types'
+import { isolate } from '../../i18n/bidi'
 import { balanceCardSlug } from './balanceCardSlug'
+import { formatDate } from './leaveRequestFormatting'
 import './balance-card.css'
 
 type BalanceCardProps = {
@@ -9,7 +11,7 @@ type BalanceCardProps = {
 }
 
 export function BalanceCard({ balance }: BalanceCardProps) {
-  const { t } = useTranslation('dashboard')
+  const { t, i18n } = useTranslation('dashboard')
   const slug = balanceCardSlug(balance.name)
   const cardStyle = {
     backgroundColor: balance.backgroundColor,
@@ -46,6 +48,14 @@ export function BalanceCard({ balance }: BalanceCardProps) {
     : hasProgressRange
       ? Math.min(100, Math.round((used / allocated) * 100))
       : 0
+  // Plan RESTO: carried days get their own bar and their own lines, never colour alone. Every
+  // number is the server's; the percentage is only the bar's width.
+  const carryover = balance.carryover ?? null
+  const carriedPct =
+    carryover && carryover.carriedDays > 0
+      ? Math.min(100, Math.round((carryover.usedDays / carryover.carriedDays) * 100))
+      : 0
+  const expiresOn = carryover ? formatDate(carryover.expiresOn, i18n.language) : ''
 
   return (
     <div
@@ -93,6 +103,49 @@ export function BalanceCard({ balance }: BalanceCardProps) {
         </div>
       ) : null}
       <div className="balance-used">{t('balance.daysUsed', { count: used })}</div>
+      {carryover ? (
+        <div className="balance-carryover" data-testid={`balance-carryover-${slug}`}>
+          {carryover.carriedDays > 0 ? (
+            <div
+              className="balance-bar-bg balance-bar-bg--carryover"
+              role="progressbar"
+              aria-label={t('balance.carryoverUsageLabel', {
+                used: carryover.usedDays,
+                carried: carryover.carriedDays,
+              })}
+              aria-valuemin={0}
+              aria-valuemax={carryover.carriedDays}
+              aria-valuenow={Math.max(0, Math.min(carryover.usedDays, carryover.carriedDays))}
+            >
+              <div
+                className="balance-bar balance-bar--carryover"
+                style={{ width: `${carriedPct}%` }}
+                data-testid={`balance-carryover-bar-${slug}`}
+              />
+            </div>
+          ) : null}
+          <div className="balance-used">
+            {t('balance.carriedFrom', {
+              count: carryover.remainingDays,
+              year: isolate(carryover.sourceYear),
+            })}
+          </div>
+          {carryover.expired ? (
+            carryover.expiredDays > 0 ? (
+              <div className="balance-used">
+                {t('balance.expired', { count: carryover.expiredDays, date: isolate(expiresOn) })}
+              </div>
+            ) : null
+          ) : (
+            <div className="balance-used">{t('balance.useBy', { date: isolate(expiresOn) })}</div>
+          )}
+          {balance.totalAvailableDays != null ? (
+            <div className="balance-total-available">
+              {t('balance.totalAvailable', { count: balance.totalAvailableDays })}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }

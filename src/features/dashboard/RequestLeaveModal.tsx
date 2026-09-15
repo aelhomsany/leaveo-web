@@ -14,6 +14,7 @@ import {
 import { CloseIcon } from '../../components/ui/icons'
 import { useAuth } from '../../auth/useAuth'
 import { useCreateLeaveRequest } from './useCreateLeaveRequest'
+import { formatDate } from './leaveRequestFormatting'
 import { useLeaveRequestPreview } from './useLeaveRequestPreview'
 import { translateFieldViolation } from '../../i18n/fieldViolationMessage'
 import './request-leave.css'
@@ -37,7 +38,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 }
 
 export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModalProps) {
-  const { t } = useTranslation(['dashboard', 'common'])
+  const { t, i18n } = useTranslation(['dashboard', 'common'])
   const { user } = useAuth()
   const orgId = user?.organizationId
   const createMutation = useCreateLeaveRequest()
@@ -86,9 +87,23 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
   const excludedTotal =
     preview != null ? preview.excludedWeekends + preview.excludedHolidays : 0
 
+  // Plan RESTO / D-9: the two refusals a requester can act on are translated by problem type; any
+  // other problem keeps the server's own detail.
+  const problemMessage = (error: ApiError, fallback: string) => {
+    if (error.problem.code === 'leave-spans-balance-years') {
+      return t('dashboard:request.errors.spansBalanceYears')
+    }
+    if (error.problem.type?.endsWith('/insufficient-balance')) {
+      return preview?.availableDays != null
+        ? t('dashboard:request.errors.insufficientBalance', { count: preview.availableDays })
+        : t('dashboard:request.errors.insufficientBalanceUnknown')
+    }
+    return error.problem.detail ?? fallback
+  }
+
   const previewErrorMessage =
     previewQuery.error instanceof ApiError
-      ? previewQuery.error.problem.detail ?? t('dashboard:request.errors.preview')
+      ? problemMessage(previewQuery.error, t('dashboard:request.errors.preview'))
       : previewQuery.isError
         ? t('dashboard:request.errors.preview')
         : null
@@ -124,6 +139,34 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
           : previewState === 'zero' && preview
             ? t('dashboard:request.preview.zero', { name: isolate(preview.workforceGroupName ?? '') })
             : ''
+
+  // Plan RESTO: which bucket the request draws on, in the server's own numbers (AD-4). Shown only
+  // when carried days are involved; a request paid wholly from this year needs no breakdown.
+  let carryoverBreakdown: string | null = null
+  if (
+    previewState === 'valid' &&
+    preview?.availableDays != null &&
+    (preview.carryoverDaysToUse ?? 0) > 0
+  ) {
+    const carried = t('dashboard:request.breakdown.carried', {
+      count: preview.carryoverDaysToUse ?? 0,
+      date: isolate(formatDate(preview.carryoverExpiresOn ?? '', i18n.language)),
+    })
+    carryoverBreakdown =
+      (preview.currentDaysToUse ?? 0) > 0
+        ? t('dashboard:request.breakdown.usesBoth', {
+            first: carried,
+            second: t('dashboard:request.breakdown.current', {
+              count: preview.currentDaysToUse ?? 0,
+              year: isolate(preview.balanceYear),
+            }),
+            available: isolate(preview.availableDays),
+          })
+        : t('dashboard:request.breakdown.usesOne', {
+            part: carried,
+            available: isolate(preview.availableDays),
+          })
+  }
 
   const submitDisabled =
     viewerUngrouped ||
@@ -191,7 +234,7 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
               )
               return
             }
-            setSubmitErrorMessage(error.problem.detail ?? t('dashboard:request.errors.submit'))
+            setSubmitErrorMessage(problemMessage(error, t('dashboard:request.errors.submit')))
             return
           }
           setSubmitErrorMessage(t('dashboard:request.errors.submit'))
@@ -346,6 +389,11 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
                   : undefined
               }
             />
+            {carryoverBreakdown ? (
+              <p className="request-carryover-breakdown" data-testid="request-carryover-breakdown">
+                {carryoverBreakdown}
+              </p>
+            ) : null}
           </div>
 
           {submitErrorMessage && (

@@ -30,6 +30,13 @@
   margin-block-end: var(--space-lg);
 }
 
+.request-leave-modal .request-carryover-breakdown {
+  margin-block: var(--space-sm) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+  line-height: var(--font-caption-line-height);
+}
+
 .request-leave-modal .modal-actions {
   margin-block-start: var(--space-sm);
   padding-block-start: 0;

@@ -236,7 +236,15 @@ describe('RequestLeaveModal — Story 3.4', () => {
     })
   })
 
-  it('[P1] surfaces insufficient-balance problem.detail on submit failure', async () => {
+  it('[P1] Plan RESTO: translates an insufficient-balance refusal using the preview availability', async () => {
+    vi.spyOn(apiClient, 'previewLeaveRequest').mockResolvedValue({
+      ...mockPreviewFiveDays,
+      balanceYear: 2026,
+      availableDays: 2,
+      currentDaysToUse: 5,
+      carryoverDaysToUse: 0,
+      carryoverExpiresOn: null,
+    })
     vi.spyOn(apiClient, 'createLeaveRequest').mockRejectedValue(
       new apiClient.ApiError(400, {
         type: 'https://leaveo.net/errors/insufficient-balance',
@@ -259,7 +267,7 @@ describe('RequestLeaveModal — Story 3.4', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'Only 2 working days remaining for Annual Leave',
+        'Not enough days: only 2 days are available for this leave type.',
       )
     })
   })

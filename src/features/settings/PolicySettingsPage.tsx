@@ -26,6 +26,7 @@ import { Modal } from "../../components/ui/Modal";
 import { CloseIcon } from "../../components/ui/icons";
 import { useToast } from "../../components/ui/useToast";
 import { useAuth } from "../../auth/useAuth";
+import { isolate } from "../../i18n/bidi";
 import "./policy-settings.css";
 
 type FormState = {
@@ -34,14 +35,55 @@ type FormState = {
   scope: "ORGANIZATION" | "WORKFORCE_GROUP" | "USER";
   subjectPublicId: string;
   effectiveFrom: string;
+  carryoverEnabled: boolean;
+  carryoverNoLimit: boolean;
+  carryoverMaxDays: string;
+  carryoverDeadlineMonth: string;
+  carryoverDeadlineDay: string;
+  carryoverRepeat: boolean;
 };
+const optionalNumber = (value: number | null | undefined) =>
+  value == null ? "" : String(value);
 const fromDraft = (draft: PolicyDraftResponse): FormState => ({
   mode: draft.mode,
-  allowanceDays: draft.allowanceDays == null ? "" : String(draft.allowanceDays),
+  allowanceDays: optionalNumber(draft.allowanceDays),
   scope: draft.scope,
   subjectPublicId: draft.subjectPublicId ?? "",
   effectiveFrom: draft.effectiveFrom,
+  carryoverEnabled: Boolean(draft.carryoverEnabled),
+  carryoverNoLimit: Boolean(draft.carryoverEnabled) && draft.carryoverMaxDays == null,
+  carryoverMaxDays: optionalNumber(draft.carryoverMaxDays),
+  carryoverDeadlineMonth: optionalNumber(draft.carryoverDeadlineMonth),
+  carryoverDeadlineDay: optionalNumber(draft.carryoverDeadlineDay),
+  carryoverRepeat: Boolean(draft.carryoverRepeat),
 });
+
+// Plan RESTO: the deadline is a month and day of the year after the balance year, never 29 February
+// (the API rejects it), so February offers 28 days whatever the year.
+const daysInDeadlineMonth = (month: string) =>
+  month === "2" ? 28 : ["4", "6", "9", "11"].includes(month) ? 30 : 31;
+const fieldNumber = (value: string) => (value === "" ? undefined : Number(value));
+const carryoverBody = (state: FormState) =>
+  state.mode === "ANNUAL_ALLOWANCE" && state.carryoverEnabled
+    ? {
+        carryoverEnabled: true,
+        // No limit is an absent maximum, not a zero.
+        carryoverMaxDays: state.carryoverNoLimit
+          ? undefined
+          : fieldNumber(state.carryoverMaxDays),
+        carryoverDeadlineMonth: fieldNumber(state.carryoverDeadlineMonth),
+        carryoverDeadlineDay: fieldNumber(state.carryoverDeadlineDay),
+        carryoverRepeat: state.carryoverRepeat,
+      }
+    : { carryoverEnabled: false };
+
+type CarryoverRule = {
+  carryoverEnabled?: boolean | null;
+  carryoverMaxDays?: number | null;
+  carryoverDeadlineMonth?: number | null;
+  carryoverDeadlineDay?: number | null;
+  carryoverRepeat?: boolean | null;
+};
 
 function PolicyRouteBlocker({ dirty }: { dirty: boolean }) {
   const { t } = useTranslation("settings");
@@ -170,6 +212,39 @@ export function PolicySettingsPage() {
     }).format(parsed);
   };
 
+  const monthName = (month: number) =>
+    new Intl.DateTimeFormat(i18n.language, {
+      month: "long",
+      timeZone: "UTC",
+    }).format(new Date(Date.UTC(2001, month - 1, 1)));
+  const carryoverSummary = (rule: CarryoverRule) => {
+    if (
+      !rule.carryoverEnabled ||
+      rule.carryoverDeadlineMonth == null ||
+      rule.carryoverDeadlineDay == null
+    ) {
+      return t("policy.carryover.summaryOff");
+    }
+    const date = isolate(
+      new Intl.DateTimeFormat(i18n.language, {
+        month: "long",
+        day: "numeric",
+        timeZone: "UTC",
+      }).format(
+        new Date(
+          Date.UTC(2001, rule.carryoverDeadlineMonth - 1, rule.carryoverDeadlineDay),
+        ),
+      ),
+    );
+    const base =
+      rule.carryoverMaxDays == null
+        ? t("policy.carryover.summaryNoLimit", { date })
+        : t("policy.carryover.summary", { count: rule.carryoverMaxDays, date });
+    return rule.carryoverRepeat
+      ? `${base} · ${t("policy.carryover.summaryRepeat")}`
+      : base;
+  };
+
   const namedTarget = (publicId: string | null | undefined) => {
     const target =
       overviewQuery.data?.users.find((item) => item.publicId === publicId) ??
@@ -213,6 +288,11 @@ export function PolicySettingsPage() {
       scope: "policy-scope",
       subjectPublicId: "policy-subject",
       effectiveFrom: "policy-effective-from",
+      carryoverEnabled: "policy-carryover-enabled",
+      carryoverMaxDays: "policy-carryover-max",
+      carryoverDeadlineMonth: "policy-carryover-month",
+      carryoverDeadlineDay: "policy-carryover-day",
+      carryoverRepeat: "policy-carryover-repeat",
     };
     const target = Object.keys(errors)
       .map((field) => ids[field])
@@ -239,6 +319,7 @@ export function PolicySettingsPage() {
           subjectPublicId:
             form.scope === "ORGANIZATION" ? undefined : form.subjectPublicId,
           effectiveFrom: form.effectiveFrom,
+          ...carryoverBody(form),
         });
       if (current !== draftQuery.data) {
         const currentForm = fromDraft(current);
@@ -483,6 +564,189 @@ export function PolicySettingsPage() {
               )}
             </label>
           )}
+          {form.mode === "ANNUAL_ALLOWANCE" && (
+            <fieldset className="policy-carryover" data-testid="policy-carryover">
+              <legend>{t("policy.carryover.legend")}</legend>
+              <label className="policy-carryover-check">
+                <input
+                  id="policy-carryover-enabled"
+                  type="checkbox"
+                  checked={form.carryoverEnabled}
+                  onChange={(e) => {
+                    const enabled = e.target.checked;
+                    // Turning carry-over on proposes the common 31 March deadline rather than an
+                    // empty pair the API would only reject.
+                    const pickDefault = enabled && form.carryoverDeadlineMonth === "";
+                    setForm({
+                      ...form,
+                      carryoverEnabled: enabled,
+                      carryoverDeadlineMonth: pickDefault ? "3" : form.carryoverDeadlineMonth,
+                      carryoverDeadlineDay: pickDefault ? "31" : form.carryoverDeadlineDay,
+                    });
+                    setPreview(null);
+                  }}
+                />
+                {t("policy.carryover.enabled")}
+              </label>
+              {fieldErrors.carryoverEnabled && (
+                <span className="form-error" role="alert">
+                  {fieldErrors.carryoverEnabled}
+                </span>
+              )}
+              {form.carryoverEnabled && (
+                <>
+                  <div className="policy-carryover-row">
+                    <label className="form-field">
+                      <span>{t("policy.carryover.maxDays")}</span>
+                      <input
+                        id="policy-carryover-max"
+                        type="number"
+                        min="1"
+                        disabled={form.carryoverNoLimit}
+                        aria-invalid={Boolean(fieldErrors.carryoverMaxDays)}
+                        aria-describedby={
+                          fieldErrors.carryoverMaxDays
+                            ? "policy-carryover-max-error"
+                            : undefined
+                        }
+                        value={form.carryoverMaxDays}
+                        onChange={(e) => {
+                          setForm({ ...form, carryoverMaxDays: e.target.value });
+                          setPreview(null);
+                        }}
+                      />
+                      {fieldErrors.carryoverMaxDays && (
+                        <span
+                          id="policy-carryover-max-error"
+                          className="form-error"
+                          role="alert"
+                        >
+                          {fieldErrors.carryoverMaxDays}
+                        </span>
+                      )}
+                    </label>
+                    <label className="policy-carryover-check">
+                      <input
+                        id="policy-carryover-no-limit"
+                        type="checkbox"
+                        checked={form.carryoverNoLimit}
+                        onChange={(e) => {
+                          setForm({
+                            ...form,
+                            carryoverNoLimit: e.target.checked,
+                            carryoverMaxDays: e.target.checked ? "" : form.carryoverMaxDays,
+                          });
+                          setPreview(null);
+                        }}
+                      />
+                      {t("policy.carryover.noLimit")}
+                    </label>
+                  </div>
+                  <span id="policy-carryover-deadline-label">
+                    {t("policy.carryover.deadline")}
+                  </span>
+                  <div
+                    className="policy-carryover-row"
+                    role="group"
+                    aria-labelledby="policy-carryover-deadline-label"
+                    aria-describedby="policy-carryover-deadline-hint"
+                  >
+                    <label className="form-field">
+                      <span>{t("policy.carryover.month")}</span>
+                      <select
+                        id="policy-carryover-month"
+                        aria-invalid={Boolean(fieldErrors.carryoverDeadlineMonth)}
+                        aria-describedby={
+                          fieldErrors.carryoverDeadlineMonth
+                            ? "policy-carryover-month-error"
+                            : undefined
+                        }
+                        value={form.carryoverDeadlineMonth}
+                        onChange={(e) => {
+                          const month = e.target.value;
+                          const day = form.carryoverDeadlineDay;
+                          setForm({
+                            ...form,
+                            carryoverDeadlineMonth: month,
+                            carryoverDeadlineDay:
+                              day !== "" && Number(day) > daysInDeadlineMonth(month) ? "" : day,
+                          });
+                          setPreview(null);
+                        }}
+                      >
+                        <option value="">{t("policy.carryover.selectMonth")}</option>
+                        {Array.from({ length: 12 }, (_, index) => index + 1).map((month) => (
+                          <option key={month} value={String(month)}>
+                            {monthName(month)}
+                          </option>
+                        ))}
+                      </select>
+                      {fieldErrors.carryoverDeadlineMonth && (
+                        <span
+                          id="policy-carryover-month-error"
+                          className="form-error"
+                          role="alert"
+                        >
+                          {fieldErrors.carryoverDeadlineMonth}
+                        </span>
+                      )}
+                    </label>
+                    <label className="form-field">
+                      <span>{t("policy.carryover.day")}</span>
+                      <select
+                        id="policy-carryover-day"
+                        aria-invalid={Boolean(fieldErrors.carryoverDeadlineDay)}
+                        aria-describedby={
+                          fieldErrors.carryoverDeadlineDay
+                            ? "policy-carryover-day-error"
+                            : undefined
+                        }
+                        value={form.carryoverDeadlineDay}
+                        onChange={(e) => {
+                          setForm({ ...form, carryoverDeadlineDay: e.target.value });
+                          setPreview(null);
+                        }}
+                      >
+                        <option value="">{t("policy.carryover.selectDay")}</option>
+                        {Array.from(
+                          { length: daysInDeadlineMonth(form.carryoverDeadlineMonth) },
+                          (_, index) => index + 1,
+                        ).map((day) => (
+                          <option key={day} value={String(day)}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                      {fieldErrors.carryoverDeadlineDay && (
+                        <span
+                          id="policy-carryover-day-error"
+                          className="form-error"
+                          role="alert"
+                        >
+                          {fieldErrors.carryoverDeadlineDay}
+                        </span>
+                      )}
+                    </label>
+                  </div>
+                  <p id="policy-carryover-deadline-hint" className="policy-carryover-hint">
+                    {t("policy.carryover.deadlineHint")}
+                  </p>
+                  <label className="policy-carryover-check">
+                    <input
+                      id="policy-carryover-repeat"
+                      type="checkbox"
+                      checked={form.carryoverRepeat}
+                      onChange={(e) => {
+                        setForm({ ...form, carryoverRepeat: e.target.checked });
+                        setPreview(null);
+                      }}
+                    />
+                    {t("policy.carryover.repeat")}
+                  </label>
+                </>
+              )}
+            </fieldset>
+          )}
           <label className="form-field">
             <span>{t("policy.fields.scope")}</span>
             <select
@@ -625,6 +889,10 @@ export function PolicySettingsPage() {
                   <dd>{formatDate(preview.effectiveFrom)}</dd>
                 </div>
                 <div>
+                  <dt>{t("policy.carryover.legend")}</dt>
+                  <dd data-testid="policy-review-carryover">{carryoverSummary(preview)}</dd>
+                </div>
+                <div>
                   <dt>{t("policy.review.affected")}</dt>
                   <dd>
                     {t("policy.review.people", {
@@ -667,6 +935,11 @@ export function PolicySettingsPage() {
                             allowance: impact.proposedAllowance,
                             remaining: impact.projectedRemaining,
                           })}
+                      {impact.projectedCarryoverDays != null
+                        ? ` · ${t("policy.review.carryover", {
+                            count: impact.projectedCarryoverDays,
+                          })}`
+                        : null}
                     </p>
                   ))
                 )}
@@ -709,7 +982,7 @@ export function PolicySettingsPage() {
                   : t("policy.history.allowance", {
                       count: item.allowanceDays,
                     })}{" "}
-                — {" "}
+                — {carryoverSummary(item)} —{" "}
                 {t("policy.review.people", {
                   count: item.impactSummary.affectedMemberCount,
                 })}{" "}
