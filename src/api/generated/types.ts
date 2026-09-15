@@ -2569,6 +2569,22 @@ export interface components {
             sort?: string;
             direction?: string;
         };
+        BalanceByLeaveType: {
+            /** Format: int64 */
+            leaveTypeId?: number;
+            leaveTypeName?: string;
+            presence?: string;
+            /** Format: int64 */
+            rowCount?: number;
+            /** Format: int64 */
+            allocation?: number;
+            /** Format: int64 */
+            approvedUsage?: number;
+            /** Format: int64 */
+            remaining?: number;
+            /** Format: int32 */
+            usedPercent?: number;
+        };
         BalanceSnapshotRow: Omit<components["schemas"]["ReportRow"], "rowType"> & {
             /** Format: int64 */
             userId?: number;
@@ -2622,6 +2638,7 @@ export interface components {
             totalsByPresence?: {
                 [key: string]: components["schemas"]["PresenceTotals"];
             };
+            balancesByLeaveType?: components["schemas"]["BalanceByLeaveType"][];
         } & {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -2665,6 +2682,14 @@ export interface components {
              */
             summaryType: "EXCEPTION";
         };
+        LeaveUsageDay: {
+            /** Format: date */
+            date?: string;
+            /** Format: int64 */
+            awayDays?: number;
+            /** Format: int64 */
+            wfhDays?: number;
+        };
         LeaveUsageRow: Omit<components["schemas"]["ReportRow"], "rowType"> & {
             /** Format: int64 */
             userId?: number;
@@ -2707,6 +2732,7 @@ export interface components {
             chargedDayCountsByPresence?: {
                 [key: string]: number;
             };
+            chargedDaysByDate?: components["schemas"]["LeaveUsageDay"][];
         } & {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -7962,6 +7988,7 @@ export interface operations {
 type WithRequired<T, K extends keyof T> = T & {
     [P in K]-?: T[P];
 };
+
 // Leaveo keeps these schema aliases for feature code ergonomics, even though
 // openapi-typescript exposes schemas through components["schemas"].
 type RequiredSchema<K extends keyof components["schemas"]> = Required<components["schemas"][K]>;

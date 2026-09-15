@@ -40,6 +40,7 @@ import {
   formatValue, summaryBreakdown,
   type ReportFormatContext,
 } from './reportFormat'
+import { ReportAnalytics } from './ReportAnalytics'
 import { useReportQuery } from './useReportQuery'
 import './reports.css'
 
@@ -1015,6 +1016,12 @@ export function ReportCenterPage() {
               </dl>
             </section>
           )}
+
+          <ReportAnalytics
+            summary={response.summary}
+            incomplete={provenance?.incomplete === true}
+            format={format}
+          />
 
           <section className="card reports-export-card" aria-labelledby="report-export-title">
             <div>

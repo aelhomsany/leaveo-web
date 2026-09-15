@@ -155,6 +155,30 @@
     "count_other": "{{count}} matching rows",
     "emptyIncomplete": "Some records could not be included in this view, so this is not a confirmed zero."
   },
+  "analytics": {
+    "title": "Analytics",
+    "hide": "Hide analytics",
+    "show": "Show analytics",
+    "incomplete": "Some requests could not be included, so these charts are not a complete picture.",
+    "balance": {
+      "description": "How much of each capped leave type's allowance is used across the whole applied view, not just this page.",
+      "ringLabel": "{{leaveType}}: {{percent}} of allowance used",
+      "ringLabelNoAllowance": "{{leaveType}}: no allowance allocated",
+      "used": "Used",
+      "allocation": "Allocation",
+      "remaining": "Remaining",
+      "noAllowance": "No allowance allocated",
+      "empty": "No capped leave types are in this view."
+    },
+    "usage": {
+      "description": "Charged days for each day of the applied window. Away and working from home are charted separately.",
+      "chartLabel": "Charged days per day from {{from}} to {{to}}: {{away}} away days and {{wfh}} working-from-home days in total",
+      "away": "Away days",
+      "wfh": "Working-from-home days",
+      "scaleMax": "Scale maximum",
+      "empty": "No charged days in this window."
+    }
+  },
   "pagination": {
     "previous": "Previous Page",
     "next": "Next Page",

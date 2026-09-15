@@ -384,6 +384,136 @@ describe('ReportCenterPage', () => {
     ).toBeInTheDocument()
   })
 
+  describe('analytics', () => {
+    function balanceChartResponse(): ReportQueryResponse {
+      const base = balanceResponse()
+      return balanceResponse({
+        summary: {
+          ...base.summary,
+          balancesByLeaveType: [
+            // usedPercent is deliberately not 17/40 (43): the ring must print the server's figure.
+            { leaveTypeId: 3, leaveTypeName: 'Annual leave', presence: 'OFF', rowCount: 2, allocation: 40, approvedUsage: 17, remaining: 23, usedPercent: 91 },
+            { leaveTypeId: 4, leaveTypeName: 'Remote', presence: 'WFH', rowCount: 1, allocation: 30, approvedUsage: 3, remaining: 27, usedPercent: 10 },
+            { leaveTypeId: 5, leaveTypeName: 'Study', presence: 'OFF', rowCount: 1, allocation: 0, approvedUsage: 0, remaining: 0, usedPercent: null },
+          ],
+        } as unknown as ReportQueryResponse['summary'],
+      })
+    }
+
+    function usageChartResponse(overrides: Partial<ReportQueryResponse> = {}): ReportQueryResponse {
+      const base = definitionFixtures.LEAVE_USAGE.response
+      return {
+        ...base,
+        summary: {
+          ...base.summary,
+          // Totals deliberately differ from the series sums: the label must read the server maps.
+          chargedDayCountsByPresence: { OFF: 12, WFH: 5 },
+          chargedDaysByDate: [
+            { date: '2026-08-01', awayDays: 1, wfhDays: 0 },
+            { date: '2026-08-02', awayDays: 1, wfhDays: 1 },
+            { date: '2026-08-03', awayDays: 0, wfhDays: 0 },
+          ],
+        } as unknown as ReportQueryResponse['summary'],
+        provenance: {
+          basis: 'SUBMISSION_CAPTURED_CHARGED_DATES',
+          incomplete: false,
+          excludedCounts: {},
+        },
+        ...overrides,
+      } as ReportQueryResponse
+    }
+
+    it('[P0] charts each capped leave type with the server percentage between the summary and the export', async () => {
+      vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceChartResponse())
+
+      renderPage()
+
+      const analytics = await screen.findByTestId('report-analytics')
+      const annual = within(analytics).getByTestId('report-analytics-ring-3')
+      expect(within(annual).getByRole('img', { name: 'Annual leave: 91% of allowance used' }))
+        .toBeInTheDocument()
+      expect(annual).toHaveTextContent('91%')
+      expect(annual).toHaveTextContent('17')
+      expect(annual).toHaveTextContent('40')
+      // A WFH allowance is presence, not absence, and says so.
+      expect(within(within(analytics).getByTestId('report-analytics-ring-4')).getByText('Working from home'))
+        .toBeInTheDocument()
+      expect(within(analytics).getByTestId('report-analytics-ring-5'))
+        .toHaveTextContent('No allowance allocated')
+
+      const analyticsHeading = within(analytics).getByRole('heading', { name: 'Analytics' })
+      expect(
+        screen.getByRole('heading', { name: 'Organization summary' })
+          .compareDocumentPosition(analyticsHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+      expect(
+        analyticsHeading.compareDocumentPosition(
+          screen.getByRole('heading', { name: 'Export applied view' }),
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+    })
+
+    it('[P0] labels the usage trend with the server presence totals and the window dates', async () => {
+      vi.spyOn(apiClient, 'queryReport').mockResolvedValue(usageChartResponse())
+
+      renderPage()
+
+      const trend = await screen.findByTestId('report-analytics-trend')
+      expect(
+        within(trend).getByRole('img', {
+          name: 'Charged days per day from Aug 1, 2026 to Aug 3, 2026: 12 away days and 5 working-from-home days in total',
+        }),
+      ).toBeInTheDocument()
+      expect(trend).toHaveTextContent('Aug 1, 2026')
+      expect(trend).toHaveTextContent('Aug 3, 2026')
+      expect(screen.getByText('Working-from-home days')).toBeInTheDocument()
+      expect(screen.queryByText(/not a complete picture/)).not.toBeInTheDocument()
+    })
+
+    it('[P1] warns that the charts are partial when the server marks the evidence incomplete', async () => {
+      vi.spyOn(apiClient, 'queryReport').mockResolvedValue(
+        usageChartResponse({
+          provenance: {
+            basis: 'SUBMISSION_CAPTURED_CHARGED_DATES',
+            incomplete: true,
+            excludedCounts: { LEGACY_RECONSTRUCTED_REQUESTS: 1 },
+          },
+        }),
+      )
+
+      renderPage()
+
+      expect(await screen.findByTestId('report-analytics')).toHaveTextContent(
+        'Some requests could not be included, so these charts are not a complete picture.',
+      )
+    })
+
+    it('[P1] collapses and reopens the charts from the card header', async () => {
+      const user = userEvent.setup()
+      vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceChartResponse())
+
+      renderPage()
+
+      const hide = await screen.findByRole('button', { name: 'Hide analytics' })
+      expect(hide).toHaveAttribute('aria-expanded', 'true')
+      await user.click(hide)
+      expect(screen.getByTestId('report-analytics-body')).not.toBeVisible()
+      const show = screen.getByRole('button', { name: 'Show analytics' })
+      expect(show).toHaveAttribute('aria-expanded', 'false')
+      await user.click(show)
+      expect(screen.getByTestId('report-analytics-body')).toBeVisible()
+    })
+
+    it('[P1] renders no analytics card when the summary carries no chart series', async () => {
+      vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
+
+      renderPage()
+
+      await screen.findByTestId('report-summary-totalApprovedUsage')
+      expect(screen.queryByTestId('report-analytics')).not.toBeInTheDocument()
+    })
+  })
+
   it('[P0] renders the server ordering including its tie-breakers', async () => {
     vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
 

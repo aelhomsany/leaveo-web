@@ -171,6 +171,201 @@
   font-weight: var(--font-label-weight);
 }
 
+.reports-analytics {
+  overflow: hidden;
+}
+
+.reports-analytics-body {
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-card-padding);
+}
+
+.reports-analytics-note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+  line-height: var(--font-caption-line-height);
+}
+
+/* The reserved chart palette. WFH always takes mint so it never reads as one more absence. */
+.reports-series-0 {
+  --series: var(--color-data-ocean);
+  --series-tint: var(--color-data-ocean-tint);
+}
+
+.reports-series-1 {
+  --series: var(--color-data-rose);
+  --series-tint: var(--color-data-rose-tint);
+}
+
+.reports-series-2 {
+  --series: var(--color-data-sun);
+  --series-tint: var(--color-data-sun-tint);
+}
+
+.reports-series-wfh {
+  --series: var(--color-data-mint);
+  --series-tint: var(--color-data-mint-tint);
+}
+
+.reports-rings {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reports-ring {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+}
+
+.reports-ring svg {
+  display: block;
+  width: 88px;
+  height: 88px;
+}
+
+.reports-ring-track,
+.reports-ring-value {
+  fill: none;
+  stroke-width: 12;
+}
+
+.reports-ring-track {
+  stroke: var(--series-tint);
+}
+
+.reports-ring-value {
+  stroke: var(--series);
+  stroke-linecap: round;
+}
+
+.reports-ring-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: var(--font-label-weight);
+  overflow-wrap: anywhere;
+}
+
+.reports-ring-percent {
+  margin: var(--space-xs) 0 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-section-title-size);
+  font-weight: var(--font-section-title-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+.reports-ring dl {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px var(--space-sm);
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-caption-size);
+  line-height: var(--font-caption-line-height);
+}
+
+.reports-ring dt {
+  color: var(--color-text-secondary);
+}
+
+.reports-ring dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.reports-trend {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-xs) var(--space-sm);
+}
+
+.reports-trend-scale {
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.reports-trend svg {
+  display: block;
+  width: 100%;
+  height: 200px;
+  border-block-end: 1px solid var(--color-border-strong);
+}
+
+.reports-trend-bar {
+  fill: var(--color-data-ocean);
+}
+
+.reports-trend-line {
+  fill: none;
+  stroke: var(--color-data-mint);
+  stroke-width: 2;
+}
+
+.reports-trend-axis {
+  display: flex;
+  grid-column: 2;
+  justify-content: space-between;
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+}
+
+.reports-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-lg);
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+  list-style: none;
+}
+
+.reports-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.reports-legend-bar {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--color-data-ocean);
+}
+
+.reports-legend-line {
+  width: 16px;
+  height: 2px;
+  background: var(--color-data-mint);
+}
+
+@media (max-width: 900px) {
+  .reports-rings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reports-trend svg {
+    height: 160px;
+  }
+}
+
 .reports-results .table-wrap {
   border-radius: 0;
 }
