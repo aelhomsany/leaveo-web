@@ -567,6 +567,15 @@
         "[P1] Employee withdraws a pending request and it leaves their history as Cancelled",
         "[P1] Employee cannot ask to cancel a started leave without a reason, and sees the outcome"
       ]
+    },
+    "leave-carryover.spec.ts::Leave carry-over \u2014 Plan RESTO": {
+      "tags": [
+        "@regression",
+        "@api"
+      ],
+      "tests": [
+        "[P1] Carried days are shown, used first on approval, and returned on cancellation"
+      ]
     }
   },
   "permanentlySkippedTests": [
