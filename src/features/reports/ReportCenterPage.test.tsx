@@ -2,13 +2,15 @@ import { StrictMode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import type { ReportExportResponse, ReportQueryResponse } from '../../api/generated/types'
 import { ToastProvider } from '../../components/ui/ToastProvider'
 import i18n from '../../i18n/config'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import type { ReportDefinitionKey } from './reportDefinitions'
+import { REPORT_SLUG_BY_KEY } from './reportDefinitions'
 import { ReportCenterPage } from './ReportCenterPage'
 
 function balanceResponse(
@@ -316,7 +318,12 @@ const definitionFixtures: Record<
   },
 }
 
-function renderPage() {
+/**
+ * Mounts the workspace the way the router does: at /reports/<slug>. The slug is now the only
+ * thing that says which report this is, so a test that wants a different report arrives at a
+ * different URL rather than picking from a control.
+ */
+function renderPage(slug = 'balance-snapshot') {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
@@ -324,9 +331,14 @@ function renderPage() {
   return render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[`/reports/${slug}`]}>
           <AuthTestProvider value={createMockAuthForRole('ORGANIZATION_ADMIN')}>
-            <ReportCenterPage />
+            <Routes>
+              {/* Stands in for the catalog so a redirect away from a bad slug has somewhere
+                  to land without pulling the real page into this suite. */}
+              <Route path="/reports" element={<div data-testid="report-catalog-stub" />} />
+              <Route path="/reports/:reportSlug" element={<ReportCenterPage />} />
+            </Routes>
           </AuthTestProvider>
         </MemoryRouter>
       </ToastProvider>
@@ -347,9 +359,11 @@ function renderPageStrict() {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
-          <MemoryRouter>
+          <MemoryRouter initialEntries={['/reports/balance-snapshot']}>
             <AuthTestProvider value={createMockAuthForRole('ORGANIZATION_ADMIN')}>
-              <ReportCenterPage />
+              <Routes>
+                <Route path="/reports/:reportSlug" element={<ReportCenterPage />} />
+              </Routes>
             </AuthTestProvider>
           </MemoryRouter>
         </ToastProvider>
@@ -382,16 +396,8 @@ describe('ReportCenterPage', () => {
     renderPage()
 
     expect(await screen.findByTestId('report-center-page')).toHaveClass('page-wide')
-    const definitionSelect = screen.getByLabelText('Report definition')
-    expect(within(definitionSelect).getAllByRole('option').map((option) => option.getAttribute('value')))
-      .toEqual([
-        'BALANCE_SNAPSHOT',
-        'LEAVE_USAGE',
-        'REQUEST_DETAIL',
-        'EXCEPTION',
-        'PENDING_AGING',
-        'CARRYOVER',
-      ])
+    // The "every report is offered, in this order" guarantee moved to ReportCatalogPage.test.tsx
+    // with the picker itself; asserting it here too would only restate that test.
     // 77 is the server's whole-result total; the single row shows 4. Summing rows fails.
     expect(await screen.findByTestId('report-summary-totalApprovedUsage')).toHaveTextContent('77')
     // Plan RESTO: carried days are their own total; `remaining` stays this year's allowance.
@@ -665,22 +671,73 @@ describe('ReportCenterPage', () => {
     expect(asOf).toHaveTextContent('8:00')
   })
 
-  it('[P0] removes unsupported draft filters when the report definition changes', async () => {
-    const querySpy = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
+  /*
+    Mounts both report URLs under ONE route element, so moving between them changes only the
+    :reportSlug param — the case React Router serves by REUSING the component instance instead of
+    remounting it. A helper that unmounted and re-rendered would pass against the very bug this
+    exists to catch.
+  */
+  function ReportUrlProbe({ to, label }: { to: string; label: string }) {
+    const navigate = useNavigate()
+    return (
+      <button type="button" onClick={() => navigate(to)}>
+        {label}
+      </button>
+    )
+  }
+
+  function renderPageForNavigation(from: string, to: string, label: string) {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    })
+
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <MemoryRouter initialEntries={[`/reports/${from}`]}>
+            <AuthTestProvider value={createMockAuthForRole('ORGANIZATION_ADMIN')}>
+              <Routes>
+                <Route
+                  path="/reports/:reportSlug"
+                  element={
+                    <>
+                      <ReportUrlProbe to={to} label={label} />
+                      <ReportCenterPage />
+                    </>
+                  }
+                />
+              </Routes>
+            </AuthTestProvider>
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>,
+    )
+  }
+
+  /*
+    Replaces "removes unsupported draft filters when the report definition changes". Filters no
+    longer survive a report change, because a report is now its own screen and its draft is built
+    fresh from the URL on arrival — there is nothing left to prune. What must be proven instead is
+    that arriving re-seeds at all: with the instance reused across a param change, a once-per-mount
+    bootstrap would leave Balance Snapshot's rows and filters sitting under Pending Aging's name.
+  */
+  it('[P0] re-seeds and re-queries when the URL moves to another report', async () => {
+    const querySpy = vi
+      .spyOn(apiClient, 'queryReport')
+      .mockResolvedValueOnce(balanceResponse())
+      .mockResolvedValue(definitionFixtures.PENDING_AGING.response)
     const user = userEvent.setup()
-    renderPage()
+    renderPageForNavigation('balance-snapshot', '/reports/pending-aging', 'go to Pending Aging')
 
     await screen.findByTestId('report-row-0')
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'REQUEST_DETAIL')
-    await user.type(screen.getByLabelText('From'), '2026-08-01')
-    await user.type(screen.getByLabelText('To'), '2026-08-24')
-    await user.selectOptions(screen.getByLabelText('Status'), 'APPROVED')
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'PENDING_AGING')
-    await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
+    expect(querySpy.mock.calls.at(-1)![0]).toBe('BALANCE_SNAPSHOT')
+
+    await user.click(screen.getByRole('button', { name: 'go to Pending Aging' }))
 
     await waitFor(() => expect(querySpy).toHaveBeenCalledTimes(2))
     const [definition, request] = querySpy.mock.calls.at(-1)!
     expect(definition).toBe('PENDING_AGING')
+    // Pending Aging's own defaults, not whatever the previous report left behind.
     expect(request).toMatchObject({
       schemaVersion: 1,
       timezone: 'America/New_York',
@@ -694,20 +751,32 @@ describe('ReportCenterPage', () => {
     expect(request).not.toHaveProperty('includeInactiveUsers')
     // Page size is server configuration; sending a fixed 50 can exceed a deployment max.
     expect(request).not.toHaveProperty('size')
+    // The heading follows the URL too: the screen cannot name one report while showing another.
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Pending Aging')
+  })
+
+  /*
+    A slug naming no report has no screen to show. Falling back to the default would serve Balance
+    Snapshot's figures under a URL nobody asked for, so a bookmark to a report that was renamed or
+    withdrawn would quietly show the wrong one instead of admitting it is gone.
+  */
+  it('[P0] sends a URL that names no report back to the catalog', async () => {
+    const querySpy = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
+    renderPage('not-a-report')
+
+    expect(await screen.findByTestId('report-catalog-stub')).toBeInTheDocument()
+    expect(screen.queryByTestId('report-center-page')).not.toBeInTheDocument()
+    expect(querySpy).not.toHaveBeenCalled()
   })
 
   it('[P0] Plan RESTO: sends the balance year and a carry-over status, never a request status', async () => {
     const querySpy = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
     const user = userEvent.setup()
-    renderPage()
+    renderPage('carry-over')
 
     await screen.findByTestId('report-row-0')
-    expect(screen.queryByLabelText('Balance year')).not.toBeInTheDocument()
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'REQUEST_DETAIL')
-    await user.selectOptions(screen.getByLabelText('Status'), 'APPROVED')
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'CARRYOVER')
-
-    // The request status did not survive the switch: the server rejects it for Carry-over.
+    // Carry-over offers its own statuses; the request statuses the server rejects here are
+    // simply never on the page, because arriving builds this report's filters from scratch.
     const status = screen.getByLabelText('Status')
     expect(status).toHaveValue('')
     expect(within(status).getAllByRole('option').map((option) => option.getAttribute('value')))
@@ -730,29 +799,38 @@ describe('ReportCenterPage', () => {
       includeInactiveUsers: false,
     })
     expect(request).not.toHaveProperty('from')
+  })
 
-    // Leaving Carry-over drops the year: the server refuses it on any other definition.
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'BALANCE_SNAPSHOT')
-    await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
-    await waitFor(() => expect(querySpy).toHaveBeenCalledTimes(3))
+  /*
+    The year belongs to Carry-over alone and the server refuses it elsewhere. That used to be
+    proven by switching away from Carry-over in the picker; with each report on its own URL the
+    same guarantee is what a different report's screen sends, having never held a year at all.
+  */
+  it('[P0] Plan RESTO: never sends a balance year from a report that has no year', async () => {
+    const querySpy = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
+    renderPage('balance-snapshot')
+
+    await screen.findByTestId('report-row-0')
+    expect(screen.queryByLabelText('Balance year')).not.toBeInTheDocument()
     expect(querySpy.mock.calls.at(-1)![1]).not.toHaveProperty('balanceYear')
   })
 
   it('[P0] blocks Apply and explains the gap when a required date range is incomplete', async () => {
     const querySpy = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
     const user = userEvent.setup()
-    renderPage()
+    renderPage('leave-usage')
 
-    await screen.findByTestId('report-row-0')
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'LEAVE_USAGE')
+    // Nothing ran on arrival: this report cannot be run until the user supplies a range, and the
+    // screen says so rather than going blank.
+    expect(await screen.findByTestId('report-needs-input')).toBeInTheDocument()
     await user.type(screen.getByLabelText('From'), '2026-08-01')
     await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
 
     expect(
       await screen.findByText('Choose both From and To dates for this report.'),
     ).toBeInTheDocument()
-    // Only the bootstrap query ran; the incomplete range never reached the server.
-    expect(querySpy).toHaveBeenCalledTimes(1)
+    // The incomplete range never reached the server, and there was no bootstrap query either.
+    expect(querySpy).not.toHaveBeenCalled()
     expect(screen.getByLabelText('From')).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByLabelText('From')).toHaveAttribute(
       'aria-describedby',
@@ -763,10 +841,9 @@ describe('ReportCenterPage', () => {
   it('[P0] rejects an inverted date range before it costs a round trip', async () => {
     const querySpy = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
     const user = userEvent.setup()
-    renderPage()
+    renderPage('leave-usage')
 
-    await screen.findByTestId('report-row-0')
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'LEAVE_USAGE')
+    await screen.findByTestId('report-needs-input')
     await user.type(screen.getByLabelText('From'), '2026-08-24')
     await user.type(screen.getByLabelText('To'), '2026-08-01')
     await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
@@ -774,16 +851,15 @@ describe('ReportCenterPage', () => {
     expect(
       await screen.findByText('The From date must be on or before the To date.'),
     ).toBeInTheDocument()
-    expect(querySpy).toHaveBeenCalledTimes(1)
+    expect(querySpy).not.toHaveBeenCalled()
   })
 
   it('[P0] clears and explains the group filters the groupless exception code forbids', async () => {
     const querySpy = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
     const user = userEvent.setup()
-    renderPage()
+    renderPage('exceptions')
 
     await screen.findByTestId('report-row-0')
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'EXCEPTION')
     await user.selectOptions(screen.getByLabelText('Workforce group'), '8')
     await user.selectOptions(
       screen.getByLabelText('Exception type'),
@@ -808,22 +884,20 @@ describe('ReportCenterPage', () => {
   it.each(Object.entries(definitionFixtures))(
     '[P0] renders %s with its own columns, labels, and values',
     async (definitionKey, fixture) => {
-      const querySpy = vi
-        .spyOn(apiClient, 'queryReport')
-        .mockResolvedValueOnce(balanceResponse())
-        .mockResolvedValue(fixture.response)
+      const querySpy = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(fixture.response)
       const user = userEvent.setup()
-      renderPage()
+      renderPage(REPORT_SLUG_BY_KEY[definitionKey as ReportDefinitionKey])
 
-      await screen.findByTestId('report-row-0')
-      await user.selectOptions(screen.getByLabelText('Report definition'), definitionKey)
+      // Each report is reached by its own URL now, so the only ones needing a hand are those
+      // that cannot run until a date range exists; the rest query themselves on arrival.
       if (screen.queryByLabelText('From')) {
         await user.type(screen.getByLabelText('From'), '2026-08-01')
         await user.type(screen.getByLabelText('To'), '2026-08-24')
+        await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
       }
-      await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
 
-      await waitFor(() => expect(querySpy).toHaveBeenCalledTimes(2))
+      await waitFor(() => expect(querySpy).toHaveBeenCalledTimes(1))
+      expect(querySpy.mock.calls.at(-1)![0]).toBe(definitionKey)
       expect(await screen.findByRole('columnheader', { name: fixture.header }))
         .toBeInTheDocument()
       const row = await screen.findByTestId('report-row-0')
@@ -845,24 +919,20 @@ describe('ReportCenterPage', () => {
   it('[P0] keeps the applied report when the interface language changes', async () => {
     const querySpy = vi
       .spyOn(apiClient, 'queryReport')
-      .mockResolvedValueOnce(balanceResponse())
       .mockResolvedValue(definitionFixtures.PENDING_AGING.response)
-    const user = userEvent.setup()
-    renderPage()
+    renderPage('pending-aging')
 
     await screen.findByTestId('report-row-0')
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'PENDING_AGING')
-    await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
-    await waitFor(() => expect(querySpy).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(querySpy).toHaveBeenCalledTimes(1))
     expect(await screen.findByText('Noor Ali')).toBeInTheDocument()
 
     await act(async () => {
       await i18n.changeLanguage('ar')
     })
 
-    // No third query, and the Pending Aging result is still the one on screen — a new
-    // `t` identity must not re-run the bootstrap effect and swap in Balance Snapshot.
-    expect(querySpy).toHaveBeenCalledTimes(2)
+    // No second query, and the Pending Aging result is still the one on screen — a new `t`
+    // identity must not re-run the bootstrap effect and swap in a different report.
+    expect(querySpy).toHaveBeenCalledTimes(1)
     expect(screen.getByText('Noor Ali')).toBeInTheDocument()
     expect(screen.getByTestId('report-applied-view')).toHaveTextContent('عمر الطلبات المعلقة')
     // parseMissingKeyHandler returns '', so a missing ar key would render a blank
@@ -1266,9 +1336,8 @@ describe('ReportCenterPage', () => {
     )
     const user = userEvent.setup()
 
-    renderPage()
-    await screen.findByTestId('report-row-0')
-    await user.selectOptions(screen.getByLabelText('Report definition'), 'REQUEST_DETAIL')
+    renderPage('request-detail')
+    await screen.findByTestId('report-needs-input')
     await user.type(screen.getByLabelText('From'), '2026-08-01')
     await user.type(screen.getByLabelText('To'), '2026-08-24')
     await user.click(screen.getByRole('button', { name: 'Apply Filters' }))

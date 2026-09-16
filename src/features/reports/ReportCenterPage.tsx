@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import {
   ApiError,
   createReportExport,
@@ -29,7 +29,6 @@ import { useToast } from '../../components/ui/useToast'
 import { availableTimezones } from '../../lib/timezones'
 import {
   DEFAULT_REPORT_DEFINITION,
-  REPORT_DEFINITIONS,
   REPORT_EXCEPTION_OPTIONS,
   balanceYearOptions,
   reportDefinitionFor,
@@ -140,34 +139,12 @@ function requestFromDraft(
   return request
 }
 
-function resetForDefinition(
-  draft: DraftReportView,
-  definition: ReportDefinition,
-): DraftReportView {
-  return {
-    ...draft,
-    definitionKey: definition.key,
-    from: supports(definition, 'dateRange') ? draft.from : '',
-    to: supports(definition, 'dateRange') ? draft.to : '',
-    workforceGroupId: supports(definition, 'workforceGroup')
-      ? draft.workforceGroupId
-      : '',
-    leaveTypeId: supports(definition, 'leaveType') ? draft.leaveTypeId : '',
-    // Request and carry-over statuses are different sets, so a status only survives a switch
-    // when the new definition offers it too.
-    status:
-      supports(definition, 'status') && statusOptionsFor(definition).includes(draft.status)
-        ? draft.status
-        : '',
-    exceptionCode: supports(definition, 'exceptionCode') ? draft.exceptionCode : '',
-    includeInactiveUsers: supports(definition, 'includeInactiveUsers')
-      ? draft.includeInactiveUsers
-      : false,
-    balanceYear: supports(definition, 'balanceYear') ? draft.balanceYear : '',
-    sort: definition.defaultSort,
-    direction: definition.defaultDirection,
-  }
-}
+/*
+  `resetForDefinition` used to prune the filters a newly chosen report does not accept, because
+  switching reports happened inside this component and the draft survived the switch. A report
+  is now its own screen at its own URL, so the draft is built fresh for that report on arrival
+  and there is nothing stale to prune.
+*/
 
 const EXPORT_POLL_INTERVAL_MS = 2_000
 /** Ten minutes at the poll interval - the server's own per-attempt timeout. */
@@ -188,7 +165,14 @@ export function ReportCenterPage() {
   // the default definition rather than erroring: the route is also rendered bare in tests, and
   // the server remains the authority on whether the query is allowed at all.
   const { reportSlug } = useParams()
-  const urlDefinition = reportDefinitionFor(reportKeyForSlug(reportSlug))
+  /*
+    The URL is now the only thing that says which report this is, so a slug naming no report is
+    not a report screen at all: it belongs back at the catalog. Falling back to the default would
+    serve Balance Snapshot's figures under a URL nobody asked for.
+  */
+  const urlKey = reportKeyForSlug(reportSlug)
+  const unknownSlug = urlKey === undefined
+  const urlDefinition = reportDefinitionFor(urlKey)
   const [draft, setDraft] = useState<DraftReportView>(() =>
     initialDraft(timezone, urlDefinition),
   )
@@ -292,7 +276,8 @@ export function ReportCenterPage() {
   }, [t])
   // Monotonic request id: a late-resolving query must not overwrite a newer one.
   const requestSeq = useRef(0)
-  const bootstrapped = useRef(false)
+  // Which report has been bootstrapped — not merely whether one has. See the effect below.
+  const bootstrappedFor = useRef<ReportDefinitionKey | null>(null)
   const previousPageRef = useRef<HTMLButtonElement>(null)
   const nextPageRef = useRef<HTMLButtonElement>(null)
   const restoreFocusRef = useRef<'previous' | 'next' | null>(null)
@@ -346,15 +331,31 @@ export function ReportCenterPage() {
     [runReportQuery],
   )
 
+  /*
+    Bootstraps once per REPORT, not once per mount. React Router reuses this component when only
+    the :reportSlug param changes, so a plain "have we bootstrapped?" boolean would leave the
+    previous report's figures on screen under the new report's name. Keying the guard to the
+    definition makes arriving at a different report re-seed the draft and re-query, while a
+    StrictMode double-mount still queries exactly once.
+  */
   useEffect(() => {
-    if (bootstrapped.current) return
-    bootstrapped.current = true
+    if (unknownSlug) return
+    if (bootstrappedFor.current === urlDefinition.key) return
+    bootstrappedFor.current = urlDefinition.key
     const firstDraft = initialDraft(timezone, urlDefinition)
+    setDraft(firstDraft)
+    /*
+      A report that requires a date range has nothing to run until the user picks one. Querying on
+      arrival would send a rangeless request the server rejects, making an error the user did not
+      cause the first thing they see. Under the old picker this never arose: choosing such a report
+      queried nothing either, it just left the previous report's figures on screen.
+    */
+    if (supports(urlDefinition, 'dateRange')) return
     void executeQuery({
       definitionKey: firstDraft.definitionKey,
       request: requestFromDraft(firstDraft, urlDefinition),
     })
-  }, [executeQuery, timezone, urlDefinition])
+  }, [executeQuery, timezone, unknownSlug, urlDefinition])
 
   // The requester's stored timezone can resolve after mount; keep the draft in step so
   // the control and the applied view never disagree about which zone was used.
@@ -376,11 +377,6 @@ export function ReportCenterPage() {
     setDraft((current) => ({ ...current, [key]: value }))
     // Clear the guard message while the user is fixing the thing it complained about,
     // instead of leaving it on screen until the next Apply.
-    setDraftError(null)
-  }
-
-  const handleDefinitionChange = (definitionKey: ReportDefinitionKey) => {
-    setDraft((current) => resetForDefinition(current, reportDefinitionFor(definitionKey)))
     setDraftError(null)
   }
 
@@ -619,12 +615,19 @@ export function ReportCenterPage() {
   const hasWorkforceGroupFilter =
     !workforceGroupsQuery.isSuccess || (workforceGroupsQuery.data?.length ?? 0) > 0
 
+  // Placed below every hook so the redirect never changes how many run. A slug naming no report
+  // has no screen to show, and the catalog is the honest place to land.
+  if (unknownSlug) return <Navigate to="/reports" replace />
+
   return (
     <div className="page page-wide reports-page" data-testid="report-center-page">
       <header className="page-header reports-page-header">
         <div>
+          <Link className="reports-back" to="/reports">
+            {t('reports:catalog.back')}
+          </Link>
           <p className="panel-eyebrow">{t('reports:eyebrow')}</p>
-          <h1 className="page-title">{t('reports:title')}</h1>
+          <h1 className="page-title">{t(definition.labelKey)}</h1>
           <p className="page-sub">{t('reports:subtitle')}</p>
         </div>
       </header>
@@ -650,23 +653,7 @@ export function ReportCenterPage() {
           }}
         >
           <div className="panel-filter-grid">
-            <div className="form-group">
-              <label htmlFor="report-definition">{t('reports:filters.definition')}</label>
-              <select
-                id="report-definition"
-                value={draft.definitionKey}
-                disabled={isReportPending}
-                onChange={(event) =>
-                  handleDefinitionChange(event.target.value as ReportDefinitionKey)}
-              >
-                {REPORT_DEFINITIONS.map((item) => (
-                  <option key={item.key} value={item.key}>
-                    {t(item.labelKey)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+            {/* The report itself is no longer a filter: it is the screen you are on. */}
             <div className="form-group">
               <label htmlFor="report-timezone">{t('reports:filters.timezone')}</label>
               <select
@@ -953,6 +940,14 @@ export function ReportCenterPage() {
             <p>{t('reports:exports.recoveryDescription')}</p>
           </div>
           {exportStatusPanel}
+        </section>
+      )}
+
+      {/* Without this the screen below the filters is simply empty on arrival, with nothing to
+          say the report is waiting on the user rather than broken or still loading. */}
+      {!response && !requestError && !isReportPending && supports(definition, 'dateRange') && (
+        <section className="card reports-needs-input" data-testid="report-needs-input">
+          <p>{t('reports:emptyState.needsDateRange')}</p>
         </section>
       )}
 

@@ -6,7 +6,8 @@
     "eyebrow": "Decision evidence",
     "title": "Reports",
     "subtitle": "Every report in one place. Open one to see its figures, then narrow it with the filters inside.",
-    "open": "View full report"
+    "open": "View full report",
+    "back": "All reports"
   },
   "loading": "Loading report evidence…",
   "notAvailable": "Not available",
@@ -80,7 +81,6 @@
   },
   "filters": {
     "title": "Report scope",
-    "definition": "Report definition",
     "timezone": "Display timezone",
     "from": "From",
     "to": "To",
@@ -316,5 +316,8 @@
     "setFootnote": "Rows matched is the server’s count for the whole query, not for this page.",
     "setTitle": "This result set",
     "shownLabel": "Shown on this page"
+  },
+  "emptyState": {
+    "needsDateRange": "Choose a From and To date, then apply the filters to run this report."
   }
 }
