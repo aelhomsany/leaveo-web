@@ -28,6 +28,16 @@ function formatDecisionDate(isoTimestamp: string, locale: string): string {
   })
 }
 
+function initials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/u)
+    .slice(0, 2)
+    .map((part) => Array.from(part)[0] ?? '')
+    .join('')
+    .toLocaleUpperCase()
+}
+
 export function RecentDecisionRow({ decision, showAuditHistory = false }: RecentDecisionRowProps) {
   const { t, i18n } = useTranslation(['approvals', 'common'])
   const [auditExpanded, setAuditExpanded] = useState(false)
@@ -45,6 +55,7 @@ export function RecentDecisionRow({ decision, showAuditHistory = false }: Recent
     <tr data-testid={`recent-decision-row-${requestId}`}>
       <td>
         <div className="recent-decision-employee">
+          <span className="recent-decision-avatar" aria-hidden="true">{initials(employeeName)}</span>
           <span>{employeeName}</span>
           {decision.decidedOnBehalf && decision.nominalApproverFirstName ? (
             <span

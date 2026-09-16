@@ -16,6 +16,16 @@ type DeclineTarget = { requestId: number; employeeName: string }
 
 type DecisionKind = 'approve' | 'decline'
 
+function initials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/u)
+    .slice(0, 2)
+    .map((part) => Array.from(part)[0] ?? '')
+    .join('')
+    .toLocaleUpperCase()
+}
+
 /**
  * The reason pattern from `DeclineModal`, on the cancellation copy. It borrows that component's
  * chrome classes rather than the component itself: a cancellation decline says something quite
@@ -154,29 +164,37 @@ function CancellationCard({
       : null
 
   return (
-    <article className="approval-card" data-testid={`cancellation-card-${requestId}`}>
+    <article
+      className="approval-card approval-card--cancellation"
+      data-testid={`cancellation-card-${requestId}`}
+    >
       <div className="approval-card-header">
         <div className="approval-card-identity">
-          <p className="approval-card-eyebrow">
-            {t('approvals:cancellations.eyebrow')}
-          </p>
-          <h3
-            className="approval-card-title"
-            data-testid={`cancellation-card-heading-${requestId}`}
-            ref={headingRef}
-            tabIndex={-1}
-            dir="auto"
-          >
-            {employeeName}
-          </h3>
-          <div className="approval-card-leave-type">
-            <LeaveTypeTag
-              icon={cancellation.leaveTypeIcon ?? ''}
-              name={cancellation.leaveTypeName ?? ''}
-              color={cancellation.leaveTypeColor ?? 'inherit'}
-              backgroundColor="transparent"
-              borderColor="transparent"
-            />
+          <div className="approval-card-person">
+            <span className="approval-card-avatar" aria-hidden="true">{initials(employeeName)}</span>
+            <div>
+              <p className="approval-card-eyebrow">
+                {t('approvals:cancellations.eyebrow')}
+              </p>
+              <h3
+                className="approval-card-title"
+                data-testid={`cancellation-card-heading-${requestId}`}
+                ref={headingRef}
+                tabIndex={-1}
+                dir="auto"
+              >
+                {employeeName}
+              </h3>
+              <div className="approval-card-leave-type">
+                <LeaveTypeTag
+                  icon={cancellation.leaveTypeIcon ?? ''}
+                  name={cancellation.leaveTypeName ?? ''}
+                  color={cancellation.leaveTypeColor ?? 'inherit'}
+                  backgroundColor="transparent"
+                  borderColor="transparent"
+                />
+              </div>
+            </div>
           </div>
         </div>
         {requestedLabel ? (

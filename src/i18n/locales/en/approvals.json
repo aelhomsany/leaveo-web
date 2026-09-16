@@ -200,6 +200,9 @@
     "pending": "We couldn't load pending requests. Please try again.",
     "recent": "We couldn't load recent decisions. Please try again."
   },
+  "hero": {
+    "eyebrow": "Decision desk"
+  },
   "concern": {
     "title": "Record Project Concern",
     "help": "Document the concern for {{name}}. The request remains operationally approved.",

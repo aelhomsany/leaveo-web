@@ -47,8 +47,48 @@
   padding: var(--space-sm);
 }
 
+/* Compact approval chains read as a single, ordered path inside the decision desk. */
+.approval-progress--compact ol {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-border-default);
+}
+
+.approval-progress--compact li {
+  position: relative;
+  min-width: 0;
+  padding: var(--space-md);
+  border: 0;
+  border-radius: 0;
+  background: var(--color-surface-card);
+}
+
+.approval-progress--compact li + li {
+  border-inline-start: 1px solid var(--color-border-default);
+}
+
+.approval-progress--compact li[data-current='true'] {
+  background: var(--color-surface-selected);
+}
+
+.approval-progress--compact .approval-progress-level {
+  color: var(--color-brand-ocean);
+  font-weight: var(--font-label-weight);
+}
+
 @media (max-width: 900px) {
   .approval-progress ol {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .approval-progress--compact ol {
+    display: grid;
+  }
+
+  .approval-progress--compact li + li {
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--color-border-default);
   }
 }

@@ -344,9 +344,10 @@ export function ApprovalsPage() {
   }
 
   return (
-    <div className="page page-wide" data-testid="approvals-page">
-      <header className="page-header">
+    <div className="page page-wide approvals-page" data-testid="approvals-page">
+      <header className="page-header approvals-page-header">
         <div>
+          <p className="approvals-page-eyebrow">{t('approvals:hero.eyebrow')}</p>
           <h1 className="page-title">{t('approvals:title')}</h1>
           <p className="page-sub">{subtitle}</p>
         </div>
@@ -358,12 +359,12 @@ export function ApprovalsPage() {
         data-testid="approvals-summary"
       >
         <dl>
-          <div>
+          <div className="approvals-summary-card approvals-summary-card--priority">
             <dt>{t('approvals:summary.pendingLabel')}</dt>
             <dd>{visibleApprovals.length}</dd>
           </div>
           {oldestSubmittedAt ? (
-            <div>
+            <div className="approvals-summary-card">
               <dt>{t('approvals:summary.oldestLabel')}</dt>
               <dd>
                 <bdi>{formatSubmittedDate(oldestSubmittedAt)}</bdi>
@@ -371,7 +372,7 @@ export function ApprovalsPage() {
             </div>
           ) : null}
           {!coverageIsLoading ? (
-            <div>
+            <div className="approvals-summary-card">
               <dt>{t('approvals:summary.coverageLabel')}</dt>
               <dd>
                 {outTodayOk && upcomingOk

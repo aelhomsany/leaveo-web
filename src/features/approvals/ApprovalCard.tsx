@@ -48,6 +48,16 @@ const COUNT_UNCERTAINTY_CODES = [
   'TIMEZONE_UNRESOLVED',
 ]
 
+function initials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/u)
+    .slice(0, 2)
+    .map((part) => Array.from(part)[0] ?? '')
+    .join('')
+    .toLocaleUpperCase()
+}
+
 /**
  * `Intl.DateTimeFormat` throws `RangeError` on a `timeZone` it does not recognise, which during
  * render takes down the entire approvals list rather than one field. The value is server-supplied
@@ -185,24 +195,29 @@ export function ApprovalCard({
     >
       <div className="approval-card-header">
         <div className="approval-card-identity">
-          <p className="approval-card-eyebrow">{t('approvals:queue.requestEyebrow')}</p>
-          <h3
-            className="approval-card-title"
-            data-testid={`approval-card-heading-${requestId}`}
-            ref={headingRef}
-            tabIndex={-1}
-            dir="auto"
-          >
-            {employeeName}
-          </h3>
-          <div className="approval-card-leave-type">
-            <LeaveTypeTag
-              icon={approval.leaveTypeIcon ?? ''}
-              name={approval.leaveTypeName ?? ''}
-              color={approval.leaveTypeColor ?? 'inherit'}
-              backgroundColor={approval.leaveTypeBackgroundColor ?? 'transparent'}
-              borderColor={approval.leaveTypeBorderColor ?? 'transparent'}
-            />
+          <div className="approval-card-person">
+            <span className="approval-card-avatar" aria-hidden="true">{initials(employeeName)}</span>
+            <div>
+              <p className="approval-card-eyebrow">{t('approvals:queue.requestEyebrow')}</p>
+              <h3
+                className="approval-card-title"
+                data-testid={`approval-card-heading-${requestId}`}
+                ref={headingRef}
+                tabIndex={-1}
+                dir="auto"
+              >
+                {employeeName}
+              </h3>
+              <div className="approval-card-leave-type">
+                <LeaveTypeTag
+                  icon={approval.leaveTypeIcon ?? ''}
+                  name={approval.leaveTypeName ?? ''}
+                  color={approval.leaveTypeColor ?? 'inherit'}
+                  backgroundColor={approval.leaveTypeBackgroundColor ?? 'transparent'}
+                  borderColor={approval.leaveTypeBorderColor ?? 'transparent'}
+                />
+              </div>
+            </div>
           </div>
         </div>
 

@@ -783,6 +783,376 @@ html[lang='ar'] .approval-card-eyebrow {
   }
 }
 
+/* Approval desk refresh ----------------------------------------------------
+   The decision flow stays exactly as it is; this layer makes the next action,
+   its consequence, and the supporting evidence easier to scan in one pass. */
+.approvals-page {
+  --approval-ink: var(--color-brand-navy);
+  --approval-accent: var(--color-brand-seafoam);
+}
+
+.approvals-page-header {
+  position: relative;
+  display: flex;
+  min-height: 196px;
+  align-items: flex-end;
+  overflow: hidden;
+  margin-block-end: 0;
+  padding: clamp(28px, 5vw, 52px) clamp(24px, 5vw, 56px);
+  border: 1px solid var(--approval-ink);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  background:
+    radial-gradient(circle at 92% -15%, color-mix(in srgb, var(--approval-accent) 45%, transparent), transparent 40%),
+    linear-gradient(125deg, var(--approval-ink), var(--color-brand-ocean));
+  color: var(--color-text-inverse);
+}
+
+.approvals-page-header::after {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: clamp(24px, 7vw, 92px);
+  width: clamp(88px, 14vw, 168px);
+  border-inline: 1px solid color-mix(in srgb, var(--color-text-inverse) 18%, transparent);
+  content: '';
+  opacity: 0.8;
+  transform: skewX(-18deg);
+}
+
+.approvals-page-header > div {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+}
+
+.approvals-page-header .page-title,
+.approvals-page-header .page-sub {
+  color: var(--color-text-inverse);
+}
+
+.approvals-page-header .page-title {
+  font-size: clamp(32px, 4vw, 48px);
+  letter-spacing: -0.04em;
+}
+
+.approvals-page-header .page-sub {
+  max-width: 52ch;
+  margin-block-start: var(--space-sm);
+  color: color-mix(in srgb, var(--color-text-inverse) 82%, transparent);
+}
+
+.approvals-page-eyebrow {
+  margin: 0 0 var(--space-sm);
+  color: var(--approval-accent);
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-label-weight);
+  letter-spacing: 0.1em;
+  line-height: var(--font-caption-line-height);
+  text-transform: uppercase;
+}
+
+html[lang='ar'] .approvals-page-eyebrow {
+  letter-spacing: normal;
+}
+
+.approvals-summary {
+  position: relative;
+  z-index: 2;
+  margin: 0 clamp(16px, 4vw, 48px) var(--space-3xl);
+  transform: translateY(-1px);
+}
+
+.approvals-summary dl {
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  background: var(--color-border-default);
+  box-shadow: var(--shadow-decision);
+}
+
+.approvals-summary dl > .approvals-summary-card {
+  padding: var(--space-xl) var(--space-2xl);
+  border: 0;
+  border-radius: 0;
+  background: var(--color-surface-card);
+  box-shadow: none;
+}
+
+.approvals-summary-card--priority {
+  background: var(--color-surface-selected) !important;
+}
+
+.approvals-summary dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.approvals-summary dd {
+  color: var(--approval-ink);
+  font-size: clamp(26px, 3vw, var(--font-metric-size));
+  letter-spacing: -0.04em;
+}
+
+.approvals-cancellations {
+  position: relative;
+  margin-block: 0 var(--space-3xl);
+  padding: var(--space-2xl);
+  border: 1px solid var(--color-status-pending-bg);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(110deg, color-mix(in srgb, var(--color-status-pending-bg) 60%, var(--color-surface-card)), var(--color-surface-card));
+}
+
+.approvals-cancellations::before {
+  position: absolute;
+  inset-block: var(--space-2xl);
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  background: var(--color-status-pending-fg);
+  content: '';
+}
+
+.approvals-section-heading {
+  align-items: flex-end;
+  padding-block-end: var(--space-md);
+  border-block-end: 1px solid var(--color-border-default);
+}
+
+.approvals-section-heading h2 {
+  font-size: clamp(20px, 2vw, 26px);
+  letter-spacing: -0.03em;
+}
+
+.approvals-card-list {
+  gap: var(--space-lg);
+}
+
+.approval-card {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) 148px;
+  gap: var(--space-lg) var(--space-2xl);
+  padding: var(--space-2xl);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 28px rgba(19, 59, 69, 0.07);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.approval-card:hover {
+  box-shadow: 0 16px 34px rgba(19, 59, 69, 0.12);
+  transform: translateY(-2px);
+}
+
+.approval-card > :not(.approval-actions) {
+  grid-column: 1;
+}
+
+.approval-card-header {
+  gap: var(--space-lg);
+}
+
+.approval-card-person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.approval-card-avatar,
+.recent-decision-avatar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-brand-ocean) 14%, transparent);
+  border-radius: 50%;
+  background: var(--color-surface-selected);
+  color: var(--color-brand-ocean);
+  font-size: var(--font-label-size);
+  font-weight: var(--font-label-weight);
+}
+
+.approval-card-eyebrow {
+  color: var(--color-brand-ocean);
+}
+
+.approval-card-title {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.approval-card-facts {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-border-default);
+}
+
+.approval-card-facts > div {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: 0;
+  background: var(--color-surface-canvas);
+}
+
+.approval-card-step {
+  display: inline-flex;
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-selected);
+  color: var(--color-brand-ocean);
+  font-size: var(--font-caption-size);
+}
+
+.approval-card .working-day-explainer {
+  padding-block: var(--space-sm);
+  border-block: 1px solid var(--color-border-default);
+}
+
+.approval-decision-facts,
+.approval-card-coverage {
+  padding: var(--space-xl);
+  border-color: color-mix(in srgb, var(--color-brand-ocean) 16%, var(--color-border-default));
+  background: linear-gradient(145deg, var(--color-surface-subtle), var(--color-surface-card));
+}
+
+.approval-decision-facts-list > div {
+  padding: var(--space-md);
+  border: 1px solid color-mix(in srgb, var(--color-brand-ocean) 9%, transparent);
+  background: color-mix(in srgb, var(--color-surface-card) 88%, transparent);
+}
+
+.approval-actions {
+  grid-column: 2;
+  grid-row: 1 / span 8;
+  align-self: stretch;
+  flex-direction: column-reverse;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: 0 0 0 var(--space-xl);
+  border-block-start: 0;
+  border-inline-start: 1px solid var(--color-border-default);
+}
+
+.approval-actions .btn {
+  width: 100%;
+  min-width: 0;
+}
+
+.approval-card--cancellation {
+  border-color: color-mix(in srgb, var(--color-status-pending-fg) 36%, var(--color-border-default));
+}
+
+.approval-card--cancellation .approval-card-avatar {
+  background: var(--color-status-pending-bg);
+  color: var(--color-status-pending-fg);
+}
+
+.approval-card--cancellation .approval-card-step {
+  width: auto;
+  padding: var(--space-md);
+  border-inline-start: 3px solid var(--color-status-pending-fg);
+  border-radius: 0;
+  background: var(--color-status-pending-bg);
+  color: var(--color-status-pending-fg);
+  font-size: var(--font-body-sm-size);
+}
+
+.support-rail .support-note {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.recent-decisions-section {
+  padding: var(--space-2xl);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-card);
+}
+
+.recent-decisions-section .support-band {
+  margin-block-end: var(--space-xl);
+}
+
+.recent-decisions-section .support-note {
+  background: var(--color-surface-canvas);
+}
+
+.recent-decisions-table th {
+  background: var(--approval-ink);
+  color: var(--color-text-inverse);
+}
+
+.recent-decisions-table tr:hover td {
+  background: color-mix(in srgb, var(--color-surface-selected) 48%, transparent);
+}
+
+.recent-decision-employee {
+  flex-wrap: nowrap;
+}
+
+.recent-decision-avatar {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+  font-size: 10px;
+}
+
+@media (max-width: 900px) {
+  .approvals-page-header {
+    min-height: 164px;
+    margin-inline: calc(var(--space-page-mobile) * -1);
+    border-radius: 0;
+  }
+
+  .approvals-summary {
+    margin-inline: 0;
+  }
+
+  .approvals-summary dl > .approvals-summary-card {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .approvals-summary dt {
+    text-transform: none;
+  }
+
+  .approvals-cancellations,
+  .recent-decisions-section {
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+  }
+
+  .approval-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-lg);
+    padding: var(--space-card-padding);
+  }
+
+  .approval-card:hover {
+    transform: none;
+  }
+
+  .approval-card > :not(.approval-actions),
+  .approval-actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .approval-actions {
+    flex-direction: row;
+    justify-content: stretch;
+    padding: var(--space-md) var(--space-card-padding);
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--color-border-default);
+  }
+}
+
 @media (forced-colors: active) {
   .approval-card-title:focus-visible,
   .approvals-empty-state h3:focus-visible,
