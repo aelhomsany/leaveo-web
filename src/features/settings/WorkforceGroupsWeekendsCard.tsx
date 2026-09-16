@@ -25,7 +25,7 @@ import { WeekendDayChips } from './WeekendDayChips'
 import { WorkforceGroupModal } from './WorkforceGroupModal'
 import { WorkingDayStrip } from './WorkingDayStrip'
 import { WorkingWeekOverrideModal, type OverrideCandidate } from './WorkingWeekOverrideModal'
-import { CalendarIcon, CheckCircleIcon, ChevronRightIcon, PlusIcon } from '../../components/ui/icons'
+import { CalendarIcon, CheckCircleIcon, PlusIcon } from '../../components/ui/icons'
 import { WEEKEND_DAYS_DISPLAY } from './weekendDays'
 import './group-tabs.css'
 
@@ -424,24 +424,14 @@ export function WorkforceGroupsWeekendsCard({
             <p className="settings-card-helper">{t('groups.helper')}</p>
           </div>
           {hasGroups ? (
-            <details className="settings-disclosure">
-              <summary>
-                {t('groups.actions.manage')}
-                <ChevronRightIcon
-                  size={14}
-                  className="settings-disclosure-chevron"
-                  aria-hidden="true"
-                />
-              </summary>
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                data-testid="add-group-btn"
-                onClick={() => setGroupModalOpen(true)}
-              >
-                <PlusIcon size={14} /> {t('groups.actions.add')}
-              </button>
-            </details>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              data-testid="add-group-btn"
+              onClick={() => setGroupModalOpen(true)}
+            >
+              <PlusIcon size={14} /> {t('groups.actions.add')}
+            </button>
           ) : null}
         </div>
 

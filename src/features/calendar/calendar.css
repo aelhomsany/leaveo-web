@@ -95,6 +95,12 @@
   box-shadow: none;
 }
 
+.calendar-workspace-header .calendar-request-button {
+  border: 1px solid color-mix(in srgb, var(--color-text-inverse) 18%, transparent);
+  box-shadow: none;
+  padding-inline: var(--space-lg);
+}
+
 .calendar-page-header {
   align-items: flex-start;
   flex-wrap: wrap;
@@ -1264,6 +1270,8 @@ html[lang='ar'] .calendar-agenda-heading {
   }
 
   .calendar-command-deck { max-width: none; }
+
+  .calendar-request-button { flex: 1 1 100%; }
 
   .calendar-out-today { padding: var(--space-lg); }
 
