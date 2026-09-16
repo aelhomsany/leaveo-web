@@ -196,6 +196,9 @@
     "scrollCue": "Scroll to see more categories",
     "sectionLabel": "Settings section"
   },
+  "hero": {
+    "eyebrow": "Organization control room"
+  },
   "days": {
     "FRIDAY": "Fri",
     "MONDAY": "Mon",

@@ -102,6 +102,7 @@ export function SettingsCategoryNav({
       <h2 id="settings-category-nav-label" className="sr-only">
         {t('categories.ariaLabel')}
       </h2>
+      <p className="settings-category-label" aria-hidden="true">{t('categories.sectionLabel')}</p>
       <HorizontalScrollRegion
         className="settings-category-scroll"
         describedById="settings-category-scroll-hint"
@@ -133,7 +134,10 @@ export function SettingsCategoryNav({
                 onClick={() => activateCategory(category)}
                 onKeyDown={(event) => handleKeyDown(event, index)}
               >
-                {t(`categories.items.${category}.label`)}
+                <span className="settings-category-number" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span>{t(`categories.items.${category}.label`)}</span>
               </button>
             )
           })}
