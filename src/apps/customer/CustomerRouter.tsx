@@ -81,6 +81,11 @@ const OnboardingPage = lazy(() =>
     default: module.OnboardingPage,
   })),
 )
+const ReportCatalogPage = lazy(() =>
+  import('../../features/reports/ReportCatalogPage').then((module) => ({
+    default: module.ReportCatalogPage,
+  })),
+)
 const ReportCenterPage = lazy(() =>
   import('../../features/reports/ReportCenterPage').then((module) => ({
     default: module.ReportCenterPage,
@@ -160,6 +165,10 @@ export function CustomerRoutes() {
               />
               <Route
                 path="/reports"
+                element={titled('routes.reports', <ReportCatalogPage />)}
+              />
+              <Route
+                path="/reports/:reportSlug"
                 element={titled('routes.reports', <ReportCenterPage />)}
               />
               <Route

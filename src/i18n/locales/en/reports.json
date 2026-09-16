@@ -2,6 +2,12 @@
   "eyebrow": "Decision evidence",
   "title": "Report Center",
   "subtitle": "Explore fixed, tenant-safe operational views with the exact scope applied by the server.",
+  "catalog": {
+    "eyebrow": "Decision evidence",
+    "title": "Reports",
+    "subtitle": "Every report in one place. Open one to see its figures, then narrow it with the filters inside.",
+    "open": "View full report"
+  },
   "loading": "Loading report evidence…",
   "notAvailable": "Not available",
   "asOf": "Evidence generated as of",

@@ -1,0 +1,127 @@
+.report-catalog-page {
+  display: grid;
+  gap: var(--space-section-gap);
+}
+
+.report-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-xl);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report-catalog-grid > li {
+  display: flex;
+  min-width: 0;
+}
+
+.report-catalog-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-card);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  text-decoration: none;
+}
+
+.report-catalog-card:hover,
+.report-catalog-card:focus-visible {
+  border-color: var(--color-data-ocean);
+  box-shadow: var(--shadow-decision);
+}
+
+.report-catalog-preview {
+  display: block;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-canvas);
+  overflow: hidden;
+}
+
+.report-catalog-preview svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.report-catalog-name {
+  color: var(--color-text-primary);
+  font-size: var(--font-card-title-size);
+  font-weight: var(--font-card-title-weight);
+  line-height: var(--font-card-title-line-height);
+}
+
+.report-catalog-desc {
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+  line-height: var(--font-caption-line-height);
+}
+
+/* Pushed to the bottom so cards with a one-line and a three-line description still align. */
+.report-catalog-open {
+  margin-block-start: auto;
+  color: var(--color-brand-ocean);
+  font-size: var(--font-caption-size);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Chart tones. Named for the token they carry, never a raw hex: these are the same data
+   hues ReportAnalytics draws with, so a preview and its report cannot drift apart. */
+.rcp-ocean { fill: var(--color-data-ocean); }
+.rcp-mint { fill: var(--color-data-mint); }
+.rcp-rose { fill: var(--color-data-rose); }
+.rcp-sun { fill: var(--color-data-sun); }
+.rcp-ink { fill: var(--color-text-primary); }
+.rcp-line { fill: var(--color-border-default); }
+.rcp-muted { fill: var(--color-border-strong); }
+.rcp-head { fill: var(--color-surface-subtle); }
+.rcp-track-fill { fill: var(--color-surface-subtle); }
+.rcp-pill-mint { fill: var(--color-data-mint-tint); }
+.rcp-pill-sun { fill: var(--color-data-sun-tint); }
+.rcp-pill-rose { fill: var(--color-data-rose-tint); }
+
+.rcp-track {
+  fill: none;
+  stroke: var(--color-border-default);
+}
+
+.rcp-ocean-stroke { fill: none; stroke: var(--color-data-ocean); }
+.rcp-mint-stroke { fill: none; stroke: var(--color-data-mint); }
+.rcp-sun-stroke { fill: none; stroke: var(--color-data-sun); }
+
+.rcp-axis {
+  fill: none;
+  stroke: var(--color-border-default);
+  stroke-width: 1.5;
+}
+
+.rcp-trend {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 900px is this app's established stacking point. Two across first, then one: a
+   three-column grid of previews becomes unreadable long before it becomes narrow. */
+@media (max-width: 1100px) {
+  .report-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .report-catalog-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-lg);
+  }
+}

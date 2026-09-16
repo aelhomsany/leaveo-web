@@ -132,20 +132,42 @@ describe('CustomerRoutes', () => {
     expect(document.title).toBe('Policy Settings — Leaveo')
   })
 
-  describe('report center route', () => {
-    it('[P0] renders the lazy Report Center at /reports for an Organization admin', async () => {
+  describe('reports routes', () => {
+    it('[P0] renders the lazy report catalog at /reports for an Organization admin', async () => {
       renderCustomerRoutes(['/reports'], createMockAuthForRole('ORGANIZATION_ADMIN'))
+
+      expect(await screen.findByTestId('report-catalog-page')).toBeInTheDocument()
+      expect(screen.getByTestId('org-shell')).toBeInTheDocument()
+      expect(document.title).toBe('Reports — Leaveo')
+    })
+
+    // The workspace moved off /reports so a report can be linked and reloaded; the slug is
+    // the only thing that now says which report this is.
+    it('[P0] renders the lazy Report Center at a report slug', async () => {
+      renderCustomerRoutes(['/reports/carry-over'], createMockAuthForRole('ORGANIZATION_ADMIN'))
 
       expect(await screen.findByTestId('report-center-page')).toBeInTheDocument()
       expect(screen.getByTestId('org-shell')).toBeInTheDocument()
       expect(document.title).toBe('Reports — Leaveo')
     })
 
-    it('[P0] redirects a manager away from the HR-only Report Center', async () => {
+    it('[P0] redirects a manager away from the HR-only reports catalog', async () => {
       renderCustomerRoutes(['/reports'], createMockAuthForRole('MANAGER'))
 
       // RoleGuard sends forbidden roles to getHomePath — the Team Calendar
       // since the Dashboard merge (2026-09-01).
+      expect(
+        await screen.findByTestId('team-calendar-page', undefined, { timeout: 3000 }),
+      ).toBeInTheDocument()
+      expect(screen.queryByTestId('report-catalog-page')).not.toBeInTheDocument()
+    })
+
+    // The guard matches `/reports` and anything under it. Splitting one route into two made
+    // that prefix load-bearing, so a report URL is pinned here too: an unguarded sub-route
+    // would hand a manager the HR workspace by typing a slug.
+    it('[P0] redirects a manager away from a report URL, not just the catalog', async () => {
+      renderCustomerRoutes(['/reports/carry-over'], createMockAuthForRole('MANAGER'))
+
       expect(
         await screen.findByTestId('team-calendar-page', undefined, { timeout: 3000 }),
       ).toBeInTheDocument()

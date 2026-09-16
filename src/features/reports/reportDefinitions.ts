@@ -236,6 +236,40 @@ export function reportDefinitionFor(key: string | undefined): ReportDefinition {
   return REPORT_DEFINITION_BY_KEY[key as ReportDefinitionKey] ?? DEFAULT_REPORT_DEFINITION
 }
 
+/**
+ * The URL segment for each report, so /reports/carry-over reads as a page rather than
+ * leaking the wire enum into the address bar. Hand-maintained beside the definitions
+ * rather than derived from the key: a slug is a URL contract, and deriving it would let
+ * a rename of the enum silently break every saved link.
+ */
+export const REPORT_SLUG_BY_KEY: Record<ReportDefinitionKey, string> = {
+  BALANCE_SNAPSHOT: 'balance-snapshot',
+  LEAVE_USAGE: 'leave-usage',
+  REQUEST_DETAIL: 'request-detail',
+  EXCEPTION: 'exceptions',
+  PENDING_AGING: 'pending-aging',
+  CARRYOVER: 'carry-over',
+}
+
+const REPORT_KEY_BY_SLUG = Object.fromEntries(
+  Object.entries(REPORT_SLUG_BY_KEY).map(([key, slug]) => [slug, key]),
+) as Record<string, ReportDefinitionKey | undefined>
+
+export function reportSlugFor(key: ReportDefinitionKey): string {
+  return REPORT_SLUG_BY_KEY[key]
+}
+
+/**
+ * Deliberately NOT `reportDefinitionFor`'s forgiving lookup: that one falls back to Balance
+ * Snapshot for any unknown key, which is right for a stored value but wrong for a URL. A
+ * mistyped /reports/<slug> must be answerable as "no such report", so this returns undefined
+ * and lets the caller decide.
+ */
+export function reportKeyForSlug(slug: string | undefined): ReportDefinitionKey | undefined {
+  if (!slug) return undefined
+  return REPORT_KEY_BY_SLUG[slug]
+}
+
 export const REPORT_STATUS_OPTIONS = ['PENDING', 'APPROVED', 'DECLINED'] as const
 
 export function statusOptionsFor(definition: ReportDefinition): readonly string[] {

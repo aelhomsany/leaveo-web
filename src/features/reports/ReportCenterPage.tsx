@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useParams } from 'react-router-dom'
 import {
   ApiError,
   createReportExport,
@@ -32,6 +33,7 @@ import {
   REPORT_EXCEPTION_OPTIONS,
   balanceYearOptions,
   reportDefinitionFor,
+  reportKeyForSlug,
   statusOptionsFor,
   type ReportDefinition,
   type ReportFilterKey,
@@ -70,9 +72,12 @@ type AppliedQuery = {
   request: ReportQueryRequest
 }
 
-function initialDraft(timezone: string): DraftReportView {
+function initialDraft(
+  timezone: string,
+  definition: ReportDefinition = DEFAULT_REPORT_DEFINITION,
+): DraftReportView {
   return {
-    definitionKey: DEFAULT_REPORT_DEFINITION.key,
+    definitionKey: definition.key,
     timezone,
     from: '',
     to: '',
@@ -82,8 +87,8 @@ function initialDraft(timezone: string): DraftReportView {
     exceptionCode: '',
     includeInactiveUsers: false,
     balanceYear: '',
-    sort: DEFAULT_REPORT_DEFINITION.defaultSort,
-    direction: DEFAULT_REPORT_DEFINITION.defaultDirection,
+    sort: definition.defaultSort,
+    direction: definition.defaultDirection,
   }
 }
 
@@ -179,7 +184,14 @@ export function ReportCenterPage() {
   const { showToast } = useToast()
   const { user } = useAuth()
   const timezone = user?.timezone || getBrowserTimezone()
-  const [draft, setDraft] = useState<DraftReportView>(() => initialDraft(timezone))
+  // Which report this is, taken from /reports/<slug>. An unknown or absent slug falls back to
+  // the default definition rather than erroring: the route is also rendered bare in tests, and
+  // the server remains the authority on whether the query is allowed at all.
+  const { reportSlug } = useParams()
+  const urlDefinition = reportDefinitionFor(reportKeyForSlug(reportSlug))
+  const [draft, setDraft] = useState<DraftReportView>(() =>
+    initialDraft(timezone, urlDefinition),
+  )
   const [response, setResponse] = useState<ReportQueryResponse | null>(null)
   const [appliedQuery, setAppliedQuery] = useState<AppliedQuery | null>(null)
   const [lastAttemptedQuery, setLastAttemptedQuery] = useState<AppliedQuery | null>(null)
@@ -337,12 +349,12 @@ export function ReportCenterPage() {
   useEffect(() => {
     if (bootstrapped.current) return
     bootstrapped.current = true
-    const firstDraft = initialDraft(timezone)
+    const firstDraft = initialDraft(timezone, urlDefinition)
     void executeQuery({
       definitionKey: firstDraft.definitionKey,
-      request: requestFromDraft(firstDraft, DEFAULT_REPORT_DEFINITION),
+      request: requestFromDraft(firstDraft, urlDefinition),
     })
-  }, [executeQuery, timezone])
+  }, [executeQuery, timezone, urlDefinition])
 
   // The requester's stored timezone can resolve after mount; keep the draft in step so
   // the control and the applied view never disagree about which zone was used.
