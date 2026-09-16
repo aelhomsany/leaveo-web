@@ -4,7 +4,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, getOnboarding } from '../../api/client'
 import { getHomePath, getSafeRedirectPath } from '../../auth/authUtils'
 import { useAuth } from '../../auth/useAuth'
-import { BuildingIcon, UmbrellaIcon } from '../../components/ui/icons'
+import { BuildingIcon, LeaveoLogo } from '../../components/ui/icons'
 import { hasSkippedOnboardingRedirect } from '../onboarding/redirectPreference'
 import { AuthProofPanel } from './AuthProofPanel'
 import './auth-form.css'
@@ -110,10 +110,11 @@ export function LoginPage() {
       <main className="auth-layout">
         <section className="auth-card" aria-labelledby="sign-in-title">
           <div className="auth-logo">
-            <div className="auth-logo-icon" aria-hidden="true">
-              <UmbrellaIcon size={34} />
-            </div>
-            <div className="auth-logo-title">{t('common:brand.name')}</div>
+            <LeaveoLogo
+              layout="stacked"
+              label={t('common:brand.name')}
+              className="auth-logo-mark"
+            />
             <div className="auth-logo-sub">{t('common:brand.tagline')}</div>
           </div>
 

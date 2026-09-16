@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import type { ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../../i18n/config'
-import { UmbrellaIcon, type IconProps } from '../ui/icons'
+import { LeaveoLogo, LeaveoSymbol, type IconProps } from '../ui/icons'
 import './sidebar.css'
 
 export type NavItem = {
@@ -43,13 +43,17 @@ export function Sidebar({
       data-testid="sidebar"
     >
       <div className="sidebar-logo">
-        <span className="sidebar-logo-icon" aria-hidden="true">
-          <UmbrellaIcon size={26} />
-        </span>
-        <div>
-          <div className="sidebar-logo-text">{logoTitle ?? t('common:brand.name')}</div>
-          <div className="sidebar-logo-sub">{logoSubtitle ?? t('common:brand.tagline')}</div>
-        </div>
+        {logoTitle ? (
+          <>
+            <LeaveoSymbol size={32} tone="reverse" />
+            <div>
+              <div className="sidebar-logo-text">{logoTitle}</div>
+              {logoSubtitle ? <div className="sidebar-logo-sub">{logoSubtitle}</div> : null}
+            </div>
+          </>
+        ) : (
+          <LeaveoLogo tone="reverse" label={t('common:brand.name')} />
+        )}
       </div>
 
       <nav className="sidebar-nav" aria-label={t('navigation.main')}>

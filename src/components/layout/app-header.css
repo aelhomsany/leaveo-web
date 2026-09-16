@@ -98,8 +98,7 @@
   }
 
   .app-header-brand {
-    display: inline-flex;
-    color: var(--color-brand-seafoam);
+    display: block;
   }
 
   .app-header-brand-title {

@@ -43,21 +43,13 @@
   text-align: center;
 }
 
-.auth-logo-icon {
-  display: flex;
-  justify-content: center;
-  color: var(--color-action-primary);
-}
-
-.auth-logo-title {
-  color: var(--color-text-primary);
-  font-size: var(--font-page-title-size-narrow);
-  font-weight: var(--font-page-title-weight);
-  line-height: var(--font-page-title-line-height);
+.auth-logo-mark {
+  display: block;
+  margin-inline: auto;
 }
 
 .auth-logo-sub {
-  margin-block-start: var(--space-xs);
+  margin-block-start: var(--space-md);
   color: var(--color-text-secondary);
   font-size: var(--font-body-size);
 }

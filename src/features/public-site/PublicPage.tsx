@@ -1,4 +1,4 @@
-import { UmbrellaIcon } from '../../components/ui/icons'
+import { LeaveoLogo } from '../../components/ui/icons'
 import ar from '../../i18n/locales/ar/public.json'
 import en from '../../i18n/locales/en/public.json'
 import { ConsentPreference } from './consent/ConsentPreference'
@@ -61,13 +61,7 @@ function PublicHeader({
           href={localePath(locale, '/')}
           aria-label={copy.brand.homeLabel}
         >
-          <span className="public-brand__mark" aria-hidden="true">
-            <UmbrellaIcon size={28} />
-          </span>
-          <span>
-            <strong>{copy.brand.name}</strong>
-            <small>{copy.brand.tagline}</small>
-          </span>
+          <LeaveoLogo />
         </a>
 
         <nav className="public-nav" aria-label={nav.label}>

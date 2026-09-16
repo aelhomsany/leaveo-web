@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError, postAcceptInvitation } from '../../api/client'
-import { UmbrellaIcon } from '../../components/ui/icons'
+import { LeaveoLogo } from '../../components/ui/icons'
 import { AuthProofPanel } from './AuthProofPanel'
 import { PasswordInput } from './PasswordInput'
 import { PasswordRequirements } from './PasswordRequirements'
@@ -112,10 +112,11 @@ export function AcceptInvitationPage() {
       <main className="auth-layout">
         <section className="auth-card" aria-labelledby="accept-invitation-title">
           <div className="auth-logo">
-            <div className="auth-logo-icon" aria-hidden="true">
-              <UmbrellaIcon size={34} />
-            </div>
-            <div className="auth-logo-title">{t('common:brand.name')}</div>
+            <LeaveoLogo
+              layout="stacked"
+              label={t('common:brand.name')}
+              className="auth-logo-mark"
+            />
             <div className="auth-logo-sub">{t('common:brand.tagline')}</div>
           </div>
 

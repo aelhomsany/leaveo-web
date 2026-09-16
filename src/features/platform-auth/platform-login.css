@@ -28,14 +28,7 @@
 }
 
 .platform-operator-field__brand {
-  inline-size: 56px;
-  block-size: 56px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--color-brand-seafoam);
-  border-radius: var(--radius-lg);
-  color: var(--color-brand-seafoam);
+  align-self: flex-start;
 }
 
 .platform-operator-field__eyebrow,

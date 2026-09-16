@@ -78,4 +78,19 @@ describe('AppHeader', () => {
     expect(menu).toHaveAttribute('aria-expanded', 'true')
     expect(menu).toHaveAccessibleName('Close navigation')
   })
+
+  it('shows the Leaveo logo as the brand when no realm title is given', () => {
+    render(<AppHeader variant="org" navOpen={false} onToggleNav={vi.fn()} />)
+
+    expect(screen.getByRole('img', { name: 'Leaveo' })).toBeInTheDocument()
+  })
+
+  it('pairs a realm title with the decorative Leaveo symbol', () => {
+    render(
+      <AppHeader variant="admin" title="Platform Admin" navOpen={false} onToggleNav={vi.fn()} />,
+    )
+
+    expect(screen.getByText('Platform Admin')).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: 'Leaveo' })).not.toBeInTheDocument()
+  })
 })

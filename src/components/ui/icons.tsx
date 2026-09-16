@@ -2,9 +2,10 @@ import type { ReactNode, SVGProps } from 'react'
 
 /**
  * Shared UI icon set — 24px-grid stroke icons (Lucide-style, currentColor).
- * Use these for all UI chrome (nav, logo, bell, empty states) instead of emoji,
+ * Use these for all UI chrome (nav, bell, empty states) instead of emoji,
  * which render inconsistently across platforms. Emoji remain fine inside
- * user/content data (e.g. server-provided leave-type icons).
+ * user/content data (e.g. server-provided leave-type icons). The Leaveo logo
+ * lives here too, as brand artwork rather than an icon (see below).
  */
 export type IconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -27,14 +28,117 @@ function IconBase({ size = 18, children, ...props }: IconProps & { children: Rea
   )
 }
 
-/** Brand mark — beach umbrella. */
-export function UmbrellaIcon(props: IconProps) {
+/*
+ * Leaveo logo — the "Pause L" symbol and its lockups, with the geometry of the brand kit
+ * (Leaveo/output/leaveo-pause-brand/build.py). Brand artwork, not an icon: it keeps the kit's
+ * own navy and teal instead of currentColor or app tokens, because the logo palette identifies
+ * the brand and must not follow a surface token. Inline SVG, so the prerendered public site and
+ * the CSP need nothing extra. Never mirror it in RTL.
+ */
+const BRAND_NAVY = '#093C5D'
+const BRAND_TEAL = '#22A699'
+const BRAND_WHITE = '#FFFFFF'
+
+type BrandTone = 'color' | 'reverse'
+
+type BrandProps = Omit<SVGProps<SVGSVGElement>, 'children' | 'width' | 'height'> & {
+  /** `color` (navy L) on light surfaces, `reverse` (white L) on navy. The bar stays teal. */
+  tone?: BrandTone
+  /** Accessible name. Leave it out when nearby text or a labelled link already names Leaveo. */
+  label?: string
+}
+
+function brandA11y(label: string | undefined) {
+  return label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true }
+}
+
+function PauseL({ tone }: { tone: BrandTone }) {
   return (
-    <IconBase {...props}>
-      <path d="M22 12a10.06 10.06 0 0 0-20 0Z" />
-      <path d="M12 12v8a2 2 0 0 0 4 0" />
-      <path d="M12 2v1" />
-    </IconBase>
+    <>
+      <path
+        fill={tone === 'reverse' ? BRAND_WHITE : BRAND_NAVY}
+        d="M24 8a16 16 0 0 1 16 16v64a8 8 0 0 0 8 8h48a16 16 0 0 1 0 32H40a32 32 0 0 1-32-32V24A16 16 0 0 1 24 8Z"
+      />
+      <rect fill={BRAND_TEAL} x="64" y="24" width="24" height="56" rx="12" />
+    </>
+  )
+}
+
+const WORDMARK_E = 'M34 34H68C68 8 34 8 34 34C34 57 59 60 68 47'
+
+function Wordmark({ tone }: { tone: BrandTone }) {
+  return (
+    <g
+      fill="none"
+      stroke={tone === 'reverse' ? BRAND_WHITE : BRAND_NAVY}
+      strokeWidth={8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8 3V46Q8 54 17 54" />
+      <path d={WORDMARK_E} />
+      <path d="M115 34C115 8 81 8 81 34C81 60 115 60 115 34V54" />
+      <path d="M129 17L145 54L161 17" />
+      <path d={WORDMARK_E} transform="translate(141 0)" />
+      <ellipse cx="239" cy="35" rx="17" ry="20" />
+    </g>
+  )
+}
+
+/** Leaveo symbol alone, for compact branding at 24px and up. */
+export function LeaveoSymbol({
+  size = 32,
+  tone = 'color',
+  label,
+  ...props
+}: BrandProps & { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 136 136" {...brandA11y(label)} {...props}>
+      <PauseL tone={tone} />
+    </svg>
+  )
+}
+
+/**
+ * Leaveo logo lockup. Horizontal for the sidebar and headers (144–176px wide, never under
+ * 132px); stacked for sign-in (140–196px wide). Keep one pause-bar width of clear space.
+ */
+export function LeaveoLogo({
+  layout = 'horizontal',
+  width,
+  tone = 'color',
+  label,
+  ...props
+}: BrandProps & { layout?: 'horizontal' | 'stacked'; width?: number }) {
+  const stacked = layout === 'stacked'
+  const [viewWidth, viewHeight] = stacked ? [280, 224] : [440, 136]
+  const renderedWidth = width ?? (stacked ? 140 : 144)
+  return (
+    <svg
+      width={renderedWidth}
+      height={(renderedWidth * viewHeight) / viewWidth}
+      viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+      {...brandA11y(label)}
+      {...props}
+    >
+      {stacked ? (
+        <>
+          <g transform="translate(72 0)">
+            <PauseL tone={tone} />
+          </g>
+          <g transform="translate(8 155)">
+            <Wordmark tone={tone} />
+          </g>
+        </>
+      ) : (
+        <>
+          <PauseL tone={tone} />
+          <g transform="translate(164 35)">
+            <Wordmark tone={tone} />
+          </g>
+        </>
+      )}
+    </svg>
   )
 }
 

@@ -203,6 +203,7 @@ describe('OrgShell', () => {
     const sidebar = screen.getByTestId('sidebar')
     expect(within(sidebar).queryByTestId('notification-bell')).toBeNull()
     expect(sidebar.querySelector('.sidebar-logo')).toBeInTheDocument()
+    expect(within(sidebar).getByRole('img', { name: 'Leaveo' })).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument()
   })
 

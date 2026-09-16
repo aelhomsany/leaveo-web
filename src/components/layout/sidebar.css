@@ -70,11 +70,6 @@
   gap: 10px;
 }
 
-.sidebar-logo-icon {
-  display: inline-flex;
-  color: var(--color-brand-seafoam);
-}
-
 .sidebar-logo-text {
   color: var(--color-text-inverse);
   font-weight: 700;

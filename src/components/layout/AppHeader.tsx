@@ -1,13 +1,16 @@
 import type { ReactNode, RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../../i18n/config'
-import { MenuIcon, CloseIcon, UmbrellaIcon } from '../ui/icons'
+import { MenuIcon, CloseIcon, LeaveoLogo, LeaveoSymbol } from '../ui/icons'
 import './app-header.css'
 
 type AppHeaderProps = {
   variant: 'org' | 'admin'
-  /** Brand title shown next to the hamburger below 900px. */
-  title: string
+  /**
+   * Realm title shown beside the Leaveo symbol below 900px (admin shell). Without it the header
+   * shows the full Leaveo logo, which already names the brand.
+   */
+  title?: string
   /** Organization name (org shell) or platform context label (admin shell); desktop only. */
   contextLabel?: string | null
   /** Right-aligned header actions (e.g. notification bell). */
@@ -36,7 +39,7 @@ export function AppHeader({
   menuButtonRef,
   actionsInert = false,
 }: AppHeaderProps) {
-  const { t } = useTranslation('layout')
+  const { t } = useTranslation(['layout', 'common'])
   return (
     <header
       className={`app-header app-header--${variant}`}
@@ -54,10 +57,19 @@ export function AppHeader({
       >
         {navOpen ? <CloseIcon size={20} /> : <MenuIcon size={20} />}
       </button>
-      <span className="app-header-brand" aria-hidden="true">
-        <UmbrellaIcon size={18} />
-      </span>
-      <span className="app-header-brand-title">{title}</span>
+      {title ? (
+        <>
+          <LeaveoSymbol size={24} tone="reverse" className="app-header-brand" />
+          <span className="app-header-brand-title">{title}</span>
+        </>
+      ) : (
+        <LeaveoLogo
+          tone="reverse"
+          width={132}
+          label={t('common:brand.name')}
+          className="app-header-brand"
+        />
+      )}
       {contextLabel ? (
         <span
           className="app-header-context"

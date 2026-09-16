@@ -1,8 +1,7 @@
 {
   "brand": {
     "name": "Leaveo",
-    "homeLabel": "Home — Leaveo",
-    "tagline": "Working-day clarity for distributed teams"
+    "homeLabel": "Home — Leaveo"
   },
   "navigation": {
     "label": "Public navigation",

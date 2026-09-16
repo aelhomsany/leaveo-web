@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Leaveo brand mark: beach umbrella from the shared UI icon set (icons.tsx UmbrellaIcon),
-       primary #093C5D tile with primary-foreground #ECF4E8 stroke. -->
-  <rect width="32" height="32" rx="7" fill="#093C5D"/>
-  <g fill="none" stroke="#ECF4E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 4)">
-    <path d="M22 12a10.06 10.06 0 0 0-20 0Z"/>
-    <path d="M12 12v8a2 2 0 0 0 4 0"/>
-    <path d="M12 2v1"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" role="img" aria-label="Leaveo"><title>Leaveo</title><style>path{fill:#093C5D}rect{fill:#22A699}@media(prefers-color-scheme:dark){path{fill:#FFFFFF}}</style><path fill="#093C5D" d="M4 1a2 2 0 0 1 2 2v8a1 1 0 0 0 1 1h5a2 2 0 0 1 0 4H6a4 4 0 0 1-4-4V3a2 2 0 0 1 2-2Z"/><rect fill="#22A699" x="8" y="3" width="3" height="7" rx="1.5"/></svg>

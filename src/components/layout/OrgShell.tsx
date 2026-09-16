@@ -69,7 +69,6 @@ export function OrgShell() {
         <div className="org-shell__content">
           <AppHeader
             variant="org"
-            title={t('common:brand.name')}
             contextLabel={user?.organizationName}
             actions={
               <>

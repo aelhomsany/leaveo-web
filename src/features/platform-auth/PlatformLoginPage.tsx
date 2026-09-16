@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { BuildingIcon, UmbrellaIcon } from '../../components/ui/icons'
+import { BuildingIcon, LeaveoLogo } from '../../components/ui/icons'
 import {
   applyDocumentLanguage,
   storePreferredLanguage,
@@ -66,9 +66,12 @@ export function PlatformLoginPage() {
     <div className="platform-login-page" data-testid="platform-login-page">
       <main className="platform-login-layout">
         <section className="platform-operator-field" aria-labelledby="platform-realm-title">
-          <div className="platform-operator-field__brand" aria-hidden="true">
-            <UmbrellaIcon size={32} />
-          </div>
+          <LeaveoLogo
+            tone="reverse"
+            width={160}
+            label={t('common:brand.name')}
+            className="platform-operator-field__brand"
+          />
           <p className="platform-operator-field__eyebrow">{t('operatorOnly')}</p>
           <h1 id="platform-realm-title">{t('realm')}</h1>
           <p>{t('boundary')}</p>

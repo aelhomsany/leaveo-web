@@ -128,38 +128,8 @@
 .public-brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
   min-block-size: var(--min-touch-target);
-  color: var(--color-text-primary);
   text-decoration: none;
-}
-
-.public-brand__mark {
-  inline-size: var(--min-touch-target);
-  block-size: var(--min-touch-target);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  background: var(--color-action-primary);
-  color: var(--color-text-inverse);
-}
-
-.public-brand strong,
-.public-brand small {
-  display: block;
-}
-
-.public-brand strong {
-  font-size: 18px;
-  line-height: 1.1;
-}
-
-.public-brand small {
-  margin-block-start: var(--space-xs);
-  color: var(--color-text-secondary);
-  font-size: var(--font-caption-size);
-  line-height: var(--font-caption-line-height);
 }
 
 .public-nav {
@@ -940,10 +910,6 @@ html[lang='ar'] .public-availability h2 {
     padding-block: var(--space-sm);
     grid-template-columns: minmax(0, 1fr) auto;
     gap: var(--space-sm);
-  }
-
-  .public-brand small {
-    display: none;
   }
 
   .public-nav {
