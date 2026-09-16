@@ -1,21 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { ReportDefinitionKey } from '../../api/client'
+import { DownloadIcon } from '../../components/ui/icons'
 import { REPORT_DEFINITIONS, reportSlugFor } from './reportDefinitions'
 import './report-catalog.css'
-
-/**
- * The data hue each report is tinted with on the catalog. Four hues across six reports, so two
- * repeat; the order below keeps a repeat off its own row neighbour.
- */
-const REPORT_ICON_TONE: Record<ReportDefinitionKey, string> = {
-  BALANCE_SNAPSHOT: 'ocean',
-  LEAVE_USAGE: 'mint',
-  REQUEST_DETAIL: 'ocean',
-  EXCEPTION: 'rose',
-  PENDING_AGING: 'sun',
-  CARRYOVER: 'mint',
-}
 
 /**
  * One mark per report, drawn for the 44px tile beside the report's name.
@@ -92,7 +80,7 @@ function ReportIcon({ definitionKey }: { definitionKey: ReportDefinitionKey }) {
  * than the scanning they save.
  */
 export function ReportCatalogPage() {
-  const { t } = useTranslation(['reports', 'common'])
+  const { t, i18n } = useTranslation(['reports', 'common'])
 
   return (
     <div className="page page-wide report-catalog-page" data-testid="report-catalog-page">
@@ -102,6 +90,7 @@ export function ReportCatalogPage() {
           <h1 className="page-title">{t('reports:catalog.title')}</h1>
           <p className="page-sub">{t('reports:catalog.subtitle')}</p>
         </div>
+        <p className="report-catalog-count"><strong>{new Intl.NumberFormat(i18n.language, { minimumIntegerDigits: 2 }).format(REPORT_DEFINITIONS.length)}</strong>{t('reports:catalog.countLabel')}</p>
       </header>
 
       <ul className="report-catalog-grid">
@@ -109,38 +98,32 @@ export function ReportCatalogPage() {
           const slug = reportSlugFor(definition.key)
           return (
             <li key={definition.key}>
-              {/* The whole card is one link: a card with a separate "open" control gives
-                  keyboard and screen-reader users two stops for one destination. That is also
-                  why no "view report" text is rendered -- the card's name and sentence are
-                  the link's accessible name, and a third line only repeated the destination. */}
+              {/* One link per report keeps the entire card keyboard accessible. */}
               <Link
-                className="report-catalog-card"
+                className={`report-catalog-card${definition.key === 'BALANCE_SNAPSHOT' ? ' report-catalog-card-featured' : ''}`}
                 to={`/reports/${slug}`}
                 data-testid={`report-card-${slug}`}
               >
-                <span
-                  className={`report-catalog-icon tone-${REPORT_ICON_TONE[definition.key]}`}
-                  aria-hidden="true"
-                >
-                  <ReportIcon definitionKey={definition.key} />
+                <span className="report-catalog-card-top">
+                  <span className="report-catalog-icon" aria-hidden="true"><ReportIcon definitionKey={definition.key} /></span>
+                  <span className="report-catalog-kind">{t(`reports:catalog.cards.${definition.key}.kind`)}</span>
                 </span>
                 <span className="report-catalog-text">
                   <span className="report-catalog-name">{t(definition.labelKey)}</span>
-                  <span className="report-catalog-desc">{t(definition.descriptionKey)}</span>
+                  <span className="report-catalog-desc">{t(`reports:catalog.cards.${definition.key}.description`)}</span>
                 </span>
-                <svg
-                  className="report-catalog-chevron"
-                  viewBox="0 0 24 24"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <path d="m9 6 6 6-6 6" />
-                </svg>
+                <span className="report-catalog-footer">
+                  <span>{t(`reports:catalog.cards.${definition.key}.topics`)}</span>
+                  <span className="report-catalog-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12" /></svg>
+                  </span>
+                </span>
               </Link>
             </li>
           )
         })}
       </ul>
+      <p className="report-catalog-export-note"><DownloadIcon size={15} />{t('reports:catalog.exportNote')}</p>
     </div>
   )
 }

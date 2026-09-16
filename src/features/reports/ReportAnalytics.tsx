@@ -14,8 +14,6 @@ type Props = {
   format: ReportFormatContext
 }
 
-const RING_RADIUS = 42
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 const OFF_SERIES_COUNT = 3
 
 /**
@@ -92,7 +90,7 @@ export function ReportAnalytics({ summary, incomplete, format }: Props) {
         {incomplete && (
           <p className="reports-analytics-note">{t('reports:analytics.incomplete')}</p>
         )}
-        {balances && <BalanceRings balances={balances} format={format} />}
+        {balances && <BalanceBars balances={balances} format={format} />}
         {carried && <CarryoverBars items={carried} format={format} />}
         {days && (
           <UsageTrend
@@ -107,7 +105,7 @@ export function ReportAnalytics({ summary, incomplete, format }: Props) {
   )
 }
 
-function BalanceRings({
+function BalanceBars({
   balances,
   format,
 }: {
@@ -126,7 +124,7 @@ function BalanceRings({
   const seriesClasses = seriesClassesFor(balances)
 
   return (
-    <ul className="reports-rings">
+    <ul className="reports-balance-bars">
       {balances.map((item, index) => {
         const name = item.leaveTypeName ?? ''
         const percent = item.usedPercent ?? null
@@ -134,38 +132,13 @@ function BalanceRings({
           percent === null
             ? t('reports:analytics.balance.noAllowance')
             : percentFormat.format(percent / 100)
-        const arc =
-          percent === null ? 0 : (Math.min(Math.max(percent, 0), 100) / 100) * RING_CIRCUMFERENCE
+        const width = percent === null ? 0 : Math.min(Math.max(percent, 0), 100)
         return (
           <li
             key={item.leaveTypeId}
-            className={`reports-ring ${seriesClasses[index]}`}
+            className={`reports-balance-item ${seriesClasses[index]}`}
             data-testid={`report-analytics-ring-${item.leaveTypeId}`}
           >
-            <svg
-              viewBox="0 0 100 100"
-              role="img"
-              aria-label={
-                percent === null
-                  ? t('reports:analytics.balance.ringLabelNoAllowance', { leaveType: name })
-                  : t('reports:analytics.balance.ringLabel', {
-                      leaveType: name,
-                      percent: percentText,
-                    })
-              }
-            >
-              <circle className="reports-ring-track" cx="50" cy="50" r={RING_RADIUS} />
-              {arc > 0 && (
-                <circle
-                  className="reports-ring-value"
-                  cx="50"
-                  cy="50"
-                  r={RING_RADIUS}
-                  strokeDasharray={`${arc} ${RING_CIRCUMFERENCE}`}
-                  transform="rotate(-90 50 50)"
-                />
-              )}
-            </svg>
             <div>
               <p className="reports-ring-name">
                 {/* User data is never translated; dir="auto" keeps an LTR name intact in RTL. */}
@@ -175,6 +148,20 @@ function BalanceRings({
                 )}
               </p>
               <p className="reports-ring-percent">{percentText}</p>
+              <svg className="reports-balance-bar" viewBox="0 0 100 8" preserveAspectRatio="none" role="img"
+              aria-label={
+                percent === null
+                  ? t('reports:analytics.balance.ringLabelNoAllowance', { leaveType: name })
+                  : t('reports:analytics.balance.ringLabel', {
+                      leaveType: name,
+                      percent: percentText,
+                    })
+              }
+
+              >
+                <rect width="100" height="8" rx="2" className="reports-balance-track" />
+                {width > 0 && <rect width={width} height="8" rx="2" className="reports-balance-value" />}
+              </svg>
               <dl>
                 <dt>{t('reports:analytics.balance.used')}</dt>
                 <dd>{formatValue(format, item.approvedUsage)}</dd>

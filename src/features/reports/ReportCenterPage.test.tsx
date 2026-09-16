@@ -390,6 +390,34 @@ describe('ReportCenterPage', () => {
     }
   })
 
+  it('[P0] keeps draft options separate from the applied query and export', async () => {
+    const query = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
+    const create = vi.spyOn(apiClient, 'createReportExport').mockResolvedValue({ id: 'draft-export', status: 'QUEUED' })
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByTestId('report-row-0')
+
+    const options = screen.getByRole('button', { name: 'Options' })
+    expect(options).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByLabelText('Display timezone')).not.toBeVisible()
+    await user.click(options)
+    expect(screen.getByLabelText('Display timezone')).toBeVisible()
+    await user.selectOptions(screen.getByLabelText('Workforce group'), '8')
+    expect(screen.getByText(/You have unapplied changes/)).toBeVisible()
+    expect(query).toHaveBeenCalledTimes(1)
+
+    await user.click(screen.getByText('Export', { selector: 'summary' }))
+    await user.click(screen.getByRole('button', { name: 'Create Export' }))
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(1))
+    // Exports still use the last applied scope, even while different filters are drafted.
+    expect(create.mock.calls[0][1].query.workforceGroupId).toBeUndefined()
+    await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
+    await waitFor(() => expect(query).toHaveBeenCalledTimes(2))
+    expect(query.mock.calls[1][1]).toMatchObject({ workforceGroupId: 8, page: 0 })
+    expect(query.mock.calls[1][1]).not.toHaveProperty('size')
+    expect(screen.queryByText(/You have unapplied changes/)).not.toBeInTheDocument()
+  })
+
   it('[P0] renders authoritative summary, applied scope, and rows without client aggregation', async () => {
     vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
 
@@ -414,11 +442,11 @@ describe('ReportCenterPage', () => {
     expect(applied).toHaveTextContent('Balance Snapshot')
     // The provenance card was removed; the applied view is the only evidence card.
     expect(screen.queryByTestId('report-provenance')).not.toBeInTheDocument()
-    // The export card sits below the organization summary, above the results.
+    // Export is available from the header, before the report summary and results.
     const summaryHeading = screen.getByRole('heading', { name: 'Organization summary' })
     const exportHeading = screen.getByRole('heading', { name: 'Export applied view' })
     expect(
-      summaryHeading.compareDocumentPosition(exportHeading) &
+      exportHeading.compareDocumentPosition(summaryHeading) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
     expect(
@@ -492,7 +520,7 @@ describe('ReportCenterPage', () => {
       } as ReportQueryResponse
     }
 
-    it('[P0] charts each capped leave type with the server percentage between the summary and the export', async () => {
+    it('[P0] charts each capped leave type with the server percentage between the summary and results', async () => {
       vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceChartResponse())
 
       renderPage()
@@ -517,7 +545,7 @@ describe('ReportCenterPage', () => {
       ).toBeTruthy()
       expect(
         analyticsHeading.compareDocumentPosition(
-          screen.getByRole('heading', { name: 'Export applied view' }),
+          screen.getByRole('heading', { name: 'Balance Snapshot results' }),
         ) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy()
     })
@@ -649,7 +677,9 @@ describe('ReportCenterPage', () => {
 
     renderPage()
 
-    expect(await screen.findByTestId('report-row-0')).toHaveTextContent('Away')
+    const row = await screen.findByTestId('report-row-0')
+    await userEvent.click(within(row).getByRole('button', { name: /Details for/ }))
+    expect(row.nextElementSibling).toHaveTextContent('Away')
     // Nested summary maps must not collapse to [object Object].
     const byPresence = screen.getByTestId('report-summary-totalsByPresence')
     expect(byPresence).toHaveTextContent('Away')
@@ -786,6 +816,7 @@ describe('ReportCenterPage', () => {
     const lastYear = String(new Date().getUTCFullYear() - 1)
     await user.selectOptions(screen.getByLabelText('Balance year'), lastYear)
     await user.selectOptions(status, 'EXPIRED')
+    await user.click(screen.getByRole('button', { name: 'Options' }))
     await user.selectOptions(screen.getByLabelText('Sort by'), 'availableDays')
     await user.click(screen.getByRole('button', { name: 'Apply Filters' }))
 
@@ -898,17 +929,22 @@ describe('ReportCenterPage', () => {
 
       await waitFor(() => expect(querySpy).toHaveBeenCalledTimes(1))
       expect(querySpy.mock.calls.at(-1)![0]).toBe(definitionKey)
-      expect(await screen.findByRole('columnheader', { name: fixture.header }))
-        .toBeInTheDocument()
       const row = await screen.findByTestId('report-row-0')
-      expect(row).toHaveTextContent(fixture.cell)
-      // A blank cell still satisfies toBeVisible(), so assert nothing rendered empty.
-      within(row)
-        .getAllByRole('cell')
-        .forEach((cell) => {
-          expect(cell.textContent?.trim()).not.toBe('')
-          expect(cell).not.toHaveTextContent('[object Object]')
-        })
+      const toggle = within(row).getByRole('button', { name: /Details for/ })
+      await user.click(toggle)
+      const details = document.getElementById(toggle.getAttribute('aria-controls')!)!
+      expect(details).toBeVisible()
+      // Secondary fields moved into the row disclosure and remain labelled and readable.
+      if (!screen.queryByRole('columnheader', { name: fixture.header })) {
+        expect(within(details).getByText(fixture.header)).toBeVisible()
+      }
+      expect(`${row.textContent} ${details.textContent}`).toContain(fixture.cell)
+      within(row).getAllByRole('cell').forEach((cell) => {
+        if (cell.contains(toggle)) return
+        expect(cell.textContent?.trim()).not.toBe('')
+        expect(cell).not.toHaveTextContent('[object Object]')
+      })
+      expect(details).not.toHaveTextContent('[object Object]')
       // Every column header resolves to real copy; a missing key renders as ''.
       screen.getAllByRole('columnheader').forEach((header) => {
         expect(header.textContent?.trim()).not.toBe('')
@@ -1117,6 +1153,7 @@ describe('ReportCenterPage', () => {
 
     await screen.findByTestId('report-row-0')
     await user.selectOptions(screen.getByLabelText('Export format'), 'XLSX')
+    await user.click(screen.getByText('Export', { selector: 'summary' }))
     await user.click(screen.getByRole('button', { name: 'Create Export' }))
 
     const status = await screen.findByTestId('report-export-status')
@@ -1177,6 +1214,7 @@ describe('ReportCenterPage', () => {
 
     renderPage()
     await screen.findByTestId('report-row-0')
+    await user.click(screen.getByText('Export', { selector: 'summary' }))
     await user.click(screen.getByRole('button', { name: 'Create Export' }))
 
     const status = await screen.findByTestId('report-export-status')
@@ -1203,6 +1241,7 @@ describe('ReportCenterPage', () => {
 
     renderPage()
     await screen.findByTestId('report-row-0')
+    await user.click(screen.getByText('Export', { selector: 'summary' }))
     await user.click(screen.getByRole('button', { name: 'Create Export' }))
 
     const status = await screen.findByTestId('report-export-status')
@@ -1225,6 +1264,7 @@ describe('ReportCenterPage', () => {
 
     renderPage()
     await screen.findByTestId('report-row-0')
+    await user.click(screen.getByText('Export', { selector: 'summary' }))
     await user.click(screen.getByRole('button', { name: 'Create Export' }))
 
     const status = await screen.findByTestId('report-export-status')
@@ -1270,6 +1310,7 @@ describe('ReportCenterPage', () => {
 
     renderPage()
     await screen.findByTestId('report-row-0')
+    await user.click(screen.getByText('Export', { selector: 'summary' }))
     await user.click(screen.getByRole('button', { name: 'Create Export' }))
 
     await screen.findByTestId('report-export-status')

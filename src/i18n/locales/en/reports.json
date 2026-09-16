@@ -3,10 +3,44 @@
   "title": "Report Center",
   "subtitle": "Explore fixed, tenant-safe operational views with the exact scope applied by the server.",
   "catalog": {
-    "eyebrow": "Decision evidence",
+    "eyebrow": "The bigger picture",
     "title": "Reports",
-    "subtitle": "Every report in one place. Open one to see its figures, then narrow it with the filters inside.",
-    "back": "All reports"
+    "subtitle": "Your team’s time, made clear. Explore balances, understand usage, stay ahead.",
+    "back": "All reports",
+    "countLabel": "reports",
+    "exportNote": "Every report, ready for CSV or Excel.",
+    "cards": {
+      "BALANCE_SNAPSHOT": {
+        "kind": "Current balances",
+        "description": "See what’s been used. Know what’s left.",
+        "topics": "Balances · Allowances · Exceptions"
+      },
+      "LEAVE_USAGE": {
+        "kind": "Over time",
+        "description": "Understand how your team takes time away.",
+        "topics": "Approved leave · Charged days"
+      },
+      "REQUEST_DETAIL": {
+        "kind": "The full record",
+        "description": "Every request, every status, in one view.",
+        "topics": "Requests · Statuses · Decisions"
+      },
+      "EXCEPTION": {
+        "kind": "Operational checks",
+        "description": "Spot the gaps that deserve a closer look.",
+        "topics": "Anomalies · Severity · Evidence"
+      },
+      "PENDING_AGING": {
+        "kind": "Waiting for action",
+        "description": "Bring long-waiting approvals into focus.",
+        "topics": "Waiting time · Approval stages"
+      },
+      "CARRYOVER": {
+        "kind": "Across years",
+        "description": "Follow carried days into the next chapter.",
+        "topics": "Carried days · Availability · Expiry"
+      }
+    }
   },
   "loading": "Loading report evidence…",
   "notAvailable": "Not available",
@@ -50,32 +84,33 @@
       "SNAPSHOT_UNREADABLE": "The saved report data could not be read. Start a new export.",
       "RENDER_FAILED": "The file could not be generated. Try again.",
       "UNKNOWN": "The export could not be completed. Try again."
-    }
+    },
+    "open": "Export"
   },
   "definitions": {
     "balanceSnapshot": {
       "label": "Balance Snapshot",
-      "description": "Current leave balances at the server-applied effective date."
+      "description": "A clear view of leave balances across your team."
     },
     "leaveUsage": {
       "label": "Leave Usage",
-      "description": "Approved leave usage across a required date range."
+      "description": "Approved leave and working-from-home usage over your selected dates."
     },
     "requestDetail": {
       "label": "Request Detail",
-      "description": "Stored request facts and statuses across a required date range."
+      "description": "Request dates, decisions and approval details in one place."
     },
     "exception": {
       "label": "Exceptions",
-      "description": "Operational anomalies detected by the reporting service."
+      "description": "Balance and configuration issues detected in your organization."
     },
     "pendingAging": {
       "label": "Pending Aging",
-      "description": "Pending requests grouped by their authoritative activation age."
+      "description": "See how long requests have waited at their current approval step."
     },
     "carryover": {
       "label": "Carry-over",
-      "description": "Carried days per person and leave type for a balance year: what was carried, used, is still available and has expired."
+      "description": "Track carried days, pending claims and expiry for a balance year."
     }
   },
   "filters": {
@@ -96,7 +131,9 @@
     "includeInactive": "Include inactive users",
     "balanceYear": "Balance year",
     "currentBalanceYear": "Current year",
-    "grouplessHint": "Workforce group and Leave type do not apply to users without a workforce group, so both are cleared and disabled for this exception type."
+    "grouplessHint": "Workforce group and Leave type do not apply to users without a workforce group, so both are cleared and disabled for this exception type.",
+    "options": "Options",
+    "unapplied": "You have unapplied changes. Apply filters to update this view."
   },
   "errors": {
     "title": "Report evidence is unavailable",
@@ -172,7 +209,9 @@
     "count_few": "{{count}} matching rows",
     "count_many": "{{count}} matching rows",
     "count_other": "{{count}} matching rows",
-    "emptyIncomplete": "Some records could not be included in this view, so this is not a confirmed zero."
+    "emptyIncomplete": "Some records could not be included in this view, so this is not a confirmed zero.",
+    "details": "Row details",
+    "detailsFor": "Details for {{name}}"
   },
   "analytics": {
     "title": "Analytics",

@@ -58,7 +58,7 @@ describe('ReportCatalogPage', () => {
     expect(screen.getByText('Balance Snapshot')).toBeInTheDocument()
     expect(screen.getByText('Pending Aging')).toBeInTheDocument()
     expect(
-      screen.getByText('Approved leave usage across a required date range.'),
+      screen.getByText('Understand how your team takes time away.'),
     ).toBeInTheDocument()
   })
 

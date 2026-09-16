@@ -24,7 +24,7 @@ import { getBrowserTimezone } from '../../auth/timezone'
 import { DateField } from '../../components/DateField'
 import { HorizontalScrollRegion } from '../../components/ui/HorizontalScrollRegion'
 import { LoadingState } from '../../components/ui/LoadingState'
-import { PresenceBadge } from '../../components/ui/PresenceBadge'
+import { ChevronDownIcon, ChevronRightIcon, DownloadIcon, SettingsIcon } from '../../components/ui/icons'
 import { useToast } from '../../components/ui/useToast'
 import { availableTimezones } from '../../lib/timezones'
 import {
@@ -39,10 +39,12 @@ import {
 } from './reportDefinitions'
 import {
   formatOrdering,
-  formatValue, summaryBreakdown,
+  formatValue,
   type ReportFormatContext,
 } from './reportFormat'
 import { ReportAnalytics } from './ReportAnalytics'
+import { ReportSummary } from './ReportSummary'
+import { ReportTable } from './ReportTable'
 import { useReportQuery } from './useReportQuery'
 import './reports.css'
 
@@ -181,6 +183,7 @@ export function ReportCenterPage() {
   const [lastAttemptedQuery, setLastAttemptedQuery] = useState<AppliedQuery | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
   const [draftError, setDraftError] = useState<string | null>(null)
+  const [optionsOpen, setOptionsOpen] = useState(false)
   const [exportFormat, setExportFormat] = useState<'CSV' | 'XLSX'>('CSV')
   const reportingAccess = useReportingCapability()
   const [exportPolls, setExportPolls] = useState(0)
@@ -624,23 +627,61 @@ export function ReportCenterPage() {
       <header className="page-header reports-page-header">
         <div>
           <Link className="reports-back" to="/reports">
-            {t('reports:catalog.back')}
+            {t('reports:catalog.back')}<ChevronRightIcon size={13} />
           </Link>
-          <p className="panel-eyebrow">{t('reports:eyebrow')}</p>
           <h1 className="page-title">{t(definition.labelKey)}</h1>
-          <p className="page-sub">{t('reports:subtitle')}</p>
+          <p className="page-sub">{t(definition.descriptionKey)}</p>
         </div>
+        {response && appliedView && (
+          <details className="reports-export-menu" onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.currentTarget.open = false
+              event.currentTarget.querySelector('summary')?.focus()
+            }
+          }}>
+            <summary className="btn btn-primary"><DownloadIcon size={16} />{t('reports:exports.open')}<ChevronDownIcon size={14} /></summary>
+            <section className="card reports-export-card" aria-labelledby="report-export-title">
+              <div>
+                <h2 id="report-export-title">{t('reports:exports.title')}</h2>
+                <p>{t('reports:exports.description')}</p>
+              </div>
+              <div className="reports-export-controls">
+                <div className="form-group">
+                  <label htmlFor="report-export-format">
+                    {t('reports:exports.format')}
+                  </label>
+                  <select
+                    id="report-export-format"
+                    value={exportFormat}
+                    disabled={createExportMutation.isPending}
+                    onChange={(event) =>
+                      setExportFormat(event.target.value as 'CSV' | 'XLSX')}
+                  >
+                    <option value="CSV">{t('reports:exports.formats.CSV')}</option>
+                    <option value="XLSX">{t('reports:exports.formats.XLSX')}</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  // One export per user: creating another while one is pending is a guaranteed 429
+                  // the page already had the state to prevent.
+                  disabled={createExportMutation.isPending || exportPending}
+                  onClick={() => void handleCreateExport()}
+                >
+                  {createExportMutation.isPending
+                    ? t('reports:exports.creating')
+                    : t('reports:exports.create')}
+                </button>
+              </div>
+
+            </section>
+          </details>
+        )}
       </header>
 
       <section className="card reports-filter-card" aria-labelledby="report-filter-title">
-        <div className="card-header">
-          <div>
-            <h2 className="card-title" id="report-filter-title">
-              {t('reports:filters.title')}
-            </h2>
-            <p className="reports-card-subtitle">{t(definition.descriptionKey)}</p>
-          </div>
-        </div>
+        <h2 className="sr-only" id="report-filter-title">{t('reports:filters.title')}</h2>
         <form
           // noValidate on purpose: min/max below are kept so the native calendar greys
           // out impossible dates, but native constraint validation would block submit
@@ -652,24 +693,7 @@ export function ReportCenterPage() {
             handleApply()
           }}
         >
-          <div className="panel-filter-grid">
-            {/* The report itself is no longer a filter: it is the screen you are on. */}
-            <div className="form-group">
-              <label htmlFor="report-timezone">{t('reports:filters.timezone')}</label>
-              <select
-                id="report-timezone"
-                value={draft.timezone}
-                disabled={isReportPending}
-                onChange={(event) => updateDraft('timezone', event.target.value)}
-              >
-                {timezoneOptions.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+          <div className="reports-filter-main">
             {supports(definition, 'balanceYear') && (
               <div className="form-group">
                 <label htmlFor="report-balance-year">{t('reports:filters.balanceYear')}</label>
@@ -815,6 +839,33 @@ export function ReportCenterPage() {
               </div>
             )}
 
+            <div className="reports-filter-buttons">
+              <button type="button" className="btn btn-outline" aria-expanded={optionsOpen} aria-controls="report-advanced-options" onClick={() => setOptionsOpen((open) => !open)}>
+                <SettingsIcon size={16} />{t('reports:filters.options')}
+              </button>
+              <button type="submit" className="btn btn-primary" disabled={isReportPending}>
+                {isReportPending ? t('reports:actions.applying') : t('reports:actions.apply')}
+              </button>
+            </div>
+          </div>
+
+          <div className="reports-filter-options" id="report-advanced-options" hidden={!optionsOpen}>
+            <div className="form-group">
+              <label htmlFor="report-timezone">{t('reports:filters.timezone')}</label>
+              <select
+                id="report-timezone"
+                value={draft.timezone}
+                disabled={isReportPending}
+                onChange={(event) => updateDraft('timezone', event.target.value)}
+              >
+                {timezoneOptions.map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="form-group">
               <label htmlFor="report-sort">{t('reports:filters.sort')}</label>
               <select
@@ -859,6 +910,9 @@ export function ReportCenterPage() {
               </label>
             )}
           </div>
+          {appliedQuery && JSON.stringify(requestFromDraft(draft, definition)) !== JSON.stringify({ ...appliedQuery.request, page: 0 }) && (
+            <p className="reports-draft-notice" role="status">{t('reports:filters.unapplied')}</p>
+          )}
 
           {groupless && (
             <p className="panel-filter-hint" id="report-groupless-hint">
@@ -875,18 +929,7 @@ export function ReportCenterPage() {
             </p>
           )}
 
-          <div className="panel-filter-actions">
-            {draftError && (
-              <p className="field-error" role="alert" id="report-filter-error">
-                {draftError}
-              </p>
-            )}
-            <button type="submit" className="btn btn-primary" disabled={isReportPending}>
-              {isReportPending
-                ? t('reports:actions.applying')
-                : t('reports:actions.apply')}
-            </button>
-          </div>
+          {draftError && <p className="field-error" role="alert" id="report-filter-error">{draftError}</p>}
         </form>
       </section>
 
@@ -953,12 +996,16 @@ export function ReportCenterPage() {
 
       {response && appliedView && (
         <>
-          <section
-            className="reports-applied card"
-            aria-labelledby="report-applied-title"
-            data-testid="report-applied-view"
-          >
-            <h2 id="report-applied-title">{t('reports:applied.title')}</h2>
+          <details className="reports-applied" data-testid="report-applied-view">
+            <summary>
+              <span id="report-applied-title">{t('reports:applied.title')} · {t(resultDefinition.labelKey)}</span>
+              <span className="reports-as-of" data-testid="report-as-of">
+                <span className="sr-only">{t('reports:asOf')} </span>
+                <time dateTime={response.asOf}>{formatValue(format, response.asOf)}</time>
+                <span className="reports-as-of-zone"> ({format.timeZone})</span>
+                <ChevronDownIcon size={14} />
+              </span>
+            </summary>
             <dl>
               <div>
                 <dt>{t('reports:applied.definition')}</dt>
@@ -984,155 +1031,16 @@ export function ReportCenterPage() {
                 </dd>
               </div>
             </dl>
-          </section>
+          </details>
+          {(exportJob || exportError) && <div className="reports-export-feedback">{exportStatusPanel}</div>}
 
-          <p className="reports-as-of" data-testid="report-as-of">
-            {t('reports:asOf')}{' '}
-            <time dateTime={response.asOf}>
-              {formatValue(format, response.asOf)}
-            </time>{' '}
-            <span className="reports-as-of-zone">
-              ({format.timeZone})
-            </span>
-          </p>
-
-          {summary && (
-            <section className="reports-summary" aria-labelledby="report-summary-title">
-              <h2 id="report-summary-title">{t('reports:summary.title')}</h2>
-              <dl>
-                {resultDefinition.summaryFields.map((field) => {
-                  // A composite value is a set of rows, not a display number. Rendering it
-                  // through the scalar `dd` turned it into one run-on headline-sized string.
-                  const breakdown = summaryBreakdown(format, summary[field.key])
-                  return (
-                    <div
-                      key={field.key}
-                      data-testid={`report-summary-${field.key}`}
-                      className={breakdown ? 'reports-summary-composite' : undefined}
-                    >
-                      <dt>{t(field.labelKey)}</dt>
-                      {breakdown ? (
-                        <dd className="reports-summary-breakdown">
-                          <ul>
-                            {breakdown.map((row) => (
-                              <li key={row.key}>
-                                <span className="reports-breakdown-label">
-                                  {row.presence ? (
-                                    <PresenceBadge
-                                      presence={row.presence}
-                                      label={row.label}
-                                    />
-                                  ) : (
-                                    row.label
-                                  )}
-                                </span>
-                                <span className="reports-breakdown-parts">
-                                  {row.parts.map((part) => (
-                                    <span
-                                      key={part.key || row.key}
-                                      className="reports-breakdown-part"
-                                    >
-                                      {part.label ? (
-                                        <span className="reports-breakdown-part-label">
-                                          {part.label}
-                                        </span>
-                                      ) : null}
-                                      <span className="reports-breakdown-part-value">
-                                        {part.value}
-                                      </span>
-                                    </span>
-                                  ))}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </dd>
-                      ) : (
-                        <dd>{formatValue(format, summary[field.key])}</dd>
-                      )}
-                    </div>
-                  )
-                })}
-              </dl>
-            </section>
-          )}
+          {summary && <ReportSummary definition={resultDefinition} summary={summary} format={format} />}
 
           <ReportAnalytics
             summary={response.summary}
             incomplete={provenance?.incomplete === true}
             format={format}
           />
-
-          <section className="card reports-export-card" aria-labelledby="report-export-title">
-            <div>
-              <h2 id="report-export-title">{t('reports:exports.title')}</h2>
-              <p>{t('reports:exports.description')}</p>
-            </div>
-            <div className="reports-export-controls">
-              <div className="form-group">
-                <label htmlFor="report-export-format">
-                  {t('reports:exports.format')}
-                </label>
-                <select
-                  id="report-export-format"
-                  value={exportFormat}
-                  disabled={createExportMutation.isPending}
-                  onChange={(event) =>
-                    setExportFormat(event.target.value as 'CSV' | 'XLSX')}
-                >
-                  <option value="CSV">{t('reports:exports.formats.CSV')}</option>
-                  <option value="XLSX">{t('reports:exports.formats.XLSX')}</option>
-                </select>
-              </div>
-              <button
-                type="button"
-                className="btn btn-primary"
-                // One export per user: creating another while one is pending is a guaranteed 429
-                // the page already had the state to prevent.
-                disabled={createExportMutation.isPending || exportPending}
-                onClick={() => void handleCreateExport()}
-              >
-                {createExportMutation.isPending
-                  ? t('reports:exports.creating')
-                  : t('reports:exports.create')}
-              </button>
-            </div>
-
-            {exportStatusPanel}
-          </section>
-
-          {/* A band, not a rail: the results table declares a 1040px minimum against a
-              1121px panel, so a 300px rail beside it would leave 797px and put the table
-              into a permanent sideways scroll inside a narrowed column.
-
-              It carries the page-versus-total figures and nothing that is already on this
-              screen — the applied view, the as-of stamp and the summary have their own
-              cards above, and repeating them here would be noise rather than support. */}
-          <div className="support-band support-band-spaced" data-testid="report-results-band">
-            <div className="support-note">
-              <p className="support-note-title">{t('reports:band.setTitle')}</p>
-              <dl className="support-note-list">
-                <div className="support-note-kv">
-                  <dt>{t('reports:band.matchedLabel')}</dt>
-                  <dd data-testid="report-band-matched">{total}</dd>
-                </div>
-                <div className="support-note-kv">
-                  <dt>{t('reports:band.shownLabel')}</dt>
-                  <dd data-testid="report-band-shown">{rows.length}</dd>
-                </div>
-              </dl>
-              <p className="support-note-body support-note-footnote">
-                {t('reports:band.setFootnote')}
-              </p>
-            </div>
-            <div className="support-note">
-              <p className="support-note-title">{t('reports:band.readingTitle')}</p>
-              <ul className="support-note-bullets">
-                <li>{t('reports:band.readingTimezone')}</li>
-                <li>{t('reports:band.readingOrdering')}</li>
-              </ul>
-            </div>
-          </div>
 
           <section className="panel-results reports-results card" aria-labelledby="report-results-title">
             <div className="card-header panel-results-header">
@@ -1146,6 +1054,16 @@ export function ReportCenterPage() {
                   {t('reports:results.count', { count: total })}
                 </p>
               </div>
+              <details className="reports-result-info" data-testid="report-results-band">
+                <summary>{t('reports:band.setTitle')}<ChevronDownIcon size={14} /></summary>
+                <div>
+                  <p>{t('reports:band.matchedLabel')}: <b data-testid="report-band-matched">{total}</b></p>
+                  <p>{t('reports:band.shownLabel')}: <b data-testid="report-band-shown">{rows.length}</b></p>
+                  <p>{t('reports:band.setFootnote')}</p>
+                  <p>{t('reports:band.readingTimezone')}</p>
+                  <p>{t('reports:band.readingOrdering')}</p>
+                </div>
+              </details>
             </div>
             {rows.length === 0 ? (
               <div className="dashboard-empty-state" data-testid="report-empty">
@@ -1163,29 +1081,7 @@ export function ReportCenterPage() {
                 describedById="report-results-scroll-hint"
                 testId="report-results-region"
               >
-                <table className="dashboard-table table-compact">
-                  <thead>
-                    <tr>
-                      {resultDefinition.columns.map((column) => (
-                        <th key={column.key} scope="col">{t(column.labelKey)}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, index) => (
-                      <tr key={`${String(row.rowType)}-${index}`} data-testid={`report-row-${index}`}>
-                        {resultDefinition.columns.map((column) => (
-                          // dir="auto" because names, groups and leave types are user
-                          // data: they are never translated, and an LTR name inside an
-                          // RTL document reorders its trailing punctuation without it.
-                          <td key={column.key} dir="auto">
-                            {formatValue(format, row[column.key])}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <ReportTable definition={resultDefinition} rows={rows} format={format} />
               </HorizontalScrollRegion>
             )}
             <div className="panel-pagination">

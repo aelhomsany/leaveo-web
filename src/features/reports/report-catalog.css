@@ -1,12 +1,59 @@
 .report-catalog-page {
   display: grid;
-  gap: var(--space-section-gap);
+  gap: 24px;
+}
+
+.report-catalog-page .page-header {
+  align-items: end;
+  margin: 0 0 4px;
+}
+
+.report-catalog-page .panel-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+}
+
+.report-catalog-page .panel-eyebrow::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-data-mint);
+}
+
+.report-catalog-page .page-title {
+  margin-block-start: 10px;
+  font-size: var(--font-display-lg-size);
+  font-weight: 500;
+}
+
+.report-catalog-page .page-sub {
+  max-width: 46ch;
+  margin-block-start: 10px;
+}
+
+.report-catalog-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+  white-space: nowrap;
+}
+
+.report-catalog-count strong {
+  color: var(--color-text-primary);
+  font-size: var(--font-section-title-size);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 .report-catalog-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-lg);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -17,122 +64,177 @@
   min-width: 0;
 }
 
-/* Icon, text and chevron on one row. The card used to stack a 124px drawing above its copy,
-   which spent roughly 40% of a ~300px card on decoration; this is about a third the height
-   and puts the report's name on the first line where it is scanned. */
 .report-catalog-card {
-  display: grid;
+  display: flex;
   flex: 1;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
-  gap: var(--space-md);
-  align-items: start;
+  flex-direction: column;
   min-width: 0;
-  padding: var(--space-md);
+  min-height: 212px;
+  padding: 24px;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-2xl);
   background: var(--color-surface-card);
-  box-shadow: var(--shadow-card);
-  color: inherit;
+  color: var(--color-text-primary);
   text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
-.report-catalog-card:hover,
-.report-catalog-card:focus-visible {
-  border-color: var(--color-data-ocean);
-  box-shadow: var(--shadow-decision);
+.report-catalog-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card);
 }
 
-/* The tile carries the report's data hue as a tint; the glyph inside inherits the solid hue
-   through currentColor, so a tone is set in exactly one place. */
+.report-catalog-card-featured {
+  background: var(--color-brand-navy);
+  border-color: var(--color-brand-navy);
+  color: var(--color-text-inverse);
+}
+
+.report-catalog-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-block-end: 18px;
+}
+
 .report-catalog-icon {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
   border-radius: var(--radius-md);
+  background: var(--color-surface-subtle);
+  color: var(--color-brand-ocean);
 }
 
 .report-catalog-icon svg {
-  display: block;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-/* A filled mark inside an otherwise stroked glyph: it needs a class rather than SVG
-   presentation attributes, which the rule above would override. */
 .report-catalog-icon .rci-dot {
   fill: currentColor;
   stroke: none;
 }
 
-.report-catalog-icon.tone-ocean {
-  background: var(--color-data-ocean-tint);
-  color: var(--color-data-ocean);
+.report-catalog-card-featured .report-catalog-icon {
+  background: var(--color-mint-alpha-20);
+  color: var(--color-brand-seafoam);
 }
 
-.report-catalog-icon.tone-mint {
-  background: var(--color-data-mint-tint);
-  color: var(--color-data-mint);
-}
-
-.report-catalog-icon.tone-rose {
-  background: var(--color-data-rose-tint);
-  color: var(--color-data-rose);
-}
-
-.report-catalog-icon.tone-sun {
-  background: var(--color-data-sun-tint);
-  color: var(--color-data-sun);
+.report-catalog-kind {
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+  font-weight: 500;
+  text-align: end;
 }
 
 .report-catalog-text {
   display: grid;
-  gap: var(--space-xs);
-  min-width: 0;
+  gap: 7px;
+  flex: 1;
 }
 
 .report-catalog-name {
-  color: var(--color-text-primary);
-  font-size: var(--font-card-title-size);
-  font-weight: var(--font-card-title-weight);
-  line-height: var(--font-card-title-line-height);
+  font-size: var(--font-section-title-size);
+  font-weight: 500;
+  line-height: 1.25;
 }
 
 .report-catalog-desc {
   color: var(--color-text-secondary);
-  font-size: var(--font-caption-size);
-  line-height: var(--font-caption-line-height);
+  font-size: var(--font-body-sm-size);
+  max-width: 36ch;
 }
 
-/* Sits on the title's line rather than centred on the card, so it reads as belonging to the
-   report's name and not to the sentence below it. */
-.report-catalog-chevron {
-  display: block;
-  width: 16px;
-  height: 16px;
-  margin-block-start: 3px;
+.report-catalog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-start: 24px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+}
+
+.report-catalog-arrow {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: 50%;
+  color: var(--color-brand-ocean);
+}
+
+.report-catalog-arrow svg {
+  width: 14px;
+  height: 14px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
-  color: var(--color-border-strong);
 }
 
-/* 900px is this app's established stacking point. Two across first, then one. */
-@media (max-width: 1100px) {
+.report-catalog-card-featured .report-catalog-desc, .report-catalog-card-featured .report-catalog-kind {
+  color: var(--color-nav-foreground);
+}
+
+.report-catalog-card-featured .report-catalog-footer {
+  color: var(--color-brand-seafoam);
+}
+
+.report-catalog-card-featured .report-catalog-arrow {
+  background: var(--color-brand-seafoam);
+  color: var(--color-brand-navy);
+  border-color: transparent;
+}
+
+.report-catalog-export-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+}
+
+[dir='rtl'] .report-catalog-arrow svg {
+  transform: scaleX(-1);
+}
+
+@media (min-width: 1500px) {
   .report-catalog-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
 }
 
-@media (max-width: 900px) {
+@media (max-width: 600px) {
   .report-catalog-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .report-catalog-count {
+    display: none;
+  }
+
+  .report-catalog-card {
+    min-height: 190px;
+    padding: 20px;
+  }
+
+  .report-catalog-page .page-title {
+    font-size: var(--font-page-title-size);
+  }
+
 }
