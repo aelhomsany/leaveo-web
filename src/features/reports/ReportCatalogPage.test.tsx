@@ -60,16 +60,15 @@ describe('ReportCatalogPage', () => {
     expect(
       screen.getByText('Approved leave usage across a required date range.'),
     ).toBeInTheDocument()
-    expect(screen.getAllByText('View full report')).toHaveLength(REPORT_DEFINITIONS.length)
   })
 
-  it('[P1] names each card by its report and keeps the decorative preview out of that name', () => {
+  it('[P1] names each card by its report and keeps the decorative icon out of that name', () => {
     renderCatalog()
 
     const card = screen.getByTestId('report-card-carry-over')
     expect(card).toHaveAccessibleName(/Carry-over/)
-    // The preview is a miniature of the report's shape, not information: an SVG that reached
-    // the accessibility tree would read as noise before every card's real name.
-    expect(card.querySelector('.report-catalog-preview')).toHaveAttribute('aria-hidden', 'true')
+    // The icon is decoration, not information: an SVG that reached the accessibility tree
+    // would read as noise before every card's real name.
+    expect(card.querySelector('.report-catalog-icon')).toHaveAttribute('aria-hidden', 'true')
   })
 })

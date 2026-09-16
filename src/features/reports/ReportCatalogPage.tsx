@@ -5,162 +5,78 @@ import { REPORT_DEFINITIONS, reportSlugFor } from './reportDefinitions'
 import './report-catalog.css'
 
 /**
- * A miniature of the shape each report returns, so a report is recognisable before its name
- * is read.
- *
- * Decorative on purpose: `aria-hidden`, and never fed live data. Three of the six reports
- * draw no chart at all today, and their preview shows the table they actually return rather
- * than implying a visualization the product does not have.
+ * The data hue each report is tinted with on the catalog. Four hues across six reports, so two
+ * repeat; the order below keeps a repeat off its own row neighbour.
  */
-function ReportPreview({ definitionKey }: { definitionKey: ReportDefinitionKey }) {
+const REPORT_ICON_TONE: Record<ReportDefinitionKey, string> = {
+  BALANCE_SNAPSHOT: 'ocean',
+  LEAVE_USAGE: 'mint',
+  REQUEST_DETAIL: 'ocean',
+  EXCEPTION: 'rose',
+  PENDING_AGING: 'sun',
+  CARRYOVER: 'mint',
+}
+
+/**
+ * One mark per report, drawn for the 44px tile beside the report's name.
+ *
+ * Deliberately a glyph rather than a miniature of the report's chart. At tile size a real
+ * chart's bars and table rows collapse into texture instead of reading as a shape, and three
+ * of the six reports draw no chart at all -- so the old previews were inventing a visual for
+ * half the catalog and shrinking one past legibility for the other half.
+ *
+ * Decorative: the wrapping tile is `aria-hidden`, and none of this is ever fed live data.
+ */
+function ReportIcon({ definitionKey }: { definitionKey: ReportDefinitionKey }) {
   switch (definitionKey) {
     case 'BALANCE_SNAPSHOT':
-      // Rings, matching ReportAnalytics' BalanceRings.
+      // A part-filled ring: a balance is a proportion of an entitlement.
       return (
-        <svg viewBox="0 0 280 124" role="presentation">
-          <g transform="translate(68,62)">
-            <circle r="19" className="rcp-track" strokeWidth="8" />
-            <circle
-              r="19"
-              className="rcp-mint-stroke"
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeDasharray="74 46"
-              transform="rotate(-90)"
-            />
-          </g>
-          <g transform="translate(140,62)">
-            <circle r="30" className="rcp-track" strokeWidth="12" />
-            <circle
-              r="30"
-              className="rcp-ocean-stroke"
-              strokeWidth="12"
-              strokeLinecap="round"
-              strokeDasharray="122 67"
-              transform="rotate(-90)"
-            />
-          </g>
-          <g transform="translate(212,62)">
-            <circle r="19" className="rcp-track" strokeWidth="8" />
-            <circle
-              r="19"
-              className="rcp-sun-stroke"
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeDasharray="42 78"
-              transform="rotate(-90)"
-            />
-          </g>
+        <svg viewBox="0 0 24 24" role="presentation">
+          <circle cx="12" cy="12" r="8" opacity="0.28" />
+          <path d="M12 4a8 8 0 0 1 7.2 11.5" />
         </svg>
       )
     case 'LEAVE_USAGE':
-      // Bars with a trend line, matching ReportAnalytics' UsageTrend.
+      // Rising bars on a baseline: usage measured over a range.
       return (
-        <svg viewBox="0 0 280 124" role="presentation">
-          <path d="M30 104h220" className="rcp-axis" />
-          {[
-            [38, 70, 34],
-            [66, 54, 50],
-            [94, 78, 26],
-            [122, 38, 66],
-            [150, 62, 42],
-            [178, 48, 56],
-            [206, 82, 22],
-            [234, 66, 38],
-          ].map(([x, y, height]) => (
-            <rect key={x} x={x} y={y} width="17" height={height} rx="3" className="rcp-ocean" />
-          ))}
-          <polyline
-            points="46,84 74,74 102,88 130,62 158,76 186,68 214,92 242,80"
-            className="rcp-mint-stroke rcp-trend"
-          />
-        </svg>
-      )
-    case 'CARRYOVER':
-      // Stacked bars, matching ReportAnalytics' CarryoverBars: used / available / expired.
-      return (
-        <svg viewBox="0 0 280 124" role="presentation">
-          {[
-            [24, 96, 90, 34],
-            [55, 66, 128, 26],
-            [86, 138, 56, 0],
-          ].map(([y, used, available, expired]) => (
-            <g key={y}>
-              <rect x="30" y={y} width="220" height="15" rx="7.5" className="rcp-track-fill" />
-              <rect x="30" y={y} width={used} height="15" rx="7.5" className="rcp-ocean" />
-              <rect x={30 + used} y={y} width={available} height="15" className="rcp-mint" />
-              {expired > 0 && (
-                <rect
-                  x={30 + used + available}
-                  y={y}
-                  width={expired}
-                  height="15"
-                  rx="7.5"
-                  className="rcp-rose"
-                />
-              )}
-            </g>
-          ))}
-        </svg>
-      )
-    case 'PENDING_AGING':
-      // Descending buckets: the older the bucket, the smaller and more urgent.
-      return (
-        <svg viewBox="0 0 280 124" role="presentation">
-          <path d="M40 104h210" className="rcp-axis" />
-          <rect x="52" y="28" width="42" height="76" rx="4" className="rcp-mint" />
-          <rect x="104" y="50" width="42" height="54" rx="4" className="rcp-ocean" />
-          <rect x="156" y="70" width="42" height="34" rx="4" className="rcp-sun" />
-          <rect x="208" y="86" width="42" height="18" rx="4" className="rcp-rose" />
-        </svg>
-      )
-    case 'EXCEPTION':
-      // No chart exists for this report: this is the table it returns, severity dot first.
-      return (
-        <svg viewBox="0 0 280 124" role="presentation">
-          <rect x="30" y="20" width="220" height="18" rx="5" className="rcp-head" />
-          <rect x="40" y="26" width="38" height="6" rx="3" className="rcp-muted" />
-          <rect x="100" y="26" width="50" height="6" rx="3" className="rcp-muted" />
-          {[
-            [56, 'rcp-rose', 64, 92],
-            [78, 'rcp-sun', 52, 78],
-            [100, 'rcp-sun', 58, 86],
-          ].map(([cy, tone, w1, w2]) => (
-            <g key={cy as number}>
-              <circle cx="46" cy={cy as number} r="6" className={tone as string} />
-              <rect x="60" y={(cy as number) - 4} width={w1 as number} height="7" rx="3.5" className="rcp-ink" />
-              <rect x="140" y={(cy as number) - 4} width={w2 as number} height="7" rx="3.5" className="rcp-line" />
-            </g>
-          ))}
+        <svg viewBox="0 0 24 24" role="presentation">
+          <path d="M4 20h16" />
+          <path d="M7.5 20v-5M12 20v-9M16.5 20v-6.5" />
         </svg>
       )
     case 'REQUEST_DETAIL':
-    default:
-      // No chart exists for this report either: rows with a status pill, as the table renders.
+      // Ruled rows: this report returns records, not a figure.
       return (
-        <svg viewBox="0 0 280 124" role="presentation">
-          <rect x="30" y="20" width="220" height="18" rx="5" className="rcp-head" />
-          <rect x="40" y="26" width="46" height="6" rx="3" className="rcp-muted" />
-          <rect x="110" y="26" width="36" height="6" rx="3" className="rcp-muted" />
-          <rect x="170" y="26" width="42" height="6" rx="3" className="rcp-muted" />
-          {[
-            [50, 58, 40, 'rcp-pill-mint'],
-            [72, 52, 46, 'rcp-pill-sun'],
-            [94, 64, 34, 'rcp-pill-rose'],
-          ].map(([y, w1, w2, pill]) => (
-            <g key={y as number}>
-              <rect x="40" y={y as number} width={w1 as number} height="7" rx="3.5" className="rcp-ink" />
-              <rect x="110" y={y as number} width={w2 as number} height="7" rx="3.5" className="rcp-line" />
-              <rect
-                x="170"
-                y={(y as number) - 3}
-                width="48"
-                height="13"
-                rx="6.5"
-                className={pill as string}
-              />
-            </g>
-          ))}
+        <svg viewBox="0 0 24 24" role="presentation">
+          <rect x="4" y="4" width="16" height="16" rx="2.5" />
+          <path d="M8 9.5h8M8 13h8M8 16.5h4.5" />
+        </svg>
+      )
+    case 'EXCEPTION':
+      // An alert mark: anomalies the reporting service flagged.
+      return (
+        <svg viewBox="0 0 24 24" role="presentation">
+          <path d="M12 4.5 21 19.5H3z" />
+          <path d="M12 10v4" />
+          <circle cx="12" cy="17" r="0.6" className="rci-dot" />
+        </svg>
+      )
+    case 'PENDING_AGING':
+      // A clock: this report is about how long something has waited.
+      return (
+        <svg viewBox="0 0 24 24" role="presentation">
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 7.5V12l3 2" />
+        </svg>
+      )
+    case 'CARRYOVER':
+    default:
+      // An arrow turning forward: days moving from one balance year into the next.
+      return (
+        <svg viewBox="0 0 24 24" role="presentation">
+          <path d="M4 8.5h11a4.5 4.5 0 0 1 0 9H9" />
+          <path d="m7.5 5 3.5 3.5L7.5 12" />
         </svg>
       )
   }
@@ -194,18 +110,32 @@ export function ReportCatalogPage() {
           return (
             <li key={definition.key}>
               {/* The whole card is one link: a card with a separate "open" control gives
-                  keyboard and screen-reader users two stops for one destination. */}
+                  keyboard and screen-reader users two stops for one destination. That is also
+                  why no "view report" text is rendered -- the card's name and sentence are
+                  the link's accessible name, and a third line only repeated the destination. */}
               <Link
                 className="report-catalog-card"
                 to={`/reports/${slug}`}
                 data-testid={`report-card-${slug}`}
               >
-                <span className="report-catalog-preview" aria-hidden="true">
-                  <ReportPreview definitionKey={definition.key} />
+                <span
+                  className={`report-catalog-icon tone-${REPORT_ICON_TONE[definition.key]}`}
+                  aria-hidden="true"
+                >
+                  <ReportIcon definitionKey={definition.key} />
                 </span>
-                <span className="report-catalog-name">{t(definition.labelKey)}</span>
-                <span className="report-catalog-desc">{t(definition.descriptionKey)}</span>
-                <span className="report-catalog-open">{t('reports:catalog.open')}</span>
+                <span className="report-catalog-text">
+                  <span className="report-catalog-name">{t(definition.labelKey)}</span>
+                  <span className="report-catalog-desc">{t(definition.descriptionKey)}</span>
+                </span>
+                <svg
+                  className="report-catalog-chevron"
+                  viewBox="0 0 24 24"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <path d="m9 6 6 6-6 6" />
+                </svg>
               </Link>
             </li>
           )
