@@ -248,12 +248,12 @@ export function TeamCalendarPage() {
 
   return (
     <div className="page page-wide team-calendar-page" data-testid="team-calendar-page">
-      <header className="page-header calendar-page-header">
+      <header className="page-header calendar-page-header calendar-workspace-header">
         <div>
           <h1 className="page-title">{t('title')}</h1>
           <p className="page-sub">{t('subtitle')}</p>
         </div>
-        <div className="calendar-header-actions">
+        <div className="calendar-header-actions calendar-command-deck">
           <div
             className="calendar-view-toggle calendar-glass-control"
             role="group"
@@ -367,7 +367,7 @@ export function TeamCalendarPage() {
 
       {calendarQuery.isSuccess && calendar ? (
         <div className="calendar-section">
-          <details className="calendar-policy-disclosure calendar-glass-card">
+          <details className="calendar-policy-disclosure calendar-glass-card calendar-policy-card">
             <summary data-testid="calendar-why-days-differ">
               {t('policy.summary')}
             </summary>
