@@ -9,9 +9,70 @@
   margin-block-end: var(--space-section-gap);
 }
 
+/* Personal leave desk -------------------------------------------------------
+   The existing balances, history and live team context are retained. The page gets a
+   clearer beginning, a quieter workspace body, and stronger scan targets for requests. */
+.my-leaves-page {
+  display: grid;
+  gap: var(--space-section-gap);
+}
+
+.my-leaves-page-header {
+  min-height: 220px;
+  align-items: flex-end;
+  margin-block-end: 0;
+  overflow: hidden;
+  padding: clamp(28px, 5vw, 52px);
+  border: 1px solid var(--color-brand-navy);
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(circle at 91% 17%, color-mix(in srgb, var(--color-brand-seafoam) 37%, transparent), transparent 32%),
+    linear-gradient(126deg, var(--color-brand-navy), var(--color-brand-ocean));
+}
+
+.my-leaves-page-header .page-title,
+.my-leaves-page-header .page-sub {
+  color: var(--color-text-inverse);
+}
+
+.my-leaves-page-header .page-title {
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 500;
+  letter-spacing: -.04em;
+}
+
+.my-leaves-page-header .page-sub {
+  max-width: 50ch;
+  color: color-mix(in srgb, var(--color-text-inverse) 80%, transparent);
+}
+
+.my-leaves-page-eyebrow {
+  margin: 0 0 var(--space-sm);
+  color: var(--color-brand-seafoam);
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-label-weight);
+  letter-spacing: .11em;
+  line-height: var(--font-caption-line-height);
+  text-transform: uppercase;
+}
+
+.my-leaves-request-button {
+  padding-inline: var(--space-xl);
+  border: 1px solid color-mix(in srgb, var(--color-text-inverse) 18%, transparent);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .16);
+}
+
 .my-leaves-balances {
   min-width: 0;
   margin-block-end: var(--space-section-gap);
+}
+
+.my-leaves-balances {
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-card);
+  box-shadow: 0 14px 38px rgba(19, 59, 69, .06);
 }
 
 .my-leaves-section-heading {
@@ -32,6 +93,8 @@
   line-height: var(--font-section-title-line-height);
   letter-spacing: var(--font-section-title-letter-spacing);
 }
+
+.my-leaves-section-title { color: var(--color-brand-navy); font-size: clamp(22px, 2.4vw, 28px); letter-spacing: -.03em; }
 
 /* The section-title token is negative tracking, which in Arabic crowds glyphs that are
    already joined. global.css guards the shared `.section-title` class, but this is its
@@ -72,6 +135,17 @@ html[lang='ar'] .my-leaves-section-title {
   background: var(--color-surface-selected);
 }
 
+.my-leaves-balances .balance-card {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(19, 59, 69, .05);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.my-leaves-balances .balance-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(19, 59, 69, .10);
+}
+
 .my-leaves-region-empty {
   margin: 0;
   padding: var(--space-card-padding);
@@ -87,6 +161,7 @@ html[lang='ar'] .my-leaves-section-title {
   min-width: 0;
   padding: var(--space-lg) var(--space-card-padding);
   border-block-end: 1px solid var(--color-border-default);
+  background: linear-gradient(90deg, var(--color-surface-subtle), var(--color-surface-card));
 }
 
 .my-leaves-result-count {
@@ -130,7 +205,7 @@ html[lang='ar'] .my-leaves-section-title {
   gap: var(--space-xs);
   padding: var(--space-xs);
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--color-surface-subtle);
 }
 
@@ -141,7 +216,7 @@ html[lang='ar'] .my-leaves-section-title {
   padding-block: var(--space-sm);
   padding-inline: var(--space-lg);
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -214,7 +289,22 @@ html[lang='ar'] .my-leaves-section-title {
      while the balance grid above it filled the row (removed 2026-07-05). */
   margin-block-start: 0;
   overflow: hidden;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 14px 38px rgba(19, 59, 69, .06);
 }
+
+.my-leaves-history-header {
+  padding-block: var(--space-xl);
+  background: linear-gradient(90deg, var(--color-surface-subtle), var(--color-surface-card));
+}
+
+.my-leaves-history-header .card-title {
+  color: var(--color-brand-navy);
+  font-size: clamp(20px, 2vw, 26px);
+}
+
+.my-leaves-history .dashboard-table tbody tr { transition: background-color 160ms ease; }
+.my-leaves-history .dashboard-table tbody tr:hover { background: color-mix(in srgb, var(--color-brand-seafoam) 16%, var(--color-surface-card)); }
 
 .my-leaves-history .dashboard-table {
   /* Inherit the shared 760px table floor rather than adding +200px; the extra
@@ -295,6 +385,15 @@ html[lang='ar'] .my-leaves-section-title {
   border-block-start: 1px solid var(--color-border-default);
 }
 
+.my-leaves-request-card {
+  margin-inline: var(--space-sm);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 18px rgba(19, 59, 69, .04);
+}
+
+.my-leaves-request-card + .my-leaves-request-card { margin-block-start: var(--space-sm); border-block-start: 1px solid var(--color-border-default); }
+
 .my-leaves-request-card-heading {
   min-width: 0;
   display: flex;
@@ -326,6 +425,10 @@ html[lang='ar'] .my-leaves-section-title {
   outline-offset: -2px;
   box-shadow: inset 0 0 0 4px var(--color-focus-outer);
 }
+
+.my-leaves-layout > .panel-stack { gap: 0; }
+.my-leaves-layout .support-rail { gap: var(--space-md); }
+.my-leaves-layout .support-note { border-radius: var(--radius-lg); box-shadow: 0 8px 22px rgba(19, 59, 69, .04); }
 
 .my-leaves-history tr[data-focused='true'] td {
   background: var(--color-surface-selected);
@@ -503,8 +606,11 @@ html[lang='ar'] .my-leaves-section-title {
 
 @media (max-width: 900px) {
   .my-leaves-page .page-header {
+    min-height: 176px;
     align-items: stretch;
     flex-direction: column;
+    margin-inline: calc(var(--space-page-mobile) * -1);
+    border-radius: 0;
   }
 
   .my-leaves-page .page-header .btn-primary {
@@ -514,6 +620,8 @@ html[lang='ar'] .my-leaves-section-title {
   .my-leaves-balances .balance-grid {
     grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
   }
+
+  .my-leaves-balances { padding: var(--space-lg); }
 
   .my-leaves-filter-controls {
     grid-template-columns: minmax(0, 1fr);
@@ -547,6 +655,8 @@ html[lang='ar'] .my-leaves-section-title {
     text-align: start;
   }
 }
+
+html[lang='ar'] .my-leaves-page-eyebrow { letter-spacing: normal; }
 
 @media (max-width: 900px) {
   .cancel-modal-actions {
