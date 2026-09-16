@@ -96,6 +96,7 @@
 }
 
 .calendar-workspace-header .calendar-request-button {
+  margin-block-start: var(--space-xl);
   border: 1px solid color-mix(in srgb, var(--color-text-inverse) 18%, transparent);
   box-shadow: none;
   padding-inline: var(--space-lg);
@@ -1271,7 +1272,7 @@ html[lang='ar'] .calendar-agenda-heading {
 
   .calendar-command-deck { max-width: none; }
 
-  .calendar-request-button { flex: 1 1 100%; }
+  .calendar-request-button { width: 100%; }
 
   .calendar-out-today { padding: var(--space-lg); }
 

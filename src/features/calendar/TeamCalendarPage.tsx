@@ -255,8 +255,6 @@ export function TeamCalendarPage() {
         <div>
           <h1 className="page-title">{t('title')}</h1>
           <p className="page-sub">{t('subtitle')}</p>
-        </div>
-        <div className="calendar-header-actions calendar-command-deck">
           <button
             type="button"
             className="btn btn-primary calendar-request-button"
@@ -265,6 +263,8 @@ export function TeamCalendarPage() {
           >
             <PlusIcon size={16} /> {t('leaves:actions.requestLeave')}
           </button>
+        </div>
+        <div className="calendar-header-actions calendar-command-deck">
           <div
             className="calendar-view-toggle calendar-glass-control"
             role="group"
