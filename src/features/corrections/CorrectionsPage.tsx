@@ -15,6 +15,7 @@ import { HorizontalScrollRegion } from '../../components/ui/HorizontalScrollRegi
 import { Modal } from '../../components/ui/Modal'
 import { CloseIcon } from '../../components/ui/icons'
 import { useToast } from '../../components/ui/useToast'
+import './corrections.css'
 
 const KNOWN_KINDS = new Set(['MANUAL_CORRECTION', 'COMPENSATION', 'OPENING_IMPORT'])
 
@@ -228,11 +229,11 @@ export function CorrectionsPage() {
 
   if (capabilityUnavailable) {
     return (
-      <div className="page page-wide" data-testid="corrections-page">
-        <header className="page-header">
+      <div className="page page-wide corrections-page" data-testid="corrections-page">
+        <header className="page-header corrections-page-header">
           <h1 className="page-title">{t('corrections:title')}</h1>
         </header>
-        <section className="card" role="alert" data-testid="corrections-capability-unavailable">
+        <section className="card corrections-unavailable" role="alert" data-testid="corrections-capability-unavailable">
           <h2>{t('corrections:capabilityUnavailable.title')}</h2>
           <p>{t('corrections:capabilityUnavailable.body')}</p>
         </section>
@@ -248,13 +249,23 @@ export function CorrectionsPage() {
   const preview = previewQuery.data
 
   return (
-    <div className="page page-wide" data-testid="corrections-page">
-      <header className="page-header">
+    <div className="page page-wide corrections-page" data-testid="corrections-page">
+      <header className="page-header corrections-page-header">
         <div>
           <p className="panel-eyebrow">{t('corrections:eyebrow')}</p>
           <h1 className="page-title">{t('corrections:title')}</h1>
           <p className="page-sub">{t('corrections:subtitle')}</p>
         </div>
+        <dl className="corrections-page-kpis" aria-label={t('corrections:ledger.band.countTitle')}>
+          <div>
+            <dt>{t('corrections:ledger.band.entriesLabel')}</dt>
+            <dd>{ledgerQuery.isPending || ledgerQuery.isError ? '—' : ledgerTotal}</dd>
+          </div>
+          <div>
+            <dt>{t('corrections:ledger.band.pagesLabel')}</dt>
+            <dd>{ledgerQuery.isPending || ledgerQuery.isError ? '—' : ledgerTotalPages}</dd>
+          </div>
+        </dl>
       </header>
 
       {/* `.page` is padding, not a gapped grid, so these sections stacked flush against one
@@ -263,8 +274,14 @@ export function CorrectionsPage() {
           renders it, and the stack's layout rules have no business reaching into the top
           layer. */}
       <div className="panel-stack">
-        <section className="card" aria-labelledby="correction-form-title" data-testid="correction-form">
-          <h2 id="correction-form-title">{t('corrections:form.title')}</h2>
+        <section className="card corrections-form-card" aria-labelledby="correction-form-title" data-testid="correction-form">
+          <div className="corrections-card-heading">
+            <div>
+              <p className="corrections-card-kicker">{t('corrections:eyebrow')}</p>
+              <h2 id="correction-form-title">{t('corrections:form.title')}</h2>
+            </div>
+            <span className="corrections-card-step" aria-hidden="true">01</span>
+          </div>
           {referenceQuery.isError && (
             <p className="field-error" role="alert" data-testid="correction-reference-error">
               {t('corrections:errors.referenceDataFailed')}
@@ -367,9 +384,12 @@ export function CorrectionsPage() {
         </section>
 
         {lastResult && (
-          <section className="card" aria-labelledby="correction-result-title" data-testid="correction-result">
-            <h2 id="correction-result-title">{t('corrections:result.title')}</h2>
-            <dl>
+          <section className="card corrections-result-card" aria-labelledby="correction-result-title" data-testid="correction-result">
+            <div className="corrections-card-heading">
+              <h2 id="correction-result-title">{t('corrections:result.title')}</h2>
+              <span className="corrections-result-seal" aria-hidden="true">✓</span>
+            </div>
+            <dl className="corrections-result-metrics">
               <div>
                 <dt>{t('corrections:result.before')}</dt>
                 <dd>{lastResult.beforeRemainingDays}</dd>
@@ -385,8 +405,8 @@ export function CorrectionsPage() {
         {/* A band, not a rail: the ledger's seven columns want 1040px of min-content against
             a 1121px panel, so a 300px rail beside it would leave the table 797px and force a
             permanent sideways scroll inside a narrowed column. */}
-        <div className="support-band" data-testid="corrections-ledger-band">
-          <div className="support-note">
+        <div className="support-band corrections-ledger-band" data-testid="corrections-ledger-band">
+          <div className="support-note corrections-ledger-note">
             <p className="support-note-title">{t('corrections:ledger.band.countTitle')}</p>
             <dl className="support-note-list">
               <div className="support-note-kv">
@@ -406,11 +426,11 @@ export function CorrectionsPage() {
               {t('corrections:ledger.band.countFootnote')}
             </p>
           </div>
-          <div className="support-note">
+          <div className="support-note corrections-ledger-note">
             <p className="support-note-title">{t('corrections:ledger.band.meaningTitle')}</p>
             <p className="support-note-body">{t('corrections:ledger.band.meaningBody')}</p>
           </div>
-          <div className="support-note">
+          <div className="support-note corrections-ledger-note">
             <p className="support-note-title">{t('corrections:ledger.band.readingTitle')}</p>
             <ul className="support-note-bullets">
               <li>{t('corrections:ledger.band.readingDelta')}</li>
@@ -420,7 +440,7 @@ export function CorrectionsPage() {
           </div>
       </div>
 
-      <section className="panel-results card" aria-labelledby="correction-ledger-title" data-testid="correction-ledger">
+      <section className="panel-results card corrections-ledger-card" aria-labelledby="correction-ledger-title" data-testid="correction-ledger">
         <div className="card-header">
           <h2 className="card-title" id="correction-ledger-title">
             {t('corrections:ledger.title')}

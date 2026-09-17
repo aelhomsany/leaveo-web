@@ -371,9 +371,10 @@ export function SettingsPage() {
   )
 
   return (
-    <div className="page page-wide" data-testid="settings-page">
+    <div className="page page-wide settings-page" data-testid="settings-page">
       <header className="page-header settings-page-header">
         <div>
+          <p className="settings-page-eyebrow">{t('hero.eyebrow')}</p>
           <h1 className="page-title">{t('title')}</h1>
           <p className="page-sub">{t('subtitle')}</p>
         </div>
@@ -387,11 +388,16 @@ export function SettingsPage() {
 
         <main className="settings-active-region">
           <header className="settings-active-header">
-            <p className="settings-active-eyebrow">{t('categories.sectionLabel')}</p>
-            <h2 className="settings-active-title" id={`settings-heading-${activeCategory}`}>
-              {activeCopy.title}
-            </h2>
-            <p className="settings-active-subtitle">{activeCopy.subtitle}</p>
+            <span className="settings-active-index" aria-hidden="true">
+              {String(SETTINGS_CATEGORIES.indexOf(activeCategory) + 1).padStart(2, '0')}
+            </span>
+            <div>
+              <p className="settings-active-eyebrow">{t('categories.sectionLabel')}</p>
+              <h2 className="settings-active-title" id={`settings-heading-${activeCategory}`}>
+                {activeCopy.title}
+              </h2>
+              <p className="settings-active-subtitle">{activeCopy.subtitle}</p>
+            </div>
           </header>
 
           <div

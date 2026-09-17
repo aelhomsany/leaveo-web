@@ -366,8 +366,9 @@ export function MyLeavesPage() {
 
   return (
     <div className="page page-wide my-leaves-page" data-testid="my-leaves-page">
-      <header className="page-header">
+      <header className="page-header my-leaves-page-header">
         <div>
+          <p className="my-leaves-page-eyebrow">{t('leaves:title')}</p>
           <h1 className="page-title" ref={greetingRef} tabIndex={-1}>
             {t('dashboard:greeting', {
               time: t(`dashboard:${timeGreetingKey()}`),
@@ -378,7 +379,7 @@ export function MyLeavesPage() {
         </div>
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-primary my-leaves-request-button"
           data-testid="request-leave-btn"
           onClick={openRequestLeave}
         >

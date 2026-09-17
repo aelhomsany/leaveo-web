@@ -307,3 +307,240 @@
     gap: var(--space-md);
   }
 }
+
+/* Organization control room refresh ----------------------------------------
+   The tab semantics and mounted-panel contract stay intact; this is visual
+   hierarchy for the same settings architecture. */
+.settings-page-header {
+  position: relative;
+  min-height: 190px;
+  overflow: hidden;
+  margin-block-end: var(--space-2xl);
+  padding: clamp(28px, 5vw, 50px) clamp(24px, 5vw, 56px);
+  border: 1px solid var(--color-brand-navy);
+  border-radius: var(--radius-2xl);
+  background:
+    linear-gradient(115deg, transparent 0 68%, color-mix(in srgb, var(--color-brand-seafoam) 24%, transparent) 68% 69%, transparent 69%),
+    radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--color-brand-seafoam) 34%, transparent), transparent 33%),
+    linear-gradient(125deg, var(--color-brand-navy), var(--color-brand-ocean));
+}
+
+.settings-page-header .page-title,
+.settings-page-header .page-sub {
+  color: var(--color-text-inverse);
+}
+
+.settings-page-header .page-title {
+  font-size: clamp(32px, 4vw, 48px);
+  letter-spacing: -0.04em;
+}
+
+.settings-page-header .page-sub {
+  max-width: 54ch;
+  color: color-mix(in srgb, var(--color-text-inverse) 82%, transparent);
+}
+
+.settings-page-eyebrow {
+  margin: 0 0 var(--space-sm);
+  color: var(--color-brand-seafoam);
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-label-weight);
+  letter-spacing: 0.1em;
+  line-height: var(--font-caption-line-height);
+  text-transform: uppercase;
+}
+
+.settings-ia-layout {
+  gap: clamp(var(--space-lg), 3vw, var(--space-3xl));
+}
+
+.settings-category-label {
+  margin: 0 0 var(--space-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-label-weight);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-category-scroll {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-decision);
+}
+
+.settings-category-tabs {
+  gap: 2px;
+  padding: var(--space-sm);
+}
+
+.settings-category-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-inline: var(--space-md);
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.settings-category-tab:hover {
+  transform: translateX(2px);
+}
+
+html[dir='rtl'] .settings-category-tab:hover {
+  transform: translateX(-2px);
+}
+
+.settings-category-tab.is-active {
+  border-color: transparent;
+  background: var(--color-brand-navy);
+  color: var(--color-text-inverse);
+  box-shadow: 0 6px 14px rgba(10, 60, 73, 0.14);
+}
+
+.settings-category-number {
+  min-width: 22px;
+  color: var(--color-text-disabled);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.settings-category-tab.is-active .settings-category-number {
+  color: var(--color-brand-seafoam);
+}
+
+.settings-active-region {
+  min-width: 0;
+}
+
+.settings-active-header {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: var(--space-lg);
+  align-items: start;
+  margin-block-end: var(--space-xl);
+  padding: var(--space-xl) var(--space-2xl);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.settings-active-index {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-surface-selected);
+  color: var(--color-brand-ocean);
+  font-size: var(--font-label-size);
+  font-weight: var(--font-label-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-active-eyebrow {
+  color: var(--color-brand-ocean);
+  font-size: var(--font-caption-size);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settings-active-title {
+  font-size: clamp(22px, 2.5vw, 30px);
+  letter-spacing: -0.035em;
+}
+
+.settings-panel > .settings-card,
+.settings-panel > .panel-with-aside,
+.settings-panel > .panel-stack {
+  padding: var(--space-2xl);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.settings-panel > .panel-with-aside {
+  align-items: start;
+}
+
+.settings-panel .settings-card {
+  border-radius: var(--radius-lg);
+}
+
+.settings-panel .support-note {
+  border-radius: var(--radius-lg);
+}
+
+.settings-panel .organization-settings-card {
+  padding: var(--space-2xl);
+  border: 1px solid var(--color-border-default);
+  box-shadow: 0 10px 26px rgba(19, 59, 69, 0.05);
+}
+
+.organization-settings-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+}
+
+.organization-settings-facts {
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-border-default);
+}
+
+.organization-settings-facts > div {
+  border: 0;
+  border-radius: 0;
+  background: var(--color-surface-canvas);
+}
+
+html[lang='ar'] .settings-page-eyebrow,
+html[lang='ar'] .settings-category-label,
+html[lang='ar'] .settings-active-eyebrow {
+  letter-spacing: normal;
+}
+
+@media (max-width: 900px) {
+  .settings-page-header {
+    min-height: 170px;
+    margin-inline: calc(var(--space-page-mobile) * -1);
+    border-radius: 0;
+  }
+
+  .settings-category-label {
+    margin-inline: var(--space-xs);
+  }
+
+  .settings-category-tab:hover,
+  html[dir='rtl'] .settings-category-tab:hover {
+    transform: none;
+  }
+
+  .settings-active-header {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: var(--space-sm);
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+  }
+
+  .settings-active-index {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+  }
+
+  .settings-panel > .settings-card,
+  .settings-panel > .panel-with-aside,
+  .settings-panel > .panel-stack {
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+  }
+
+  .settings-panel .organization-settings-card {
+    padding: var(--space-lg);
+  }
+}

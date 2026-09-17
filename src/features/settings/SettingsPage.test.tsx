@@ -262,12 +262,11 @@ describe('SettingsPage', () => {
     expect(screen.queryByTestId('calendar-feed-settings')).not.toBeInTheDocument()
   })
 
-  it('[P2] progressively discloses infrequent group creation', async () => {
+  it('[P2] opens group creation directly from Working calendars', async () => {
     const user = userEvent.setup()
     renderSettingsPage()
 
     await screen.findByTestId('workforce-groups-weekends-card')
-    await user.click(screen.getByText('Manage Groups'))
     await user.click(screen.getByTestId('add-group-btn'))
 
     const modal = screen.getByTestId('workforce-group-modal')

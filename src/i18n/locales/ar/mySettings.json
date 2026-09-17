@@ -1,6 +1,9 @@
 {
   "title": "إعداداتي",
   "subtitle": "إشعاراتك وعمليات التكامل الخاصة بك",
+  "hero": {
+    "eyebrow": "مساحتك الشخصية"
+  },
   "sections": {
     "notifications": {
       "title": "الإشعارات",

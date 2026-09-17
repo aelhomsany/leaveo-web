@@ -30,3 +30,177 @@
 .my-settings-section > .panel-with-aside {
   margin-block-start: 0;
 }
+
+/* Personal workspace refresh ------------------------------------------------
+   Every existing settings card keeps its own behavior; these rules compose the
+   cards into a quieter, more personal control surface. */
+.my-settings-page-header {
+  display: flex;
+  min-height: 204px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2xl);
+  overflow: hidden;
+  padding: clamp(28px, 5vw, 52px) clamp(24px, 5vw, 56px);
+  border: 1px solid var(--color-brand-navy);
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(circle at 90% 20%, color-mix(in srgb, var(--color-brand-seafoam) 38%, transparent), transparent 34%),
+    linear-gradient(125deg, var(--color-brand-navy), var(--color-brand-ocean));
+  color: var(--color-text-inverse);
+}
+
+.my-settings-page-header .page-title,
+.my-settings-page-header .page-sub {
+  color: var(--color-text-inverse);
+}
+
+.my-settings-page-header .page-title {
+  font-size: clamp(32px, 4vw, 48px);
+  letter-spacing: -0.04em;
+}
+
+.my-settings-page-header .page-sub {
+  max-width: 48ch;
+  color: color-mix(in srgb, var(--color-text-inverse) 82%, transparent);
+}
+
+.my-settings-page-eyebrow {
+  margin: 0 0 var(--space-sm);
+  color: var(--color-brand-seafoam);
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-label-weight);
+  letter-spacing: 0.1em;
+  line-height: var(--font-caption-line-height);
+  text-transform: uppercase;
+}
+
+.my-settings-profile {
+  display: flex;
+  min-width: 190px;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid color-mix(in srgb, var(--color-text-inverse) 22%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-text-inverse) 9%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.my-settings-profile > span:last-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.my-settings-profile strong,
+.my-settings-profile small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-settings-profile strong {
+  color: var(--color-text-inverse);
+  font-size: var(--font-label-size);
+}
+
+.my-settings-profile small {
+  color: color-mix(in srgb, var(--color-text-inverse) 72%, transparent);
+  font-size: var(--font-caption-size);
+}
+
+.my-settings-avatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-brand-seafoam);
+  color: var(--color-brand-navy);
+  font-size: var(--font-label-size);
+  font-weight: var(--font-label-weight);
+}
+
+.my-settings-section {
+  padding: var(--space-2xl);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.my-settings-section + .my-settings-section {
+  margin-block-start: var(--space-2xl);
+}
+
+.my-settings-section-header {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-md);
+  margin-block-end: var(--space-xl);
+  padding-block-end: var(--space-lg);
+  border-block-end: 1px solid var(--color-border-default);
+}
+
+.my-settings-section-index {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-surface-selected);
+  color: var(--color-brand-ocean);
+  font-size: var(--font-caption-size);
+  font-weight: var(--font-label-weight);
+}
+
+.my-settings-section-title {
+  color: var(--color-brand-navy);
+  font-size: clamp(20px, 2.2vw, 26px);
+  letter-spacing: -0.03em;
+}
+
+.my-settings-section-subtitle {
+  max-width: 72ch;
+  line-height: var(--font-body-line-height);
+}
+
+.my-settings-section .settings-card,
+.my-settings-section .support-note {
+  border-radius: var(--radius-lg);
+}
+
+.my-settings-section .settings-card {
+  box-shadow: 0 10px 26px rgba(19, 59, 69, 0.05);
+}
+
+html[lang='ar'] .my-settings-page-eyebrow {
+  letter-spacing: normal;
+}
+
+@media (max-width: 900px) {
+  .my-settings-page-header {
+    min-height: 176px;
+    margin-inline: calc(var(--space-page-mobile) * -1);
+    border-radius: 0;
+  }
+
+  .my-settings-profile {
+    display: none;
+  }
+
+  .my-settings-section {
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+  }
+
+  .my-settings-section-header {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: var(--space-sm);
+    margin-block-end: var(--space-lg);
+    padding-block-end: var(--space-md);
+  }
+}

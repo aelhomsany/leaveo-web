@@ -20,16 +20,16 @@ export function PlatformProfilePage() {
   }
 
   return (
-    <div className="page page-wide" data-testid="platform-profile-page">
-      <header className="page-header">
+    <div className="page page-wide platform-profile-page" data-testid="platform-profile-page">
+      <header className="page-header platform-profile-page__header">
         <div>
           <h1 className="page-title">{t('platformAuth:profile.title')}</h1>
           <p className="page-sub">{t('platformAuth:profile.subtitle')}</p>
         </div>
       </header>
 
-      <section className="settings-card" aria-label={t('platformAuth:profile.summary')}>
-        <div className="card-section-header">
+      <section className="settings-card platform-profile-card" aria-label={t('platformAuth:profile.summary')}>
+        <div className="card-section-header platform-profile-card__header">
           <h2 className="card-title">{t('platformAuth:profile.account')}</h2>
         </div>
         <dl className="platform-profile-list" data-testid="platform-profile-list">

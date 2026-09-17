@@ -1,6 +1,9 @@
 {
   "title": "My settings",
   "subtitle": "Your notifications and personal integrations",
+  "hero": {
+    "eyebrow": "Personal workspace"
+  },
   "sections": {
     "notifications": {
       "title": "Notifications",

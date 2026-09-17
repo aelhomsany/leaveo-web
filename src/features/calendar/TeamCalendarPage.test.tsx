@@ -93,6 +93,17 @@ describe('TeamCalendarPage', () => {
     expect(screen.getByTestId('calendar-scroll-wrap')).toBeInTheDocument()
   })
 
+  it('[P1] opens the existing leave request flow from the calendar', async () => {
+    vi.spyOn(apiClient, 'getCalendarMonth').mockResolvedValue(mockCalendarMonth)
+    vi.spyOn(apiClient, 'getLeaveTypes').mockResolvedValue([])
+    const user = userEvent.setup()
+
+    renderTeamCalendarPage()
+
+    await user.click(await screen.findByTestId('calendar-request-leave-btn'))
+    expect(await screen.findByTestId('request-leave-modal')).toBeInTheDocument()
+  })
+
   it('[P0] scopes and shares Workforce Group cache data by organization', async () => {
     vi.spyOn(apiClient, 'getCalendarMonth').mockResolvedValue(mockCalendarMonth)
 

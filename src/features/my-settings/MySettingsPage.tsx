@@ -10,6 +10,16 @@ import { NotificationPreferencesSettings } from '../settings/NotificationPrefere
 import { SlackLinkNotes, SlackLinkSettings } from '../settings/SlackLinkSettings'
 import './my-settings.css'
 
+function initials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/u)
+    .slice(0, 2)
+    .map((part) => Array.from(part)[0] ?? '')
+    .join('')
+    .toLocaleUpperCase()
+}
+
 /**
  * Plan PUENTE D-12 — "My settings", a left-nav item for every org role. The org-wide Settings
  * page is Organization Admin only, so the personal cards live here: Notification preferences, Calendar
@@ -61,11 +71,19 @@ export function MySettingsPage() {
   }
 
   return (
-    <div className="page page-wide" data-testid="my-settings-page">
-      <header className="page-header">
+    <div className="page page-wide my-settings-page" data-testid="my-settings-page">
+      <header className="page-header my-settings-page-header">
         <div>
+          <p className="my-settings-page-eyebrow">{t('mySettings:hero.eyebrow')}</p>
           <h1 className="page-title">{t('mySettings:title')}</h1>
           <p className="page-sub">{t('mySettings:subtitle')}</p>
+        </div>
+        <div className="my-settings-profile" dir="auto">
+          <span className="my-settings-avatar" aria-hidden="true">{initials(user.fullName ?? '')}</span>
+          <span>
+            <strong>{user.fullName}</strong>
+            <small>{user.organizationName}</small>
+          </span>
         </div>
       </header>
 
@@ -75,12 +93,15 @@ export function MySettingsPage() {
         data-testid="my-settings-notifications-section"
       >
         <header className="my-settings-section-header">
+          <span className="my-settings-section-index" aria-hidden="true">01</span>
+          <div>
           <h2 className="my-settings-section-title" id="my-settings-notifications-title">
             {t('mySettings:sections.notifications.title')}
           </h2>
           <p className="my-settings-section-subtitle">
             {t('mySettings:sections.notifications.subtitle')}
           </p>
+          </div>
         </header>
         <NotificationPreferencesSettings onSuccess={showSuccessToast} onWarning={showWarningToast} />
       </section>
@@ -91,12 +112,15 @@ export function MySettingsPage() {
         data-testid="my-settings-integrations-section"
       >
         <header className="my-settings-section-header">
+          <span className="my-settings-section-index" aria-hidden="true">02</span>
+          <div>
           <h2 className="my-settings-section-title" id="my-settings-integrations-title">
             {t('mySettings:sections.integrations.title')}
           </h2>
           <p className="my-settings-section-subtitle">
             {t('mySettings:sections.integrations.subtitle')}
           </p>
+          </div>
         </header>
         <div className="panel-stack" data-testid="my-settings-integrations-panel">
           <div className="panel-group">

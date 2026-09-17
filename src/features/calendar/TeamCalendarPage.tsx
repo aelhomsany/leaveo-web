@@ -5,6 +5,8 @@ import { ApiError, getWorkforceGroups } from '../../api/client'
 import type { DayOfWeek } from '../../api/generated/types'
 import { useAuth } from '../../auth/useAuth'
 import { LoadingState } from '../../components/ui/LoadingState'
+import { PlusIcon } from '../../components/ui/icons'
+import { RequestLeaveModal } from '../dashboard/RequestLeaveModal'
 import { useMyLeaveRequests } from '../my-leaves/useMyLeaveRequests'
 import { CalendarAgenda } from './CalendarAgenda'
 import { CalendarLegend } from './CalendarLegend'
@@ -56,13 +58,14 @@ function combinedErrorMessage(errors: unknown[], fallback: string): string {
 }
 
 export function TeamCalendarPage() {
-  const { t, i18n } = useTranslation('calendar')
+  const { t, i18n } = useTranslation(['calendar', 'leaves'])
   const { user } = useAuth()
   const [initialDate] = useState(currentLocalDate)
   const [view, setView] = useState<CalendarView>(initialCalendarView)
   const [anchorDate, setAnchorDate] = useState(initialDate)
   const [workforceGroupId, setWorkforceGroupId] = useState<number | undefined>(undefined)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [requestModalOpen, setRequestModalOpen] = useState(false)
   // Roving-tabindex focus for the Timeline date header. Kept separate from
   // `selectedDate` so that merely Tab-ing/arrow-navigating the Timeline does
   // not silently set the Agenda's single-day filter (only an explicit Agenda
@@ -248,12 +251,20 @@ export function TeamCalendarPage() {
 
   return (
     <div className="page page-wide team-calendar-page" data-testid="team-calendar-page">
-      <header className="page-header calendar-page-header">
+      <header className="page-header calendar-page-header calendar-workspace-header">
         <div>
           <h1 className="page-title">{t('title')}</h1>
           <p className="page-sub">{t('subtitle')}</p>
+          <button
+            type="button"
+            className="btn btn-primary calendar-request-button"
+            data-testid="calendar-request-leave-btn"
+            onClick={() => setRequestModalOpen(true)}
+          >
+            <PlusIcon size={16} /> {t('leaves:actions.requestLeave')}
+          </button>
         </div>
-        <div className="calendar-header-actions">
+        <div className="calendar-header-actions calendar-command-deck">
           <div
             className="calendar-view-toggle calendar-glass-control"
             role="group"
@@ -367,7 +378,7 @@ export function TeamCalendarPage() {
 
       {calendarQuery.isSuccess && calendar ? (
         <div className="calendar-section">
-          <details className="calendar-policy-disclosure calendar-glass-card">
+          <details className="calendar-policy-disclosure calendar-glass-card calendar-policy-card">
             <summary data-testid="calendar-why-days-differ">
               {t('policy.summary')}
             </summary>
@@ -422,6 +433,11 @@ export function TeamCalendarPage() {
           )}
         </div>
       ) : null}
+
+      <RequestLeaveModal
+        open={requestModalOpen}
+        onClose={() => setRequestModalOpen(false)}
+      />
     </div>
   )
 }
