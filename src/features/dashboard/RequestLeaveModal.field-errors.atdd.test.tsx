@@ -26,6 +26,7 @@ function renderModal(onClose = vi.fn()) {
   vi.spyOn(apiClient, 'getLeaveTypes').mockResolvedValue(mockLeaveTypes)
   vi.spyOn(apiClient, 'previewLeaveRequest').mockResolvedValue({
     workingDays: 2,
+    chargedDays: 2,
     excludedWeekends: 0,
     excludedHolidays: 0,
     workforceGroupName: 'US',

@@ -93,6 +93,10 @@ export function LeaveTypesCard({
   const [presenceType, setPresenceType] = useState<"WFH" | "OFF">(
     LEAVE_TYPE_DEFAULT_PRESENTATION.presenceType,
   );
+  // Plan MEDIA. On by default, for new types and for every type that existed before half days did:
+  // an organization that wants whole-day-only Bereavement turns it off there, and nothing that used
+  // to be requestable stops being requestable on its own.
+  const [halfDayAllowed, setHalfDayAllowed] = useState(true);
   // Surfaced live in the create dialog so an unreadable colour pair is caught
   // while it is being picked, rather than once it is on everyone's calendar.
   const previewContrast = useMemo(
@@ -111,6 +115,7 @@ export function LeaveTypesCard({
     setBackgroundColor(LEAVE_TYPE_DEFAULT_PRESENTATION.backgroundColor);
     setBorderColor(LEAVE_TYPE_DEFAULT_PRESENTATION.borderColor);
     setPresenceType(LEAVE_TYPE_DEFAULT_PRESENTATION.presenceType);
+    setHalfDayAllowed(true);
     setFieldErrors({});
   };
   const typesQuery = useQuery({
@@ -145,7 +150,8 @@ export function LeaveTypesCard({
               LEAVE_TYPE_DEFAULT_PRESENTATION.borderColor) ||
           presenceType !==
             (editTarget.presenceType ??
-              LEAVE_TYPE_DEFAULT_PRESENTATION.presenceType))));
+              LEAVE_TYPE_DEFAULT_PRESENTATION.presenceType) ||
+          halfDayAllowed !== (editTarget.halfDayAllowed !== false))));
   useEffect(() => {
     onDirtyChange?.(formDirty);
   }, [formDirty, onDirtyChange]);
@@ -214,6 +220,7 @@ export function LeaveTypesCard({
         backgroundColor,
         borderColor,
         presenceType,
+        halfDayAllowed,
       }),
     onSuccess: async () => {
       await refresh();
@@ -232,6 +239,7 @@ export function LeaveTypesCard({
         backgroundColor,
         borderColor,
         presenceType,
+        halfDayAllowed,
       }),
     onSuccess: async () => {
       await refresh();
@@ -295,6 +303,9 @@ export function LeaveTypesCard({
     setBackgroundColor(type.backgroundColor ?? "#D6E8ED");
     setBorderColor(type.borderColor ?? "#0E4F75");
     setPresenceType(type.presenceType ?? "OFF");
+    // Absent means allowed: the column defaults to true, so an older response must not read as a
+    // type that has half days switched off.
+    setHalfDayAllowed(type.halfDayAllowed !== false);
   };
   if (typesQuery.isPending)
     return (
@@ -422,6 +433,19 @@ export function LeaveTypesCard({
                 {fieldErrors.presenceType}
               </span>
             )}
+          </div>
+
+          <div className="form-cell form-field-full">
+            <label className="form-field form-field-check">
+              <input
+                id="leave-type-half-day"
+                type="checkbox"
+                checked={halfDayAllowed}
+                onChange={(e) => setHalfDayAllowed(e.target.checked)}
+              />
+              <span>{t("leaveTypes.fields.halfDayAllowed")}</span>
+            </label>
+            <p className="form-hint">{t("leaveTypes.halfDayHint")}</p>
           </div>
         </div>
 
@@ -590,6 +614,14 @@ export function LeaveTypesCard({
                             : "leaveTypes.active",
                         )}
                       </span>
+                      {/* Only the restriction is worth a word here. Half days are the default, so
+                          saying so on every other row would be noise on a list read at a glance. */}
+                      {type.halfDayAllowed === false ? (
+                        <>
+                          {" "}
+                          · <span>{t("leaveTypes.wholeDaysOnly")}</span>
+                        </>
+                      ) : null}
                     </div>
                   </div>
                   <div className="leave-type-actions">

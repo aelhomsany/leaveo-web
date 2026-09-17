@@ -11,6 +11,7 @@ import {
 } from '../../api/client'
 import type { BalanceCorrectionResponse, components } from '../../api/generated/types'
 import { DateField } from '../../components/DateField'
+import { formatLeaveDays } from '../../lib/leaveDays'
 import { HorizontalScrollRegion } from '../../components/ui/HorizontalScrollRegion'
 import { Modal } from '../../components/ui/Modal'
 import { CloseIcon } from '../../components/ui/icons'
@@ -487,7 +488,7 @@ export function CorrectionsPage() {
                       <td>
                         {row.kind && KNOWN_KINDS.has(row.kind) ? t(`corrections:ledger.kind.${row.kind}`) : row.kind}
                       </td>
-                      <td>{row.deltaDays}</td>
+                      <td>{formatLeaveDays(row.deltaDays)}</td>
                       <td>
                         {row.effectiveDate ? <time dateTime={row.effectiveDate}>{row.effectiveDate}</time> : '—'}
                       </td>
@@ -585,17 +586,23 @@ export function CorrectionsPage() {
               <dl data-testid="correction-preview">
                 <div>
                   <dt>{t('corrections:confirm.preview.before')}</dt>
-                  <dd data-testid="correction-preview-before">{preview.beforeRemainingDays}</dd>
+                  <dd data-testid="correction-preview-before">
+                    {formatLeaveDays(preview.beforeRemainingDays)}
+                  </dd>
                 </div>
                 <div>
                   <dt>{t('corrections:confirm.preview.delta')}</dt>
                   <dd data-testid="correction-preview-delta">
-                    {preview.deltaDays > 0 ? `+${preview.deltaDays}` : preview.deltaDays}
+                    {preview.deltaDays > 0
+                      ? `+${formatLeaveDays(preview.deltaDays)}`
+                      : formatLeaveDays(preview.deltaDays)}
                   </dd>
                 </div>
                 <div>
                   <dt>{t('corrections:confirm.preview.after')}</dt>
-                  <dd data-testid="correction-preview-after">{preview.afterRemainingDays}</dd>
+                  <dd data-testid="correction-preview-after">
+                    {formatLeaveDays(preview.afterRemainingDays)}
+                  </dd>
                 </div>
               </dl>
             )}

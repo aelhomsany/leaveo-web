@@ -1226,6 +1226,19 @@ html[lang='ar'] .calendar-agenda-heading {
   font-size: 12px;
 }
 
+/* Plan MEDIA: which half of *this* date the person is away for. A separate chip rather than more
+   words in the subtitle, because the subtitle is already an ellipsised range and this is the part
+   a reader scanning one day of the agenda is actually looking for. */
+.calendar-agenda-day-part {
+  background: var(--color-surface-subtle, rgba(0, 0, 0, 0.05));
+  border-radius: 999px;
+  color: var(--color-teal);
+  font-weight: 700;
+  margin-inline-start: var(--space-xs);
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
 .calendar-presence-badge,
 .calendar-holiday-badge {
   flex: 0 0 auto;

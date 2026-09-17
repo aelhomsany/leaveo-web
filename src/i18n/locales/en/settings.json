@@ -471,9 +471,12 @@
       "icon": "Icon",
       "presence": "Presence",
       "color": "Text color",
+      "halfDayAllowed": "Can be taken in half days",
       "backgroundColor": "Background color",
       "borderColor": "Border color"
     },
+    "halfDayHint": "People can request a morning or an afternoon of this type. Turn it off for types that only make sense as whole days.",
+    "wholeDaysOnly": "Whole days only",
     "presence": {
       "off": "Off",
       "wfh": "Work From Home"

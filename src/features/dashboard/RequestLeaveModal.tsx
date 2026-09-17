@@ -13,6 +13,13 @@ import {
 } from '../../components/ui/WorkingDayExplainer'
 import { CloseIcon } from '../../components/ui/icons'
 import { useAuth } from '../../auth/useAuth'
+import {
+  FIRST_HALF,
+  FULL_DAY,
+  formatLeaveDays,
+  SECOND_HALF,
+  type DayPart,
+} from '../../lib/leaveDays'
 import { useCreateLeaveRequest } from './useCreateLeaveRequest'
 import { formatDate } from './leaveRequestFormatting'
 import { useLeaveRequestPreview } from './useLeaveRequestPreview'
@@ -47,6 +54,12 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
   const [leaveTypeId, setLeaveTypeId] = useState<number | ''>('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  // Plan MEDIA: what the person picked, not necessarily what is sent. The legal parts depend on the
+  // shape of the range and on the leave type, both of which can change after a part is chosen, so
+  // the selections are clamped on the way out (see effectiveStartPart) rather than rewritten here.
+  // Rewriting them would silently discard a choice the moment a date typo made it briefly illegal.
+  const [startPart, setStartPart] = useState<DayPart>(FULL_DAY)
+  const [endPart, setEndPart] = useState<DayPart>(FULL_DAY)
   const [note, setNote] = useState('')
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -60,10 +73,42 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
     enabled: open && orgId != null,
   })
 
+  const leaveTypes = leaveTypesQuery.data ?? []
+  const selectedLeaveType = leaveTypes.find((type) => type.id === leaveTypeId)
+  // Absent means allowed: the column defaults to true, and a client reading an older response
+  // should not silently take half days away from an organization that has them.
+  const halfDayAllowed = selectedLeaveType?.halfDayAllowed !== false
+
+  // One charged day, so the request is a morning or an afternoon rather than a range with ends.
+  const singleDay = dateFrom !== '' && dateFrom === dateTo
+
+  // The server's rules, enforced here by never offering the combinations that break them: a range
+  // of two days or more cannot start on a morning (you would be back at lunchtime on a day you are
+  // away for) nor end on an afternoon. The clamp matters beyond the dropdowns -- a person can pick
+  // "morning" on a single day and then push the end date out.
+  const effectiveStartPart: DayPart = !halfDayAllowed
+    ? FULL_DAY
+    : singleDay
+      ? startPart
+      : startPart === FIRST_HALF
+        ? FULL_DAY
+        : startPart
+  const effectiveEndPart: DayPart = !halfDayAllowed
+    ? FULL_DAY
+    : singleDay
+      ? // One control drives both ends of a single day; sending the same part twice is what the
+        // server reads as "half of that one day".
+        startPart
+      : endPart === SECOND_HALF
+        ? FULL_DAY
+        : endPart
+
   const previewQuery = useLeaveRequestPreview(
     debouncedFrom,
     debouncedTo,
     leaveTypeId === '' ? undefined : leaveTypeId,
+    effectiveStartPart,
+    effectiveEndPart,
   )
 
   const clientDateInvalid =
@@ -92,6 +137,26 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
   const problemMessage = (error: ApiError, fallback: string) => {
     if (error.problem.code === 'leave-spans-balance-years') {
       return t('dashboard:request.errors.spansBalanceYears')
+    }
+    // Plan MEDIA. The overlap is a 409 and can only come back from submit; the other three are
+    // validation and arrive from the preview too, which is where a person should meet them.
+    if (error.problem.code === 'leave-request-overlaps') {
+      return t('dashboard:request.errors.overlaps', {
+        date: isolate(formatDate(String(error.problem.date ?? ''), i18n.language)),
+      })
+    }
+    if (error.problem.code === 'half-day-not-allowed') {
+      return t('dashboard:request.errors.halfDayNotAllowed', {
+        name: isolate(selectedLeaveType?.name ?? ''),
+      })
+    }
+    if (error.problem.code === 'half-day-on-non-working-day') {
+      return t('dashboard:request.errors.halfDayOnNonWorkingDay', {
+        date: isolate(formatDate(String(error.problem.date ?? ''), i18n.language)),
+      })
+    }
+    if (error.problem.code === 'contradictory-half-day-parts') {
+      return t('dashboard:request.errors.contradictoryParts')
     }
     if (error.problem.type?.endsWith('/insufficient-balance')) {
       return preview?.availableDays != null
@@ -160,11 +225,11 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
               count: preview.currentDaysToUse ?? 0,
               year: isolate(preview.balanceYear),
             }),
-            available: isolate(preview.availableDays),
+            available: isolate(formatLeaveDays(preview.availableDays)),
           })
         : t('dashboard:request.breakdown.usesOne', {
             part: carried,
-            available: isolate(preview.availableDays),
+            available: isolate(formatLeaveDays(preview.availableDays)),
           })
   }
 
@@ -186,6 +251,8 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
       setLeaveTypeId('')
       setDateFrom('')
       setDateTo('')
+      setStartPart(FULL_DAY)
+      setEndPart(FULL_DAY)
       setNote('')
       setSubmitErrorMessage(null)
       setFieldErrors({})
@@ -213,6 +280,8 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
         leaveTypeId: selectedLeaveTypeId,
         dateFrom,
         dateTo,
+        startPart: effectiveStartPart,
+        endPart: effectiveEndPart,
         note: trimmedNote === '' ? undefined : trimmedNote,
       },
       {
@@ -303,7 +372,7 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
               aria-describedby={leaveTypeError.describedBy}
             >
               <option value="">{t('dashboard:request.fields.selectLeaveType')}</option>
-              {(leaveTypesQuery.data ?? []).map((leaveType) => (
+              {leaveTypes.map((leaveType) => (
                 <option key={leaveType.id} value={leaveType.id} dir="auto">
                   {leaveType.icon ? `${leaveType.icon} ` : ''}
                   {leaveType.name}
@@ -355,6 +424,48 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
             </div>
           </div>
 
+          {halfDayAllowed && dateFrom !== '' && dateTo !== '' && !clientDateInvalid ? (
+            singleDay ? (
+              <div className="form-group" data-testid="day-part-single">
+                <label htmlFor="leave-day-part">{t('dashboard:request.fields.dayPart')}</label>
+                <select
+                  id="leave-day-part"
+                  value={startPart}
+                  onChange={(event) => setStartPart(event.target.value as DayPart)}
+                >
+                  <option value={FULL_DAY}>{t('common:dayParts.FULL')}</option>
+                  <option value={FIRST_HALF}>{t('common:dayParts.FIRST_HALF')}</option>
+                  <option value={SECOND_HALF}>{t('common:dayParts.SECOND_HALF')}</option>
+                </select>
+              </div>
+            ) : (
+              <div className="form-group date-row" data-testid="day-part-range">
+                <div className="form-group">
+                  <label htmlFor="leave-start-part">{t('dashboard:request.fields.startPart')}</label>
+                  <select
+                    id="leave-start-part"
+                    value={effectiveStartPart}
+                    onChange={(event) => setStartPart(event.target.value as DayPart)}
+                  >
+                    <option value={FULL_DAY}>{t('dashboard:request.dayParts.startFull')}</option>
+                    <option value={SECOND_HALF}>{t('dashboard:request.dayParts.startSecondHalf')}</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="leave-end-part">{t('dashboard:request.fields.endPart')}</label>
+                  <select
+                    id="leave-end-part"
+                    value={effectiveEndPart}
+                    onChange={(event) => setEndPart(event.target.value as DayPart)}
+                  >
+                    <option value={FULL_DAY}>{t('dashboard:request.dayParts.endFull')}</option>
+                    <option value={FIRST_HALF}>{t('dashboard:request.dayParts.endFirstHalf')}</option>
+                  </select>
+                </div>
+              </div>
+            )
+          ) : null}
+
           <div className="working-day-preview" data-testid="working-day-preview">
             <WorkingDayExplainer
               state={previewState}
@@ -362,7 +473,10 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
               resultLabel={
                 preview
                   ? preview.workingDays > 0
-                    ? t('dashboard:request.preview.charged', { count: preview.workingDays })
+                    ? // Plan MEDIA: chargedDays, not workingDays. The two were the same number until
+                      // half days existed -- three working days starting after lunch now cost 2.5,
+                      // and it is the charge the balance moves by that a person needs to read here.
+                      t('dashboard:request.preview.charged', { count: preview.chargedDays })
                     : t('dashboard:request.preview.zeroResult')
                   : undefined
               }

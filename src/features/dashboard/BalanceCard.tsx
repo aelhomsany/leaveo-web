@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { BalanceCardResponse } from '../../api/generated/types'
 import { isolate } from '../../i18n/bidi'
+import { formatLeaveDays } from '../../lib/leaveDays'
 import { balanceCardSlug } from './balanceCardSlug'
 import { formatDate } from './leaveRequestFormatting'
 import './balance-card.css'
@@ -77,20 +78,23 @@ export function BalanceCard({ balance }: BalanceCardProps) {
       <div className="balance-value">
         <span className="sr-only">
           {t('balance.allocationLabel', {
-            remaining,
-            allocated,
+            remaining: formatLeaveDays(remaining),
+            allocated: formatLeaveDays(allocated),
           })}
         </span>
         <span className="balance-value-copy" aria-hidden="true">
-          {isOverdraft ? used : remaining}
-          <span className="balance-total">/{allocated}</span>
+          {formatLeaveDays(isOverdraft ? used : remaining)}
+          <span className="balance-total">/{formatLeaveDays(allocated)}</span>
         </span>
       </div>
       {hasProgressRange ? (
         <div
           className="balance-bar-bg"
           role="progressbar"
-          aria-label={t('balance.usageLabel', { used, allocated })}
+          aria-label={t('balance.usageLabel', {
+            used: formatLeaveDays(used),
+            allocated: formatLeaveDays(allocated),
+          })}
           aria-valuemin={0}
           aria-valuemax={allocated}
           aria-valuenow={Math.max(0, Math.min(used, allocated))}
@@ -110,8 +114,8 @@ export function BalanceCard({ balance }: BalanceCardProps) {
               className="balance-bar-bg balance-bar-bg--carryover"
               role="progressbar"
               aria-label={t('balance.carryoverUsageLabel', {
-                used: carryover.usedDays,
-                carried: carryover.carriedDays,
+                used: formatLeaveDays(carryover.usedDays),
+                carried: formatLeaveDays(carryover.carriedDays),
               })}
               aria-valuemin={0}
               aria-valuemax={carryover.carriedDays}
