@@ -100,7 +100,7 @@ export function PlatformLoginPage() {
             </div>
           ) : null}
 
-          <form onSubmit={submit}>
+          <form className="platform-login-card__form" onSubmit={submit}>
             <div className="auth-form-group">
               <label htmlFor="platform-sign-in-email">{t('fields.email')}</label>
               <input
