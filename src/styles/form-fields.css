@@ -157,6 +157,19 @@
   }
 }
 
+/* A checkbox and its label on one line. `.form-field` stacks its span above its
+   control, which is right for a text input and wrong for a checkbox: the box
+   belongs beside the words it labels, not under them. */
+.form-field-check {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.form-field-check > span {
+  font-weight: var(--font-body-weight);
+}
+
 /* --- Checkboxes, radios and pickers ------------------------------------- */
 
 /* A tick box is not a text field. The sizing rules above -- width 100%, a 44px block

@@ -114,6 +114,7 @@ const mockLeaveTypes: LeaveTypeResponse[] = [
 
 const mockPreview: PreviewLeaveRequestResponse = {
   workingDays: 5,
+  chargedDays: 5,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,

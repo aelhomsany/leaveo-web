@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { isolate } from '../../i18n/bidi'
+import { formatLeaveDays } from '../../lib/leaveDays'
 import type { PendingApprovalResponse } from '../../api/generated/types'
 import { WorkingDayExplainer } from '../../components/ui/WorkingDayExplainer'
 import { CheckIcon } from '../../components/ui/icons'
@@ -131,8 +132,8 @@ export function ApprovalCard({
     approval.balanceSufficient === false
   ) {
     balanceText = t('approvals:balance.insufficient', {
-      remaining: isolate(approval.balanceRemaining),
-      requested: isolate(workingDays),
+      remaining: isolate(formatLeaveDays(approval.balanceRemaining)),
+      requested: isolate(formatLeaveDays(workingDays)),
     })
   } else if (
     approval.balanceCapped === true &&
@@ -144,14 +145,14 @@ export function ApprovalCard({
     balanceText =
       (approval.balanceCarryoverAvailable ?? 0) > 0
         ? t('approvals:balance.consequenceWithCarryover', {
-            before: isolate(approval.balanceRemaining),
-            carried: isolate(approval.balanceCarryoverAvailable),
+            before: isolate(formatLeaveDays(approval.balanceRemaining)),
+            carried: isolate(formatLeaveDays(approval.balanceCarryoverAvailable)),
             date: isolate(formatDate(approval.carryoverExpiresOn ?? '', i18n.language)),
-            after: isolate(approval.balanceAfterApproval),
+            after: isolate(formatLeaveDays(approval.balanceAfterApproval)),
           })
         : t('approvals:balance.consequence', {
-            before: isolate(approval.balanceRemaining),
-            after: isolate(approval.balanceAfterApproval),
+            before: isolate(formatLeaveDays(approval.balanceRemaining)),
+            after: isolate(formatLeaveDays(approval.balanceAfterApproval)),
           })
   }
 

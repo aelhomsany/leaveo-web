@@ -2366,6 +2366,8 @@ export interface components {
             borderColor: string;
             /** @enum {string} */
             presenceType: "WFH" | "OFF";
+            /** @description Whether this type may be taken in half days; omitted keeps the current setting, and a new type allows them. */
+            halfDayAllowed?: boolean;
         };
         LeaveTypeResponse: {
             /** Format: int64 */
@@ -2386,6 +2388,8 @@ export interface components {
             /** Format: int32 */
             displayOrder?: number;
             active?: boolean;
+            /** @description Whether this type may be taken in half days (Plan MEDIA). */
+            halfDayAllowed?: boolean;
         };
         ReorderLeaveTypesRequest: {
             /** @description Every leave type public ID in the organization, exactly once, in the desired order */
@@ -2467,14 +2471,17 @@ export interface components {
         };
         PolicyMemberImpact: {
             memberPublicId?: string;
-            /** Format: int32 */
+            /** Format: double */
             usedDays?: number;
             /** Format: int32 */
             proposedAllowance?: number;
-            /** Format: int32 */
-            projectedRemaining?: number;
             /**
-             * Format: int32
+             * Format: double
+             * @description Proposed allowance minus days already taken; may be fractional, and negative where the draft would cut an allowance below what is spent.
+             */
+            projectedRemaining?: number | null;
+            /**
+             * Format: double
              * @description Days this member would carry into the next year if they took no more leave; null when the draft does not carry over or the allowance is unlimited.
              */
             projectedCarryoverDays?: number | null;
@@ -2614,9 +2621,9 @@ export interface components {
             rowCount?: number;
             /** Format: int64 */
             allocation?: number;
-            /** Format: int64 */
+            /** Format: double */
             approvedUsage?: number;
-            /** Format: int64 */
+            /** Format: double */
             remaining?: number;
             /** Format: int32 */
             usedPercent?: number;
@@ -2638,13 +2645,13 @@ export interface components {
             capped?: boolean;
             /** Format: int32 */
             allocation?: number;
-            /** Format: int32 */
+            /** Format: double */
             approvedUsage?: number;
-            /** Format: int32 */
+            /** Format: double */
             adjustments?: number;
-            /** Format: int32 */
+            /** Format: double */
             remaining?: number;
-            /** Format: int32 */
+            /** Format: double */
             carryoverAvailable?: number;
             exceptionCodes?: string[];
         } & {
@@ -2663,13 +2670,13 @@ export interface components {
             leaveTypeCount?: number;
             /** Format: int64 */
             totalAllocation?: number;
-            /** Format: int64 */
+            /** Format: double */
             totalApprovedUsage?: number;
-            /** Format: int64 */
+            /** Format: double */
             totalAdjustments?: number;
-            /** Format: int64 */
+            /** Format: double */
             totalRemaining?: number;
-            /** Format: int64 */
+            /** Format: double */
             totalCarryoverAvailable?: number;
             /** Format: int64 */
             exceptionCount?: number;
@@ -2692,15 +2699,15 @@ export interface components {
             leaveTypeName?: string;
             /** Format: int64 */
             rowCount?: number;
-            /** Format: int64 */
+            /** Format: double */
             carried?: number;
-            /** Format: int64 */
+            /** Format: double */
             used?: number;
-            /** Format: int64 */
+            /** Format: double */
             pendingClaim?: number;
-            /** Format: int64 */
+            /** Format: double */
             available?: number;
-            /** Format: int64 */
+            /** Format: double */
             expired?: number;
         };
         CarryoverRow: Omit<components["schemas"]["ReportRow"], "rowType"> & {
@@ -2722,15 +2729,15 @@ export interface components {
             targetYear?: number;
             /** Format: int32 */
             capDays?: number;
-            /** Format: int32 */
+            /** Format: double */
             carriedDays?: number;
-            /** Format: int32 */
+            /** Format: double */
             usedDays?: number;
-            /** Format: int32 */
+            /** Format: double */
             pendingClaimDays?: number;
-            /** Format: int32 */
+            /** Format: double */
             expiredDays?: number;
-            /** Format: int32 */
+            /** Format: double */
             availableDays?: number;
             /** Format: date */
             expiresOn?: string;
@@ -2750,15 +2757,15 @@ export interface components {
             userCount?: number;
             /** Format: int64 */
             leaveTypeCount?: number;
-            /** Format: int64 */
+            /** Format: double */
             totalCarried?: number;
-            /** Format: int64 */
+            /** Format: double */
             totalUsed?: number;
-            /** Format: int64 */
+            /** Format: double */
             totalPendingClaim?: number;
-            /** Format: int64 */
+            /** Format: double */
             totalExpired?: number;
-            /** Format: int64 */
+            /** Format: double */
             totalAvailable?: number;
             rowsByStatus?: {
                 [key: string]: number;
@@ -2810,9 +2817,9 @@ export interface components {
         LeaveUsageDay: {
             /** Format: date */
             date?: string;
-            /** Format: int64 */
+            /** Format: double */
             awayDays?: number;
-            /** Format: int64 */
+            /** Format: double */
             wfhDays?: number;
         };
         LeaveUsageRow: Omit<components["schemas"]["ReportRow"], "rowType"> & {
@@ -2831,7 +2838,7 @@ export interface components {
             membershipBasis?: string;
             /** Format: int64 */
             requestCount?: number;
-            /** Format: int64 */
+            /** Format: double */
             chargedDayCount?: number;
         } & {
             /**
@@ -2845,7 +2852,7 @@ export interface components {
             rowCount?: number;
             /** Format: int64 */
             requestCount?: number;
-            /** Format: int64 */
+            /** Format: double */
             chargedDayCount?: number;
             /** Format: int64 */
             excludedReconstructedRequestCount?: number;
@@ -2920,9 +2927,9 @@ export interface components {
             rowCount?: number;
             /** Format: int64 */
             allocation?: number;
-            /** Format: int64 */
+            /** Format: double */
             approvedUsage?: number;
-            /** Format: int64 */
+            /** Format: double */
             remaining?: number;
         };
         ReportOrdering: {
@@ -2983,7 +2990,7 @@ export interface components {
             dateFrom?: string;
             /** Format: date */
             dateTo?: string;
-            /** Format: int32 */
+            /** Format: double */
             storedDays?: number;
             status?: string;
             /** Format: date-time */
@@ -3001,7 +3008,7 @@ export interface components {
         RequestDetailSummary: Omit<WithRequired<components["schemas"]["ReportSummary"], "summaryType">, "summaryType"> & {
             /** Format: int64 */
             rowCount?: number;
-            /** Format: int64 */
+            /** Format: double */
             storedDayCount?: number;
             statusCounts?: {
                 [key: string]: number;
@@ -3202,6 +3209,10 @@ export interface components {
             dateFrom: string;
             /** Format: date */
             dateTo: string;
+            /** @enum {string} */
+            startPart?: "FULL" | "FIRST_HALF" | "SECOND_HALF";
+            /** @enum {string} */
+            endPart?: "FULL" | "FIRST_HALF" | "SECOND_HALF";
             note?: string;
         };
         ApprovalStepEvidenceResponse: {
@@ -3229,9 +3240,9 @@ export interface components {
             mode?: "SELF_SERVICE" | "ADMIN_REVIEW" | "NONE";
             /** @enum {string} */
             blockedReason?: "ALREADY_CANCELLED" | "DECLINED" | "REVIEW_PENDING" | "PRIOR_BALANCE_YEAR" | "NOT_REQUESTER";
-            /** Format: int32 */
+            /** Format: double */
             daysToRestore?: number;
-            /** Format: int32 */
+            /** Format: double */
             daysForfeited?: number;
             /** @enum {string} */
             reviewStatus?: "COMPLETED" | "PENDING" | "APPROVED" | "DECLINED";
@@ -3245,8 +3256,21 @@ export interface components {
             dateFrom?: string;
             /** Format: date */
             dateTo?: string;
-            /** Format: int32 */
+            /**
+             * Format: double
+             * @description Working days charged; 0.5 when the request is a half day (Plan MEDIA).
+             */
             days?: number;
+            /**
+             * @description Which part of dateFrom the leave starts on.
+             * @enum {string}
+             */
+            startPart?: "FULL" | "FIRST_HALF" | "SECOND_HALF";
+            /**
+             * @description Which part of dateTo the leave ends on.
+             * @enum {string}
+             */
+            endPart?: "FULL" | "FIRST_HALF" | "SECOND_HALF";
             /** @enum {string} */
             status?: "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED";
             note?: string;
@@ -3284,11 +3308,11 @@ export interface components {
             reason?: string;
             /** Format: date-time */
             requestedAt?: string;
-            /** Format: int32 */
+            /** Format: double */
             daysToRestore?: number;
-            /** Format: int32 */
+            /** Format: double */
             carryoverDaysToRestore?: number;
-            /** Format: int32 */
+            /** Format: double */
             daysForfeited?: number;
             /** Format: int32 */
             balanceYear?: number;
@@ -3314,6 +3338,10 @@ export interface components {
             dateFrom: string;
             /** Format: date */
             dateTo: string;
+            /** @enum {string} */
+            startPart?: "FULL" | "FIRST_HALF" | "SECOND_HALF";
+            /** @enum {string} */
+            endPart?: "FULL" | "FIRST_HALF" | "SECOND_HALF";
         };
         PreviewLeaveRequestResponse: {
             /** Format: int32 */
@@ -3334,11 +3362,14 @@ export interface components {
             /** Format: int32 */
             balanceYear?: number;
             chargedDates?: string[];
-            /** Format: int32 */
+            /** Format: double */
+            chargedDays?: number;
+            chargedDayParts?: ("FULL" | "FIRST_HALF" | "SECOND_HALF")[];
+            /** Format: double */
             carryoverDaysToUse?: number;
-            /** Format: int32 */
+            /** Format: double */
             currentDaysToUse?: number;
-            /** Format: int32 */
+            /** Format: double */
             availableDays?: number;
             /** Format: date */
             carryoverExpiresOn?: string;
@@ -3501,7 +3532,7 @@ export interface components {
             leaveTypePublicId?: string;
             /** Format: int32 */
             balanceYear?: number;
-            /** Format: int32 */
+            /** Format: double */
             deltaDays?: number;
             reason?: string;
             /** Format: date */
@@ -3509,9 +3540,9 @@ export interface components {
             actorUserPublicId?: string;
             /** Format: date-time */
             createdAt?: string;
-            /** Format: int32 */
+            /** Format: double */
             beforeRemainingDays?: number;
-            /** Format: int32 */
+            /** Format: double */
             afterRemainingDays?: number;
             /** Format: int64 */
             compensationOfId?: number;
@@ -3544,15 +3575,15 @@ export interface components {
             leaveTypePublicId?: string;
             /** Format: int32 */
             balanceYear?: number;
-            /** Format: int32 */
+            /** Format: double */
             beforeRemainingDays?: number;
-            /** Format: int32 */
+            /** Format: double */
             deltaDays?: number;
-            /** Format: int32 */
+            /** Format: double */
             afterRemainingDays?: number;
-            /** Format: int32 */
+            /** Format: double */
             carryoverCarriedBefore?: number;
-            /** Format: int32 */
+            /** Format: double */
             carryoverCarriedAfter?: number;
         };
         ResetPasswordRequest: {
@@ -3663,6 +3694,8 @@ export interface components {
             borderColor: string;
             /** @enum {string} */
             presenceType: "WFH" | "OFF";
+            /** @description Whether this type may be taken in half days; omitted keeps the current setting, and a new type allows them. */
+            halfDayAllowed?: boolean;
         };
         UpdatePolicyDraftRequest: {
             /** Format: int64 */
@@ -3949,7 +3982,7 @@ export interface components {
             leaveTypeBorderColor?: string;
             dateFrom?: string;
             dateTo?: string;
-            /** Format: int32 */
+            /** Format: double */
             workingDays?: number;
             /** @enum {string} */
             status?: "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED";
@@ -3974,7 +4007,7 @@ export interface components {
             leaveTypeBorderColor?: string;
             dateFrom?: string;
             dateTo?: string;
-            /** Format: int32 */
+            /** Format: double */
             workingDays?: number;
             /** @enum {string} */
             status?: "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED";
@@ -4053,7 +4086,7 @@ export interface components {
             userId?: number;
             fullName?: string;
             dateFrom?: string;
-            /** Format: int32 */
+            /** Format: double */
             workingDays?: number;
             leaveTypeIcon?: string;
         };
@@ -4083,17 +4116,20 @@ export interface components {
              * @description Allocated working days from entitlements; null when uncapped.
              */
             allocatedDays?: number | null;
-            /** Format: int32 */
+            /**
+             * Format: double
+             * @description Working days used; half days make this fractional.
+             */
             usedDays?: number;
             /**
-             * Format: int32
+             * Format: double
              * @description Remaining working days; null when uncapped.
              */
             remainingDays?: number | null;
             /** @description Days carried over from last year; null when this leave type did not carry over. */
             carryover?: components["schemas"]["CarryoverBalanceResponse"];
             /**
-             * Format: int32
+             * Format: double
              * @description Remaining working days plus carried days still usable; null when uncapped.
              */
             totalAvailableDays?: number | null;
@@ -4109,20 +4145,20 @@ export interface components {
              * @description The maximum that applied when the days were carried; null means no limit.
              */
             capDays?: number | null;
-            /** Format: int32 */
+            /** Format: double */
             carriedDays?: number;
             /**
-             * Format: int32
+             * Format: double
              * @description Carried days already spent by approved leave.
              */
             usedDays?: number;
             /**
-             * Format: int32
+             * Format: double
              * @description Carried days still usable today; 0 once the deadline has passed.
              */
             remainingDays?: number;
             /**
-             * Format: int32
+             * Format: double
              * @description Carried days the deadline took.
              */
             expiredDays?: number;
@@ -4161,9 +4197,10 @@ export interface components {
             presence?: "WFH" | "OFF";
             dateFrom?: string;
             dateTo?: string;
-            /** Format: int32 */
+            /** Format: double */
             workingDays?: number;
             workingDates?: string[];
+            dayParts?: ("FULL" | "FIRST_HALF" | "SECOND_HALF")[];
             canViewRequestContext?: boolean;
             /** @enum {string} */
             viewerRelationship?: "SELF" | "ACTIVE_OR_COMPLETED_APPROVER" | "ORGANIZATION_ADMIN" | "DIRECT_REPORT_MANAGER" | "SAME_WORKFORCE_GROUP" | "ORGANIZATION_PEER";
@@ -4231,7 +4268,7 @@ export interface components {
             leaveTypePublicId?: string;
             /** Format: int32 */
             balanceYear?: number;
-            /** Format: int32 */
+            /** Format: double */
             deltaDays?: number;
             reason?: string;
             /** Format: date */
@@ -4267,7 +4304,7 @@ export interface components {
             leaveTypeBorderColor?: string;
             dateFrom?: string;
             dateTo?: string;
-            /** Format: int32 */
+            /** Format: double */
             workingDays?: number;
             /** @enum {string} */
             status?: "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED";
@@ -4342,20 +4379,20 @@ export interface components {
             leaveTypeBorderColor?: string;
             dateFrom?: string;
             dateTo?: string;
-            /** Format: int32 */
+            /** Format: double */
             workingDays?: number;
             note?: string;
             workforceGroupName?: string;
             weekendDays?: string[];
             balanceCapped?: boolean;
-            /** Format: int32 */
+            /** Format: double */
             balanceRemaining?: number;
-            /** Format: int32 */
+            /** Format: double */
             balanceAfterApproval?: number;
             balanceSufficient?: boolean;
-            /** Format: int32 */
+            /** Format: double */
             balanceCarryoverAvailable?: number;
-            /** Format: int32 */
+            /** Format: double */
             carryoverDaysToUse?: number;
             carryoverExpiresOn?: string;
             /** Format: int32 */
@@ -4398,16 +4435,16 @@ export interface components {
             dateFrom?: string;
             /** Format: date */
             dateTo?: string;
-            /** Format: int32 */
+            /** Format: double */
             workingDays?: number;
             reason?: string;
             /** Format: date-time */
             requestedAt?: string;
-            /** Format: int32 */
+            /** Format: double */
             daysToRestore?: number;
-            /** Format: int32 */
+            /** Format: double */
             carryoverDaysToRestore?: number;
-            /** Format: int32 */
+            /** Format: double */
             daysForfeited?: number;
             /** Format: int32 */
             balanceYear?: number;

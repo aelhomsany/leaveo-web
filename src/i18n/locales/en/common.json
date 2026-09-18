@@ -18,6 +18,12 @@
     "tagline": "Team Leave Management"
   },
   "comingSoon": "Coming soon.",
+  "dayParts": {
+    "FIRST_HALF": "Morning",
+    "FULL": "Whole day",
+    "SECOND_HALF": "Afternoon",
+    "halfDay": "Half day"
+  },
   "handoff": {
     "title": "Signing you in",
     "body": "Your workspace is ready. Completing the secure one-time handoff…",

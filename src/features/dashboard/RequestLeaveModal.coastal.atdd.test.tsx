@@ -25,6 +25,7 @@ const mockLeaveTypes = [
 
 const mockPreviewFiveDays: PreviewLeaveRequestResponse = {
   workingDays: 5,
+  chargedDays: 5,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,
@@ -33,6 +34,7 @@ const mockPreviewFiveDays: PreviewLeaveRequestResponse = {
 
 const mockPreviewZeroDays: PreviewLeaveRequestResponse = {
   workingDays: 0,
+  chargedDays: 0,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,

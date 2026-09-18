@@ -163,24 +163,31 @@
       "submitting": "Submitting…"
     },
     "errors": {
-      "noWorkforceGroup": "You are not in a workforce group yet, so working days cannot be counted. Create one under Organization Settings → Working Calendars — you will be added to it automatically.",
-      "insufficientBalance_zero": "No days are available for this leave type.",
-      "insufficientBalance_one": "Not enough days: only {{count}} day is available for this leave type.",
-      "insufficientBalance_two": "Not enough days: only {{count}} days are available for this leave type.",
+      "contradictoryParts": "Those two halves do not describe a stretch of time. Leave that covers only a morning, or only an afternoon, has to start and end on the same day.",
+      "halfDayNotAllowed": "{{name}} must be taken in whole days.",
+      "halfDayOnNonWorkingDay": "{{date}} is not a working day, so it cannot be taken as a half day.",
+      "insufficientBalanceUnknown": "Not enough days are available for this leave type.",
       "insufficientBalance_few": "Not enough days: only {{count}} days are available for this leave type.",
       "insufficientBalance_many": "Not enough days: only {{count}} days are available for this leave type.",
+      "insufficientBalance_one": "Not enough days: only {{count}} day is available for this leave type.",
       "insufficientBalance_other": "Not enough days: only {{count}} days are available for this leave type.",
-      "insufficientBalanceUnknown": "Not enough days are available for this leave type.",
+      "insufficientBalance_two": "Not enough days: only {{count}} days are available for this leave type.",
+      "insufficientBalance_zero": "No days are available for this leave type.",
+      "noWorkforceGroup": "You are not in a workforce group yet, so working days cannot be counted. Create one under Organization Settings → Working Calendars — you will be added to it automatically.",
+      "overlaps": "You already have leave requested for {{date}}. Change the dates, or cancel the other request first.",
       "preview": "Unable to preview working days",
       "spansBalanceYears": "Leave cannot run across two years. Split it at 31 December and submit one request for each year.",
       "submit": "Unable to submit leave request"
     },
     "fields": {
+      "dayPart": "Duration",
+      "endPart": "Last day",
       "from": "From",
       "fromDate": "From date",
       "leaveType": "Leave Type",
       "note": "Note (optional)",
       "selectLeaveType": "— Select leave type —",
+      "startPart": "First day",
       "to": "To",
       "toDate": "To date"
     },
@@ -195,7 +202,13 @@
       "zeroResult": "No working days"
     },
     "success": "Leave request submitted — waiting for approval",
-    "title": "Request Leave"
+    "title": "Request Leave",
+    "dayParts": {
+      "endFirstHalf": "Morning only",
+      "endFull": "Whole day",
+      "startFull": "Whole day",
+      "startSecondHalf": "Afternoon only"
+    }
   },
   "sidebar": {
     "everyoneIn": "Everyone is in today!",

@@ -8,6 +8,7 @@ import type {
   DayOfWeek,
 } from '../../api/generated/types'
 import { AlertDiamondIcon, CalendarIcon, SunIcon } from '../../components/ui/icons'
+import { FULL_DAY, type DayPart } from '../../lib/leaveDays'
 import { CalendarEventChip } from './CalendarEventChip'
 import { CalendarMonthGrid } from './CalendarMonthGrid'
 import { CalendarWeekStrip } from './CalendarWeekStrip'
@@ -62,6 +63,22 @@ function clampToMonth(date: string, visibleFrom: string, visibleTo: string): str
   return date
 }
 
+/**
+ * Which part of one date an absence covers (Plan MEDIA), or null when it covers all of it.
+ *
+ * `dayParts` is parallel to `workingDates`, so the part is read by the date's position in that
+ * list. An absence with no parts at all -- a pre-MEDIA request, or the optimistic overlay for a
+ * pending one -- is whole days, which is what it was.
+ */
+function absenceDayPart(absence: CalendarAbsenceResponse, date: string): DayPart | null {
+  const index = absence.workingDates?.indexOf(date) ?? -1
+  if (index < 0) {
+    return null
+  }
+  const part = absence.dayParts?.[index]
+  return part == null || part === FULL_DAY ? null : part
+}
+
 function absenceDayPosition(absence: CalendarAbsenceResponse, date: string) {
   // Position comes from the server-authoritative charged working-date list
   // (never recomputed on the client). Total prefers the stored count, falling
@@ -82,7 +99,7 @@ export function CalendarAgenda({
   onSelectedDateChange,
   locale,
 }: CalendarAgendaProps) {
-  const { t } = useTranslation('calendar')
+  const { t } = useTranslation(['calendar', 'common'])
   const visibleFrom = `${month}-01`
   const visibleTo = monthEnd(month)
   const weekAnchor = selectedDate ?? clampToMonth(anchorDate, visibleFrom, visibleTo)
@@ -219,6 +236,9 @@ export function CalendarAgenda({
       },
     )
     const workingDays = t('agenda.workingDays', { count: absence.workingDays })
+    // The half itself, not just the fraction: a person scanning one day of the agenda wants to know
+    // whether their colleague is away this morning or this afternoon, which the day count cannot say.
+    const dayPart = absenceDayPart(absence, sectionDate)
     const presenceClass = absence.presence === 'WFH' ? 'badge-wfh' : 'badge-off'
     const progress = absenceDayPosition(absence, sectionDate)
 
@@ -241,6 +261,11 @@ export function CalendarAgenda({
           </span>
           <span className="calendar-agenda-card-subtitle">
             {t('agenda.absenceSummary', { range, days: workingDays })}
+            {dayPart ? (
+              <span className="calendar-agenda-day-part" data-testid="calendar-agenda-day-part">
+                {t(`common:dayParts.${dayPart}`)}
+              </span>
+            ) : null}
           </span>
           <span className="calendar-agenda-meta">
             <span>{t('agenda.group', {

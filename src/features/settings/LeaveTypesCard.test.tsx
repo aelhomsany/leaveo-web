@@ -264,6 +264,7 @@ describe("LeaveTypesCard", () => {
       backgroundColor: LEAVE_TYPE_DEFAULT_PRESENTATION.backgroundColor,
       borderColor: LEAVE_TYPE_DEFAULT_PRESENTATION.borderColor,
       presenceType: LEAVE_TYPE_DEFAULT_PRESENTATION.presenceType,
+      halfDayAllowed: true,
     });
     expect(screen.getByLabelText(/^name$/i)).toHaveValue("Compassionate Leave");
     expect(screen.getByText("name already exists")).toBeInTheDocument();

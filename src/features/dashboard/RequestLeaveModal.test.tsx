@@ -37,6 +37,7 @@ const mockLeaveTypes = [
 
 const mockPreviewFiveDays: PreviewLeaveRequestResponse = {
   workingDays: 5,
+  chargedDays: 5,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,
@@ -45,6 +46,7 @@ const mockPreviewFiveDays: PreviewLeaveRequestResponse = {
 
 const mockPreviewZeroDays: PreviewLeaveRequestResponse = {
   workingDays: 0,
+  chargedDays: 0,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,
@@ -229,6 +231,8 @@ describe('RequestLeaveModal — Story 3.4', () => {
         leaveTypeId: 1,
         dateFrom: '2026-06-01',
         dateTo: '2026-06-07',
+        startPart: 'FULL',
+        endPart: 'FULL',
         note: undefined,
       })
       expect(onSuccess).toHaveBeenCalled()

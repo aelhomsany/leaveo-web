@@ -179,6 +179,10 @@ export function TeamCalendarPage() {
         dateTo: request.dateTo as string,
         workingDays: request.workingDays ?? 0,
         workingDates: [],
+        // Parallel to workingDates, so empty for the same reason: this overlay is synthesized from
+        // the self-scoped request list, which carries the charge but not the frozen day-by-day
+        // breakdown. The fractional workingDays still shows a half day as half a day.
+        dayParts: [],
         canViewRequestContext: true,
         viewerRelationship: 'SELF' as const,
         pending: true as const,
