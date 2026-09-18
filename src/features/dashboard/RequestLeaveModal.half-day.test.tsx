@@ -27,7 +27,9 @@ import { RequestLeaveModal } from './RequestLeaveModal'
 const MON = '2026-06-01'
 const TUE = '2026-06-02'
 const WED = '2026-06-03'
+const FRI = '2026-06-05'
 const SAT = '2026-06-06'
+const SUN = '2026-06-07'
 const NEXT_MON = '2026-06-08'
 
 const VALIDATION_FAILED = 'https://leaveo.net/errors/validation-failed'
@@ -233,13 +235,13 @@ async function waitForFirstPreview() {
   )
 }
 
-// The exact result line. Exact, because "0.5 working days…" contains "5 working days…".
+// The exact result line. Exact, because "0.5 working days…" contains "5 working days…". Singular
+// only at exactly one day, which is where English's plural rules put it.
 async function expectCharged(days: string) {
+  const unit = days === '1' ? 'working day' : 'working days'
   await waitFor(
     () =>
-      expect(screen.getByTestId('working-day-result').textContent).toBe(
-        `${days} working days will be charged`,
-      ),
+      expect(screen.getByTestId('working-day-result').textContent).toBe(`${days} ${unit} will be charged`),
     { timeout: 2000 },
   )
 }
@@ -726,6 +728,65 @@ describe('RequestLeaveModal — Plan MEDIA half days', () => {
       const shown = await screen.findByText(message)
       expect(shown).toHaveAttribute('role', 'alert')
       expect(screen.queryByText(error.problem.detail as string, { exact: false })).not.toBeInTheDocument()
+    })
+  })
+
+  describe('the result line and the submit button', () => {
+    // MEDIA-UI-VAL-009. The charge and the excluded-days line take their plural form from the count,
+    // so exactly one day reads in the singular and a half reads like any other fraction.
+    it('[P1] reads one working day and one excluded day in the singular', async () => {
+      mockPreviewServer()
+      const user = userEvent.setup()
+      renderModal()
+
+      await chooseLeaveType(user, annualLeave)
+      setDates(FRI, SAT)
+      await waitFor(
+        () =>
+          expect(screen.getByTestId('working-day-result').textContent).toBe('1 working day will be charged'),
+        { timeout: 2000 },
+      )
+      expect(screen.getByText('1 weekend/holiday day excluded from balance')).toBeInTheDocument()
+
+      setEndDate(SUN)
+      await waitFor(() =>
+        expect(screen.getByText('2 weekend/holiday days excluded from balance')).toBeInTheDocument(),
+      )
+      expect(screen.getByTestId('working-day-result').textContent).toBe('1 working day will be charged')
+
+      setDates(MON, MON)
+      await expectCharged('1')
+      await user.selectOptions(screen.getByLabelText('Duration'), 'FIRST_HALF')
+      await expectCharged('0.5')
+    })
+
+    // MEDIA-UI-VAL-010. The preview prices dates debounced by 300 ms; submit sends the dates as typed.
+    // Between a date change and the preview catching up, the charge on screen is the old range's, so
+    // submit waits rather than sending a range whose charge nobody has seen.
+    it('[P1] keeps submit disabled until the preview has caught up with a date change', async () => {
+      mockPreviewServer()
+      const create = mockCreateSuccess()
+      const user = userEvent.setup()
+      renderModal()
+
+      await chooseLeaveType(user, annualLeave)
+      setDates(MON, WED)
+      await expectCharged('3')
+      expect(screen.getByTestId('submit-request-btn')).toBeEnabled()
+
+      setEndDate(TUE)
+      expect(screen.getByTestId('working-day-result').textContent).toBe('3 working days will be charged')
+      expect(screen.getByTestId('submit-request-btn')).toBeDisabled()
+
+      await expectCharged('2')
+      await submitAndExpect(create, user, {
+        leaveTypeId: 1,
+        dateFrom: MON,
+        dateTo: TUE,
+        startPart: 'FULL',
+        endPart: 'FULL',
+        note: undefined,
+      })
     })
   })
 })

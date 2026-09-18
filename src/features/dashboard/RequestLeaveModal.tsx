@@ -260,6 +260,10 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
     viewerUngrouped ||
     leaveTypeId === '' ||
     !previewEnabled ||
+    // The preview prices the debounced dates and submit sends the typed ones. Until the two agree,
+    // the charge on screen belongs to dates the form no longer holds.
+    dateFrom !== debouncedFrom ||
+    dateTo !== debouncedTo ||
     clientDateInvalid ||
     previewQuery.isPending ||
     previewQuery.isFetching ||
