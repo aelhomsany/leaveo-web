@@ -128,11 +128,42 @@ jobs:
         with:
           path: leaveo-web
 
+      # A web branch runs against the leaveo-api branch of the same name, so a full-stack change is
+      # tested with its own API. A web-only branch has no API twin: checking out the missing ref
+      # failed this job before any test ran (web PR #6, 2026-09-18), so it now falls back to dev.
+      # Only git's definite "no such ref" (exit 2) falls back. An auth or network failure still
+      # fails here instead of quietly testing a full-stack branch against the wrong API. The branch
+      # name arrives through env, never interpolated into the script: PR head refs are
+      # author-controlled.
+      - name: Resolve leaveo-api branch
+        id: api-ref
+        env:
+          API_REPO: ${{ github.repository_owner }}/leaveo-api
+          API_TOKEN: ${{ secrets.LEAVEO_API_READ_TOKEN }}
+          WEB_BRANCH: ${{ github.head_ref || github.ref_name }}
+          GIT_TERMINAL_PROMPT: '0'
+        run: |
+          set +e
+          git ls-remote --exit-code --heads \
+            "https://x-access-token:${API_TOKEN}@github.com/${API_REPO}.git" \
+            "refs/heads/${WEB_BRANCH}" > /dev/null
+          status=$?
+          set -e
+          case "$status" in
+            0) ref="$WEB_BRANCH" ;;
+            2) ref=dev
+               echo "::notice title=leaveo-api branch::No leaveo-api branch named ${WEB_BRANCH}; testing against dev." ;;
+            *) echo "::error title=leaveo-api branch::Could not list leaveo-api branches (git exit ${status})."
+               exit 1 ;;
+          esac
+          echo "Testing against leaveo-api@${ref}"
+          echo "ref=${ref}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout leaveo-api
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/leaveo-api
-          ref: ${{ github.head_ref || github.ref_name }}
+          ref: ${{ steps.api-ref.outputs.ref }}
           token: ${{ secrets.LEAVEO_API_READ_TOKEN }}
           path: leaveo-api
         continue-on-error: false
