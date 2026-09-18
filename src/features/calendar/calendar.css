@@ -1335,3 +1335,7 @@ html[lang='ar'] .calendar-agenda-heading {
     justify-self: start;
   }
 }
+/* Arabic reset for the tracked workspace page title (arabic-letterspacing.atdd.test.ts). */
+html[lang='ar'] .team-calendar-page .calendar-workspace-header .page-title {
+  letter-spacing: normal;
+}

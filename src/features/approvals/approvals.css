@@ -1162,3 +1162,12 @@ html[lang='ar'] .approvals-page-eyebrow {
     outline-offset: 2px;
   }
 }
+/* Arabic is cursive: letter-spacing breaks glyph joining on translated chrome.
+   Reset the tracked labels under the Arabic document (see arabic-letterspacing.atdd.test.ts). */
+html[lang='ar'] .approvals-page-header .page-title,
+html[lang='ar'] .approvals-summary dt,
+html[lang='ar'] .approvals-summary dd,
+html[lang='ar'] .approvals-section-heading h2,
+html[lang='ar'] .approval-card-title {
+  letter-spacing: normal;
+}

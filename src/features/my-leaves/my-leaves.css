@@ -668,3 +668,7 @@ html[lang='ar'] .my-leaves-page-eyebrow { letter-spacing: normal; }
     width: 100%;
   }
 }
+/* Arabic reset for the tracked page title (arabic-letterspacing.atdd.test.ts). */
+html[lang='ar'] .my-leaves-page-header .page-title {
+  letter-spacing: normal;
+}
