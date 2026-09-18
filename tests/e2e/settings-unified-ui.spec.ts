@@ -59,9 +59,11 @@ test.describe('Settings unified UI — Story 2.7', { tag: [tags.regression, tags
 
   test('[P1] + Add Group creates a new workforce group tab', async ({ page }) => {
     await loginViaUi(page, { email: 'jordan@company.com', password })
-    await navigateInApp(page, '/settings')
+    // Workforce Groups live under the working-calendars category since the Settings IA
+    // refresh; the old flat "Manage Groups" link no longer exists.
+    await navigateInApp(page, '/settings?category=working-calendars')
+    await expect(page.getByTestId('settings-panel-working-calendars')).toBeVisible()
 
-    await page.getByText('Manage Groups', { exact: true }).click()
     await page.getByTestId('add-group-btn').click()
     await expect(page.getByTestId('workforce-group-modal')).toBeVisible()
 

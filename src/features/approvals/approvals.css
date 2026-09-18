@@ -527,6 +527,22 @@ html[lang='ar'] .approval-card-eyebrow {
   container: recent-decisions-scroll / inline-size;
 }
 
+/* Keep the trailing evidence column reachable inside a phone-width scroll port. The desktop
+   1040px table floor otherwise forces this last column to absorb the slack and render wider
+   than the port, so the horizontal scroll can never bring its full box into view (Story 10.3
+   responsive-tables). At a narrow scroll port, drop the floor — the table still scrolls on its
+   natural min-content — and let the column shrink to the compact chain's own 240px minimum, so
+   the last cell fits the port. */
+@container recent-decisions-scroll (max-width: 520px) {
+  .recent-decisions-table {
+    min-width: 0;
+  }
+
+  .recent-decision-progress {
+    min-width: 240px;
+  }
+}
+
 .recent-decision-audit-row > td {
   padding: 0;
   background: var(--color-surface-subtle);
