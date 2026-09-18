@@ -3,6 +3,7 @@ import type { APIRequestContext } from '@playwright/test'
 import { test, expect } from '../support/fixtures'
 import { loginViaApi, loginViaUi, navigateInApp } from '../support/helpers/auth'
 import { apiRequest } from '../support/helpers/api-client'
+import { createLeaveRequestOnFreeMonday } from '../support/helpers/leave-requests'
 import { tags } from '../support/tags'
 
 const password = process.env.E2E_USER_PASSWORD ?? 'PilotDev123!'
@@ -42,30 +43,15 @@ async function provisionPendingRequest(request: APIRequestContext, note: string)
   const annual = leaveTypes.find((type) => type.name === 'Annual Leave')
   expect(annual, 'Annual Leave must exist in the seeded organization').toBeTruthy()
 
-  // Far enough ahead not to collide with the seeded requests, and pinned to a Monday so the
-  // range contains working days under both the US (Sat/Sun) and Egypt (Fri/Sat) weekends.
-  const start = new Date()
-  start.setUTCDate(start.getUTCDate() + 60)
-  while (start.getUTCDay() !== 1) {
-    start.setUTCDate(start.getUTCDate() + 1)
-  }
-  const end = new Date(start)
-  end.setUTCDate(end.getUTCDate() + 1)
-  const iso = (value: Date) => value.toISOString().slice(0, 10)
-
-  const created = await apiRequest<{ id: number }>({
-    request,
-    method: 'POST',
-    path: '/api/v1/leave-requests',
+  // Far enough ahead not to collide with the seeded requests. All three tests here, and
+  // leave-cancellation.spec.ts, provision leave for Omar, and the API refuses a second request
+  // on a date he already has, so each one lands on the first Monday–Tuesday he still has free.
+  return createLeaveRequestOnFreeMonday(request, {
     token: accessToken,
-    data: {
-      leaveTypeId: annual!.id,
-      dateFrom: iso(start),
-      dateTo: iso(end),
-      note,
-    },
+    leaveTypeId: annual!.id,
+    offsetDays: 60,
+    note,
   })
-  return created.id
 }
 
 test.describe('Approval decision — Story 3.7', { tag: [tags.regression, tags.api] }, () => {

@@ -3,6 +3,7 @@ import type { APIRequestContext } from '@playwright/test'
 import { test, expect } from '../support/fixtures'
 import { loginViaApi, loginViaUi, logoutViaUi, navigateInApp } from '../support/helpers/auth'
 import { apiRequest } from '../support/helpers/api-client'
+import { createLeaveRequestOnFreeMonday, mondayRange } from '../support/helpers/leave-requests'
 import { tags } from '../support/tags'
 
 const password = process.env.E2E_USER_PASSWORD ?? 'PilotDev123!'
@@ -24,30 +25,10 @@ const REQUESTER = { email: 'omar@company.com', password, timezone: 'Africa/Cairo
 const MANAGER = { email: 'alex@company.com', password }
 const ORGANIZATION_ADMIN = { email: 'jordan@company.com', password }
 
-const iso = (value: Date) => value.toISOString().slice(0, 10)
-
-/**
- * A two-working-day range starting on a Monday, `offsetDays` from today. Monday–Tuesday contains
- * working days under both the US (Sat/Sun) and Egypt (Fri/Sat) weekends; a negative offset walks
- * backwards so the range has already started.
- */
-function mondayRange(offsetDays: number): { from: string; to: string } {
-  const start = new Date()
-  start.setUTCDate(start.getUTCDate() + offsetDays)
-  const step = offsetDays < 0 ? -1 : 1
-  while (start.getUTCDay() !== 1) {
-    start.setUTCDate(start.getUTCDate() + step)
-  }
-  const end = new Date(start)
-  end.setUTCDate(end.getUTCDate() + 1)
-  return { from: iso(start), to: iso(end) }
-}
-
-async function createRequest(
+/** Signs Omar in over the API and returns his token with the Annual Leave type's id. */
+async function requesterAnnualLeave(
   request: APIRequestContext,
-  range: { from: string; to: string },
-  note: string,
-): Promise<number> {
+): Promise<{ token: string; leaveTypeId: number }> {
   const { accessToken } = await loginViaApi(request, REQUESTER)
 
   const leaveTypes = await apiRequest<Array<{ id: number; name: string }>>({
@@ -58,13 +39,22 @@ async function createRequest(
   })
   const annual = leaveTypes.find((type) => type.name === 'Annual Leave')
   expect(annual, 'Annual Leave must exist in the seeded organization').toBeTruthy()
+  return { token: accessToken, leaveTypeId: annual!.id }
+}
+
+async function createRequest(
+  request: APIRequestContext,
+  range: { from: string; to: string },
+  note: string,
+): Promise<number> {
+  const { token, leaveTypeId } = await requesterAnnualLeave(request)
 
   const created = await apiRequest<{ id: number }>({
     request,
     method: 'POST',
     path: '/api/v1/leave-requests',
-    token: accessToken,
-    data: { leaveTypeId: annual!.id, dateFrom: range.from, dateTo: range.to, note },
+    token,
+    data: { leaveTypeId, dateFrom: range.from, dateTo: range.to, note },
   })
   return created.id
 }
@@ -89,11 +79,15 @@ test.describe('Leave cancellation — Plan VUELTA', { tag: [tags.regression, tag
     page,
     request,
   }) => {
-    const requestId = await createRequest(
-      request,
-      mondayRange(60),
-      'E2E withdraw journey',
-    )
+    // approval-decision.spec.ts provisions leave for Omar too, and the API refuses a second request
+    // on a date he already has, so this lands on the first Monday–Tuesday he still has free.
+    const { token, leaveTypeId } = await requesterAnnualLeave(request)
+    const requestId = await createLeaveRequestOnFreeMonday(request, {
+      token,
+      leaveTypeId,
+      offsetDays: 60,
+      note: 'E2E withdraw journey',
+    })
 
     await loginViaUi(page, REQUESTER)
     await navigateInApp(page, '/my-leaves')
