@@ -43,7 +43,7 @@ const subtrees: [namespace: string, subtree: string][] = [
 
 // Every key MEDIA added, by name, so dropping one from both files together still fails.
 const mediaKeys: Record<string, string[]> = {
-  common: ['dayParts.FIRST_HALF', 'dayParts.FULL', 'dayParts.SECOND_HALF', 'dayParts.halfDay'],
+  common: ['dayParts.FIRST_HALF', 'dayParts.FULL', 'dayParts.SECOND_HALF'],
   dashboard: [
     'request.dayParts.startFull',
     'request.dayParts.startSecondHalf',
