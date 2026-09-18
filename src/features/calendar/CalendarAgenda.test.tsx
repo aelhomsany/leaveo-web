@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import type { CalendarMonthResponse } from '../../api/generated/types'
+import type { CalendarAbsenceResponse, CalendarMonthResponse } from '../../api/generated/types'
 import { CalendarAgenda } from './CalendarAgenda'
 import { mockCalendarMonth } from './calendarTestFixtures'
 
@@ -172,5 +172,100 @@ describe('CalendarAgenda scope flag', () => {
     expect(screen.getByTestId('calendar-agenda-scope')).toHaveClass(
       'calendar-agenda-heading--month',
     )
+  })
+})
+
+/**
+ * Plan MEDIA. The agenda names the half: a fractional day count says how much of a day somebody is
+ * away, and only dayParts -- read by the date's position in workingDates -- says which half. An
+ * absence with no parts reads as whole days, which is what it was.
+ */
+describe('CalendarAgenda day-part chip — Plan MEDIA', () => {
+  // Tuesday 2 June 2026, one working day.
+  function oneDay(overrides: Partial<CalendarAbsenceResponse>): CalendarAbsenceResponse {
+    return {
+      ...mockCalendarMonth.absences[0],
+      requestId: 20,
+      dateFrom: '2026-06-02',
+      dateTo: '2026-06-02',
+      workingDays: 1,
+      workingDates: ['2026-06-02'],
+      dayParts: ['FULL'],
+      ...overrides,
+    }
+  }
+
+  function withoutDayParts(absence: CalendarAbsenceResponse): CalendarAbsenceResponse {
+    const copy: Partial<CalendarAbsenceResponse> = { ...absence }
+    delete copy.dayParts
+    return copy as CalendarAbsenceResponse
+  }
+
+  function renderWith(absence: CalendarAbsenceResponse) {
+    render(<AgendaHarness calendar={{ ...mockCalendarMonth, absences: [absence], holidays: [] }} />)
+    return screen.getByTestId('calendar-event-20')
+  }
+
+  // MEDIA-UI-VAL-007. A half day names its half, beside the fractional count rather than instead
+  // of it.
+  it.each([
+    ['FIRST_HALF', 'Morning'],
+    ['SECOND_HALF', 'Afternoon'],
+  ] as const)('[P1] names a %s absence "%s"', (part, label) => {
+    const card = renderWith(oneDay({ workingDays: 0.5, dayParts: [part] }))
+
+    expect(within(card).getByTestId('calendar-agenda-day-part')).toHaveTextContent(
+      new RegExp(`^${label}$`),
+    )
+    expect(card).toHaveTextContent('Jun 2, 2026 · 0.5 working days')
+  })
+
+  // MEDIA-UI-VAL-007. A whole day gets no chip -- not even one saying "Whole day".
+  it('[P1] shows no chip for a whole day', () => {
+    const card = renderWith(oneDay({ dayParts: ['FULL'] }))
+
+    expect(within(card).queryByTestId('calendar-agenda-day-part')).not.toBeInTheDocument()
+    expect(card).not.toHaveTextContent(/Whole day|Morning|Afternoon/)
+  })
+
+  // MEDIA-UI-VAL-007. No parts at all: a pre-MEDIA request whose response has no dayParts, an empty
+  // list, and the shape TeamCalendarPage gives its optimistic pending overlay (dayParts and
+  // workingDates both empty -- an overlay that today is only handed to the timeline).
+  it.each([
+    ['a pre-MEDIA request with no dayParts', withoutDayParts(oneDay({}))],
+    ['an empty dayParts list', oneDay({ dayParts: [] })],
+    ['the pending-overlay shape', oneDay({ workingDays: 0.5, workingDates: [], dayParts: [] })],
+  ])('[P1] shows no chip for %s', (_label, absence) => {
+    const card = renderWith(absence)
+
+    expect(within(card).queryByTestId('calendar-agenda-day-part')).not.toBeInTheDocument()
+    expect(card).not.toHaveTextContent(/Whole day|Morning|Afternoon/)
+  })
+
+  // MEDIA-UI-VAL-007. Across a range each date reads its own part: the afternoon start on the first
+  // day, nothing in the middle, the morning end on the last day.
+  it('[P1] reads the part for the date being shown across a multi-day absence', async () => {
+    const user = userEvent.setup()
+    renderWith(
+      oneDay({
+        dateFrom: '2026-06-01',
+        dateTo: '2026-06-03',
+        workingDays: 2,
+        workingDates: ['2026-06-01', '2026-06-02', '2026-06-03'],
+        dayParts: ['SECOND_HALF', 'FULL', 'FIRST_HALF'],
+      }),
+    )
+    const chip = () =>
+      within(screen.getByTestId('calendar-event-20')).queryByTestId('calendar-agenda-day-part')
+
+    // Unfiltered, the card sits on its first day.
+    expect(chip()).toHaveTextContent(/^Afternoon$/)
+
+    await user.click(screen.getByRole('button', { name: 'June 2, 1 absence' }))
+    expect(screen.getByTestId('calendar-event-20')).toBeInTheDocument()
+    expect(chip()).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'June 3, 1 absence' }))
+    expect(chip()).toHaveTextContent(/^Morning$/)
   })
 })
