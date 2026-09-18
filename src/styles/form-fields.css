@@ -163,11 +163,11 @@
 .form-field-check {
   flex-direction: row;
   align-items: center;
-  gap: var(--space-xs, 8px);
+  gap: var(--space-xs);
 }
 
 .form-field-check > span {
-  font-weight: var(--font-body-weight, 400);
+  font-weight: var(--font-body-weight);
 }
 
 /* --- Checkboxes, radios and pickers ------------------------------------- */

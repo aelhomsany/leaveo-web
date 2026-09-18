@@ -1230,7 +1230,7 @@ html[lang='ar'] .calendar-agenda-heading {
    words in the subtitle, because the subtitle is already an ellipsised range and this is the part
    a reader scanning one day of the agenda is actually looking for. */
 .calendar-agenda-day-part {
-  background: var(--color-surface-subtle, rgba(0, 0, 0, 0.05));
+  background: var(--color-surface-subtle);
   border-radius: 999px;
   color: var(--color-teal);
   font-weight: 700;
