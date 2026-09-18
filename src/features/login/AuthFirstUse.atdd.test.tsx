@@ -26,6 +26,7 @@ import {
   createMockAuthValue,
   mockUsers,
 } from '../../test/authTestUtils'
+import { mockRecentApprovalDecision, mockTeamMemberSummary, noCancellation } from '../../test/apiFixtures'
 // The Dashboard merged into My Leaves (2026-09-01); the first-use cue and the
 // greeting now live on MyLeavesPage, so the "Dashboard" scenarios mount that.
 import { MyLeavesPage } from '../my-leaves/MyLeavesPage'
@@ -64,6 +65,7 @@ const mockRequestHistory: RecentRequestResponse = {
   statusHint: 'Approved',
   declineReason: null,
   approverFirstName: 'Alex',
+  cancellation: noCancellation(),
 }
 
 function renderLogin(login = vi.fn()) {
@@ -118,22 +120,22 @@ function stubDashboardApis(options?: {
     options?.noOrgLeaveHistory
       ? []
       : [
-          {
-            requestId: 501,
+          mockRecentApprovalDecision({
             employeeUserId: mockUsers.employee.id,
             employeeFullName: mockUsers.employee.fullName,
-            leaveTypeId: 1,
-            leaveTypeName: 'Annual Leave',
-            dateFrom: '2026-06-01',
-            dateTo: '2026-06-02',
-            workingDays: 2,
-            status: 'APPROVED',
-            decidedAt: '2026-06-03T10:00:00Z',
-          },
+          }),
         ],
   )
   vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-    { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
+    {
+      id: 1,
+      name: 'US',
+      timezone: 'America/New_York',
+      weekendDays: ['SATURDAY', 'SUNDAY'],
+      currentEffectiveFrom: '2026-01-01',
+      scheduledChanges: [],
+      overrideCount: 0,
+    },
   ])
   vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue(
     options?.noHolidays
@@ -149,7 +151,7 @@ function stubDashboardApis(options?: {
         ],
   )
   vi.spyOn(apiClient, 'getTeamMembers').mockResolvedValue([
-    {
+    mockTeamMemberSummary({
       id: mockUsers.organizationAdmin.id,
       fullName: mockUsers.organizationAdmin.fullName,
       email: mockUsers.organizationAdmin.email,
@@ -157,21 +159,19 @@ function stubDashboardApis(options?: {
       role: 'ORGANIZATION_ADMIN',
       workforceGroupId: options?.unassignedMembers ? null : 1,
       workforceGroupName: options?.unassignedMembers ? null : 'US',
-      status: 'ACTIVE',
-    },
+    }),
     ...(options?.soleMember
       ? []
       : [
-          {
+          mockTeamMemberSummary({
             id: mockUsers.employee.id,
             fullName: mockUsers.employee.fullName,
             email: mockUsers.employee.email,
             department: 'Engineering',
-            role: 'EMPLOYEE' as const,
+            role: 'EMPLOYEE',
             workforceGroupId: options?.unassignedMembers ? null : 1,
             workforceGroupName: options?.unassignedMembers ? null : 'US',
-            status: 'ACTIVE' as const,
-          },
+          }),
         ]),
   ])
 }
@@ -434,13 +434,29 @@ describe('AuthFirstUse ATDD — Story 11.7', () => {
       // rejected the whole signals query, showCue fell back to `hasStarted` (false for a
       // brand-new admin), and onboarding vanished for exactly the person who needed it.
       vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-        { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-        { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] },
+        {
+          id: 1,
+          name: 'US',
+          timezone: 'America/New_York',
+          weekendDays: ['SATURDAY', 'SUNDAY'],
+          currentEffectiveFrom: '2026-01-01',
+          scheduledChanges: [],
+          overrideCount: 0,
+        },
+        {
+          id: 2,
+          name: 'Egypt',
+          timezone: 'Africa/Cairo',
+          weekendDays: ['FRIDAY', 'SATURDAY'],
+          currentEffectiveFrom: '2026-01-01',
+          scheduledChanges: [],
+          overrideCount: 0,
+        },
       ])
       vi.spyOn(apiClient, 'getPublicHolidays').mockImplementation((groupId: number) =>
         groupId === 1
           ? Promise.resolve([])
-          : Promise.reject(new ApiError('Holiday lookup failed', 500)),
+          : Promise.reject(new ApiError(500, { status: 500, detail: 'Holiday lookup failed' })),
       )
       localStorage.removeItem(
         `${FIRST_USE_STORAGE_PREFIX}${mockUsers.organizationAdmin.organizationId}:${mockUsers.organizationAdmin.id}`,
@@ -456,7 +472,7 @@ describe('AuthFirstUse ATDD — Story 11.7', () => {
     '[P0] Given every signal endpoint fails, When an unstarted Organization Admin opens Dashboard, Then the cue still shows',
     async () => {
       stubDashboardApis()
-      const boom = () => Promise.reject(new ApiError('Signal unavailable', 503))
+      const boom = () => Promise.reject(new ApiError(503, { status: 503, detail: 'Signal unavailable' }))
       vi.spyOn(apiClient, 'getWorkforceGroups').mockImplementation(boom)
       vi.spyOn(apiClient, 'getTeamMembers').mockImplementation(boom)
       vi.spyOn(apiClient, 'getRecentApprovalDecisions').mockImplementation(boom)

@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import type { LeaveTypeResponse, TeamMemberSummaryResponse } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockTeamMemberSummary, mockWorkforceGroup } from '../../test/apiFixtures'
 import { ToastProvider } from '../../components/ui/ToastProvider'
 import { SettingsPage } from './SettingsPage'
 
@@ -25,18 +26,22 @@ import { SettingsPage } from './SettingsPage'
 const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: 'lt-1',
     name: 'Annual Leave',
     icon: 'leave',
     color: '#093C5D',
     backgroundColor: '#D6E8ED',
     borderColor: '#0E4F75',
+    presenceType: 'OFF',
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
 ]
 
 const mockTeamMembers: TeamMemberSummaryResponse[] = [
-  {
+  mockTeamMemberSummary({
     id: 1,
     fullName: 'Jordan Lee',
     email: 'jordan@company.com',
@@ -44,10 +49,8 @@ const mockTeamMembers: TeamMemberSummaryResponse[] = [
     role: 'ORGANIZATION_ADMIN',
     workforceGroupId: 1,
     workforceGroupName: 'US',
-    managerId: undefined,
-    managerName: undefined,
-  },
-  {
+  }),
+  mockTeamMemberSummary({
     id: 2,
     fullName: 'Omar Hassan',
     email: 'omar@company.com',
@@ -57,13 +60,13 @@ const mockTeamMembers: TeamMemberSummaryResponse[] = [
     workforceGroupName: 'Egypt',
     managerId: 1,
     managerName: 'Jordan Lee',
-  },
+  }),
 ]
 
 function mockSettingsApis() {
   vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-    { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-    { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] },
+    mockWorkforceGroup({ id: 1, name: 'US' }),
+    mockWorkforceGroup({ id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] }),
   ])
   vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue([
     {
@@ -118,11 +121,9 @@ function mockSettingsApis() {
       effectiveEnabledNow: true,
     },
   ])
-  vi.spyOn(apiClient, 'putWorkforceGroupWeekendDays').mockResolvedValue({
-    id: 1,
-    name: 'US',
-    weekendDays: ['SATURDAY', 'SUNDAY'],
-  })
+  vi.spyOn(apiClient, 'putWorkforceGroupWeekendDays').mockResolvedValue(
+    mockWorkforceGroup({ id: 1, name: 'US' }),
+  )
 }
 
 function renderSettings(initialPath = '/settings') {

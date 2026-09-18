@@ -7,6 +7,7 @@ import { vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import type {
   BalanceCardResponse,
+  LeaveRequestResponse,
   LeaveTypeResponse,
   OutTodayResponse,
   PreviewLeaveRequestResponse,
@@ -15,6 +16,11 @@ import type {
   UserRole,
 } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import {
+  mockLeaveRequestResponse,
+  mockPreviewLeaveRequestResponse,
+  noCancellation,
+} from '../../test/apiFixtures'
 import { ToastProvider } from '../../components/ui/ToastProvider'
 import i18n from '../../i18n/config'
 import { MyLeavesPage } from './MyLeavesPage'
@@ -64,6 +70,7 @@ const mockHistory: RecentRequestResponse[] = [
     statusHint: 'Approved by Alex',
     declineReason: null,
     approverFirstName: 'Alex',
+    cancellation: noCancellation(),
   },
   {
     id: 2,
@@ -80,6 +87,7 @@ const mockHistory: RecentRequestResponse[] = [
     statusHint: null,
     declineReason: 'Team needs in-office coverage for sprint review',
     approverFirstName: null,
+    cancellation: noCancellation(),
   },
   {
     id: 1,
@@ -96,41 +104,46 @@ const mockHistory: RecentRequestResponse[] = [
     statusHint: 'Waiting for approval',
     declineReason: null,
     approverFirstName: null,
+    cancellation: noCancellation(),
   },
 ]
 
 const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: 'public-1',
     name: 'Annual Leave',
     icon: 'leave',
     color: '#093C5D',
     backgroundColor: '#D6E8ED',
     borderColor: '#0E4F75',
+    presenceType: 'OFF',
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
 ]
 
-const mockPreview: PreviewLeaveRequestResponse = {
+const mockPreview: PreviewLeaveRequestResponse = mockPreviewLeaveRequestResponse({
   workingDays: 5,
   chargedDays: 5,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,
   workforceGroupName: 'US',
-}
+})
 
-const mockCreateResponse = {
+const mockCreateResponse: LeaveRequestResponse = mockLeaveRequestResponse({
   id: 99,
   leaveTypeId: 1,
   dateFrom: '2026-08-03',
   dateTo: '2026-08-07',
   days: 5,
-  status: 'PENDING' as const,
+  status: 'PENDING',
   note: null,
   createdAt: '2026-06-13T10:00:00Z',
-}
+})
 
 function renderMyLeavesPage(
   initialPath = '/my-leaves',
@@ -330,6 +343,7 @@ describe('MyLeavesPage', () => {
           actedOnBehalf: false,
           actualActorId: 3,
           actualActorFullName: 'Alex Manager',
+          note: null,
           decidedAt: '2026-07-01T10:00:00Z',
         },
         {

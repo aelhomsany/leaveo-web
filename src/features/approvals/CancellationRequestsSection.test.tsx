@@ -41,6 +41,8 @@ function cancellation(
     reason: 'Trip was called off after it started.',
     requestedAt: '2026-08-06T09:00:00Z',
     daysToRestore: 3,
+    carryoverDaysToRestore: 0,
+    daysForfeited: 0,
     balanceYear: 2026,
     ...overrides,
   }

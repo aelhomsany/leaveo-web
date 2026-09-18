@@ -310,8 +310,8 @@ describe('OrgShell', () => {
     it('shows Reports when the plan entitles the workspace', async () => {
       vi.spyOn(apiClient, 'getCapabilityAccess').mockResolvedValue({
         capability: 'ADVANCED_REPORTING',
-        status: 'AVAILABLE',
-        available: true,
+        availability: 'AVAILABLE',
+        allowed: true,
       })
       renderOrgShell('ORGANIZATION_ADMIN')
 

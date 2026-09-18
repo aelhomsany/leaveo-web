@@ -1,10 +1,11 @@
 import { render, screen, within } from '@testing-library/react'
+import { mockApprovalStepEvidence } from '../../test/apiFixtures'
 import { ApprovalProgress } from './ApprovalProgress'
 
 describe('ApprovalProgress', () => {
   it('[P0] presents a level-one decline as declined evidence, not a generic skip', () => {
     render(
-      <ApprovalProgress evidence={[{
+      <ApprovalProgress evidence={[mockApprovalStepEvidence({
         level: 1,
         nominalApproverId: 3,
         nominalApproverFullName: 'Alex Manager',
@@ -16,7 +17,7 @@ describe('ApprovalProgress', () => {
         actualActorFullName: 'Alex Manager',
         note: 'Coverage conflict',
         decidedAt: '2026-08-10T12:00:00Z',
-      }]} />,
+      })]} />,
     )
 
     expect(screen.getByText('Declined')).toBeInTheDocument()
@@ -26,7 +27,7 @@ describe('ApprovalProgress', () => {
   it('[P1] presents ordered evidence with nominal and on-behalf actor context', () => {
     render(
       <ApprovalProgress evidence={[
-        {
+        mockApprovalStepEvidence({
           level: 1,
           nominalApproverId: 3,
           nominalApproverFullName: 'Alex Manager',
@@ -37,8 +38,8 @@ describe('ApprovalProgress', () => {
           actualActorId: 3,
           actualActorFullName: 'Alex Manager',
           decidedAt: '2026-08-10T11:00:00Z',
-        },
-        {
+        }),
+        mockApprovalStepEvidence({
           level: 2,
           nominalApproverId: 7,
           nominalApproverFullName: 'Parker PM',
@@ -50,8 +51,8 @@ describe('ApprovalProgress', () => {
           actualActorFullName: 'Harper HR',
           note: 'Project coverage was discussed',
           decidedAt: '2026-08-10T12:00:00Z',
-        },
-        {
+        }),
+        mockApprovalStepEvidence({
           level: 3,
           nominalApproverId: 11,
           nominalApproverFullName: 'Dana Lead',
@@ -62,7 +63,7 @@ describe('ApprovalProgress', () => {
           actualActorId: null,
           actualActorFullName: null,
           decidedAt: null,
-        },
+        }),
       ]} />,
     )
 

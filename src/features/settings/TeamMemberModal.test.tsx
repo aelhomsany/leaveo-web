@@ -6,6 +6,7 @@ import { ApiError } from '../../api/client'
 import * as apiClient from '../../api/client'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
 import { mockBackdropGeometry } from '../../test/backdropTestUtils'
+import { mockTeamMemberDetail, mockTeamMemberSummary } from '../../test/apiFixtures'
 import { redirectToExternalUrl } from '../../navigation/redirect'
 import i18n from '../../i18n/config'
 import { TeamMemberModal } from './TeamMemberModal'
@@ -22,19 +23,51 @@ vi.mock('../../navigation/redirect', () => ({
 }))
 
 const mockGroups: WorkforceGroupResponse[] = [
-  { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-  { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] },
+  {
+    id: 1,
+    name: 'US',
+    timezone: 'America/New_York',
+    weekendDays: ['SATURDAY', 'SUNDAY'],
+    currentEffectiveFrom: '2026-01-01',
+    scheduledChanges: [],
+    overrideCount: 0,
+  },
+  {
+    id: 2,
+    name: 'Egypt',
+    timezone: 'Africa/Cairo',
+    weekendDays: ['FRIDAY', 'SATURDAY'],
+    currentEffectiveFrom: '2026-01-01',
+    scheduledChanges: [],
+    overrideCount: 0,
+  },
 ]
 
 const mockLeaveTypes: LeaveTypeResponse[] = [
-  { id: 1, name: 'Annual Leave', icon: '🌴', color: '#093C5D', backgroundColor: '#D6E8ED', borderColor: '#0E4F75', defaultBalanceDays: 20, displayOrder: 1 },
-  { id: 2, name: 'Sick Leave', icon: '🤒', color: '#EF4444', backgroundColor: '#FEF2F2', borderColor: '#FECACA', defaultBalanceDays: 10, displayOrder: 2 },
-  { id: 5, name: 'Unpaid Leave', icon: '💼', color: '#5A7A80', backgroundColor: '#ECF4E8', borderColor: '#B8DCC4', defaultBalanceDays: null, displayOrder: 5 },
+  { id: 1, publicId: 'lt-annual', name: 'Annual Leave', icon: '🌴', color: '#093C5D', backgroundColor: '#D6E8ED', borderColor: '#0E4F75', presenceType: 'OFF', defaultBalanceDays: 20, displayOrder: 1, active: true, halfDayAllowed: true },
+  { id: 2, publicId: 'lt-sick', name: 'Sick Leave', icon: '🤒', color: '#EF4444', backgroundColor: '#FEF2F2', borderColor: '#FECACA', presenceType: 'OFF', defaultBalanceDays: 10, displayOrder: 2, active: true, halfDayAllowed: true },
+  { id: 5, publicId: 'lt-unpaid', name: 'Unpaid Leave', icon: '💼', color: '#5A7A80', backgroundColor: '#ECF4E8', borderColor: '#B8DCC4', presenceType: 'OFF', defaultBalanceDays: null, displayOrder: 5, active: true, halfDayAllowed: false },
 ]
 
 const mockMembers: TeamMemberSummaryResponse[] = [
-  { id: 3, fullName: 'Alex Johnson', email: 'alex@company.com', department: 'Engineering', role: 'MANAGER', workforceGroupId: 1, workforceGroupName: 'US', managerId: undefined, managerName: undefined },
-  { id: 5, fullName: 'Jordan Lee', email: 'jordan@company.com', department: 'People', role: 'ORGANIZATION_ADMIN', workforceGroupId: 1, workforceGroupName: 'US', managerId: undefined, managerName: undefined },
+  mockTeamMemberSummary({
+    id: 3,
+    fullName: 'Alex Johnson',
+    email: 'alex@company.com',
+    department: 'Engineering',
+    role: 'MANAGER',
+    workforceGroupId: 1,
+    workforceGroupName: 'US',
+  }),
+  mockTeamMemberSummary({
+    id: 5,
+    fullName: 'Jordan Lee',
+    email: 'jordan@company.com',
+    department: 'People',
+    role: 'ORGANIZATION_ADMIN',
+    workforceGroupId: 1,
+    workforceGroupName: 'US',
+  }),
 ]
 
 function renderModal(
@@ -115,17 +148,15 @@ describe('TeamMemberModal — add mode', () => {
   it('submits createTeamMember when form is valid', async () => {
     const user = userEvent.setup()
     const onSuccess = vi.fn()
+    // createTeamMember returns TeamMemberInvitationResponse (the invitation just sent), not a
+    // TeamMemberDetailResponse -- the assertion below only checks what was sent, not this shape.
     const createSpy = vi.spyOn(apiClient, 'createTeamMember').mockResolvedValue({
-      id: 99,
+      id: 'invite-99',
       fullName: 'Test Person',
       email: 'tp@company.com',
-      department: 'IT',
       role: 'EMPLOYEE',
-      workforceGroupId: 1,
-      workforceGroupName: 'US',
-      managerId: undefined,
-      managerName: undefined,
-      entitlements: [],
+      status: 'PENDING',
+      activeSeat: false,
     })
 
     renderModal(null, vi.fn(), onSuccess)
@@ -403,7 +434,7 @@ describe('TeamMemberModal — add mode', () => {
 })
 
 describe('TeamMemberModal — edit mode', () => {
-  const mockDetail: TeamMemberDetailResponse = {
+  const mockDetail: TeamMemberDetailResponse = mockTeamMemberDetail({
     id: 7,
     fullName: 'Priya Nair',
     email: 'priya@company.com',
@@ -417,7 +448,7 @@ describe('TeamMemberModal — edit mode', () => {
       { leaveTypeId: 1, leaveTypeName: 'Annual Leave', allocatedDays: 20 },
       { leaveTypeId: 2, leaveTypeName: 'Sick Leave', allocatedDays: 10 },
     ],
-  }
+  })
 
   beforeEach(() => {
     vi.mocked(redirectToExternalUrl).mockReset()

@@ -10,59 +10,80 @@ import {
   AuthTestProvider,
   createMockAuthForRole,
 } from "../../test/authTestUtils";
+import { mockLeaveTypePolicySummary } from "../../test/apiFixtures";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { LeaveTypesCard } from "./LeaveTypesCard";
 
 const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: "public-1",
     name: "Annual Leave",
     icon: "🏖️",
     color: "#093C5D",
     backgroundColor: "#D6E8ED",
     borderColor: "#0E4F75",
+    presenceType: "OFF",
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
   {
     id: 2,
+    publicId: "public-2",
     name: "Sick Leave",
     icon: "🤒",
     color: "#EF4444",
     backgroundColor: "#FEF2F2",
     borderColor: "#FECACA",
+    presenceType: "OFF",
     defaultBalanceDays: 10,
     displayOrder: 2,
+    active: true,
+    halfDayAllowed: true,
   },
   {
     id: 3,
+    publicId: "public-3",
     name: "Work From Home",
     icon: "🏠",
     color: "#2D6A4F",
     backgroundColor: "#E4F5DC",
     borderColor: "#CBF3BB",
+    presenceType: "WFH",
     defaultBalanceDays: 30,
     displayOrder: 3,
+    active: true,
+    halfDayAllowed: false,
   },
   {
     id: 4,
+    publicId: "public-4",
     name: "Maternity/Paternity",
     icon: "👶",
     color: "#854D0E",
     backgroundColor: "#FEF9C3",
     borderColor: "#FDE68A",
+    presenceType: "OFF",
     defaultBalanceDays: 90,
     displayOrder: 4,
+    active: true,
+    halfDayAllowed: false,
   },
   {
     id: 5,
+    publicId: "public-5",
     name: "Unpaid Leave",
     icon: "📋",
     color: "#5A7A80",
     backgroundColor: "#ECF4E8",
     borderColor: "#B8DCC4",
+    presenceType: "OFF",
     defaultBalanceDays: null,
     displayOrder: 5,
+    active: true,
+    halfDayAllowed: true,
   },
 ];
 
@@ -437,6 +458,11 @@ describe("LeaveTypesCard", () => {
       effectiveFrom: "2027-01-01",
       revision: 0,
       consumed: false,
+      carryoverEnabled: false,
+      carryoverMaxDays: null,
+      carryoverDeadlineMonth: null,
+      carryoverDeadlineDay: null,
+      carryoverRepeat: false,
     });
     const first = renderLeaveTypesCard();
     await user.click(
@@ -597,12 +623,12 @@ describe("LeaveTypesCard", () => {
       vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(withPresence);
       vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
         leaveTypes: [
-          { leaveTypePublicId: "lt-1", name: "Annual Leave" },
-          {
+          mockLeaveTypePolicySummary({ leaveTypePublicId: "lt-1", name: "Annual Leave" }),
+          mockLeaveTypePolicySummary({
             leaveTypePublicId: "lt-2",
             name: "Sick Leave",
             latestDraft: { draftPublicId: "draft-1", revision: 3 },
-          },
+          }),
         ],
         users: [],
         workforceGroups: [],
@@ -626,11 +652,30 @@ describe("LeaveTypesCard half-day toggle — Plan MEDIA", () => {
   const halfDayToggle = () =>
     screen.getByRole("checkbox", { name: "Can be taken in half days" });
 
+  // wfhNoHalfDayFlag deliberately omits halfDayAllowed (built field-by-field, not spread from
+  // mockLeaveTypes[2], since that now always carries the key) to exercise a real API response
+  // that predates Plan MEDIA and never sends the flag at all -- LeaveTypesCard must still read
+  // that as allowed. The cast is the narrowest way to feed that shape into LeaveTypeResponse[],
+  // which -- correctly, for every other row -- requires the key.
+  const wfhNoHalfDayFlag = {
+    id: mockLeaveTypes[2].id,
+    publicId: "public-3",
+    name: mockLeaveTypes[2].name,
+    icon: mockLeaveTypes[2].icon,
+    color: mockLeaveTypes[2].color,
+    backgroundColor: mockLeaveTypes[2].backgroundColor,
+    borderColor: mockLeaveTypes[2].borderColor,
+    presenceType: "WFH" as const,
+    defaultBalanceDays: mockLeaveTypes[2].defaultBalanceDays,
+    displayOrder: mockLeaveTypes[2].displayOrder,
+    active: true,
+  } as LeaveTypeResponse;
+
   const types: LeaveTypeResponse[] = [
     { ...mockLeaveTypes[0], publicId: "public-1", presenceType: "OFF", active: true, halfDayAllowed: true },
     { ...mockLeaveTypes[1], publicId: "public-2", presenceType: "OFF", active: true, halfDayAllowed: false },
     // No halfDayAllowed at all.
-    { ...mockLeaveTypes[2], publicId: "public-3", presenceType: "WFH", active: true },
+    wfhNoHalfDayFlag,
   ];
 
   beforeEach(() => {

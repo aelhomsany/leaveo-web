@@ -3,19 +3,24 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import * as apiClient from '../../api/client'
+import type { LeaveTypeResponse } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
 import { RequestLeaveModal } from './RequestLeaveModal'
 
-const mockLeaveTypes = [
+const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: 'public-1',
     name: 'Annual Leave',
     icon: '🌴',
     color: '#093C5D',
     backgroundColor: '#D6E8ED',
     borderColor: '#0E4F75',
+    presenceType: 'OFF',
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
 ]
 

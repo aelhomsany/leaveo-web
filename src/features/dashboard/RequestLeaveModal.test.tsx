@@ -7,13 +7,14 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { vi } from 'vitest'
 import * as apiClient from '../../api/client'
-import type { PreviewLeaveRequestResponse } from '../../api/generated/types'
+import type { LeaveTypeResponse, PreviewLeaveRequestResponse } from '../../api/generated/types'
 import {
   AuthTestProvider,
   createMockAuthForRole,
   createMockAuthValue,
   mockUsers,
 } from '../../test/authTestUtils'
+import { mockLeaveRequestResponse, mockPreviewLeaveRequestResponse } from '../../test/apiFixtures'
 import { mockBackdropGeometry } from '../../test/backdropTestUtils'
 import { RequestLeaveModal } from './RequestLeaveModal'
 
@@ -22,36 +23,40 @@ const globalCss = readFileSync(
   'utf8',
 )
 
-const mockLeaveTypes = [
+const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: 'public-1',
     name: 'Annual Leave',
     icon: '🌴',
     color: '#093C5D',
     backgroundColor: '#D6E8ED',
     borderColor: '#0E4F75',
+    presenceType: 'OFF',
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
 ]
 
-const mockPreviewFiveDays: PreviewLeaveRequestResponse = {
+const mockPreviewFiveDays: PreviewLeaveRequestResponse = mockPreviewLeaveRequestResponse({
   workingDays: 5,
   chargedDays: 5,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,
   workforceGroupName: 'US',
-}
+})
 
-const mockPreviewZeroDays: PreviewLeaveRequestResponse = {
+const mockPreviewZeroDays: PreviewLeaveRequestResponse = mockPreviewLeaveRequestResponse({
   workingDays: 0,
   chargedDays: 0,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,
   workforceGroupName: 'US',
-}
+})
 
 function renderModal(open = true, onClose = vi.fn()) {
   const queryClient = new QueryClient({
@@ -184,16 +189,16 @@ describe('RequestLeaveModal — Story 3.3', () => {
 })
 
 describe('RequestLeaveModal — Story 3.4', () => {
-  const mockCreateResponse = {
+  const mockCreateResponse = mockLeaveRequestResponse({
     id: 99,
     leaveTypeId: 1,
     dateFrom: '2026-06-01',
     dateTo: '2026-06-05',
     days: 5,
-    status: 'PENDING' as const,
+    status: 'PENDING',
     note: null,
     createdAt: '2026-06-13T10:00:00Z',
-  }
+  })
 
   beforeEach(() => {
     vi.spyOn(apiClient, 'getLeaveTypes').mockResolvedValue(mockLeaveTypes)

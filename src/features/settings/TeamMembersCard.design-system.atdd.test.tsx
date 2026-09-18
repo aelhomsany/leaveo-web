@@ -4,11 +4,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import type { TeamMemberSummaryResponse } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockTeamMemberSummary } from '../../test/apiFixtures'
 import { TeamMembersCard } from './TeamMembersCard'
 import { MemoryRouter } from 'react-router-dom'
 
 const mockMembers: TeamMemberSummaryResponse[] = [
-  {
+  mockTeamMemberSummary({
     id: 1,
     fullName: 'Jordan Lee',
     email: 'jordan@company.com',
@@ -16,11 +17,8 @@ const mockMembers: TeamMemberSummaryResponse[] = [
     role: 'ORGANIZATION_ADMIN',
     workforceGroupId: 1,
     workforceGroupName: 'US',
-    managerId: undefined,
-    managerName: undefined,
-    status: 'ACTIVE',
-  },
-  {
+  }),
+  mockTeamMemberSummary({
     id: 2,
     fullName: 'Sarah Chen',
     email: 'sarah@company.com',
@@ -30,8 +28,7 @@ const mockMembers: TeamMemberSummaryResponse[] = [
     workforceGroupName: 'Egypt',
     managerId: 3,
     managerName: 'Alex Johnson',
-    status: 'ACTIVE',
-  },
+  }),
 ]
 
 function renderCard() {

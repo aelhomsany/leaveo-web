@@ -11,6 +11,7 @@ type ManifestSuite = {
 type TagManifest = {
   version: number
   suites: Record<string, ManifestSuite>
+  permanentlySkippedTests?: string[]
 }
 
 const manifestPath = fileURLToPath(new URL('../e2e/tag-manifest.json', import.meta.url))
@@ -256,7 +257,7 @@ class TagIntegrityReporter implements Reporter {
     }
   }
 
-  onEnd(): { status?: FullResult['status'] } | void {
+  async onEnd(): Promise<{ status?: FullResult['status'] } | void> {
     if (this.diagnostics.length === 0) {
       process.stdout.write(`E2E tag integrity passed (${Object.keys(manifest.suites).length} suites).\n`)
       return

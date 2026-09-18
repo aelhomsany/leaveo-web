@@ -1,23 +1,17 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import type { PendingApprovalResponse } from '../../api/generated/types'
+import { mockPendingApprovalResponse } from '../../test/apiFixtures'
 import { ApprovalCard } from './ApprovalCard'
 
-const approval: PendingApprovalResponse = {
+const approval = mockPendingApprovalResponse({
   requestId: 101,
   employeeUserId: 7,
   employeeFullName: 'Sarah Chen',
-  leaveTypeId: 1,
-  leaveTypeName: 'Annual Leave',
-  leaveTypeIcon: 'leave',
-  leaveTypeColor: '#093C5D',
-  leaveTypeBackgroundColor: '#D6E8ED',
-  leaveTypeBorderColor: '#0E4F75',
   dateFrom: '2026-08-03',
   dateTo: '2026-08-07',
   workingDays: 5,
   note: null,
-}
+})
 
 describe('ApprovalCard query feedback ATDD — Story 10.8 / 11.4', () => {
   test('[P1] identifies only the pending approval action as busy while disabling both row actions', () => {

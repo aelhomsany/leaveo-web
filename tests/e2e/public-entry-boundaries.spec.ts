@@ -130,6 +130,8 @@ test.describe(
               const last = list.getEntries().at(-1)
               if (last) vitalsWindow.__publicLabVitals!.lcp = last.startTime
             }).observe({ type: 'largest-contentful-paint', buffered: true })
+            // The cast is for durationThreshold, Event Timing's own option, which TypeScript's DOM lib
+            // does not declare yet.
             new PerformanceObserver((list) => {
               for (const entry of list.getEntries()) {
                 const interaction = entry as PerformanceEntry & {
@@ -143,7 +145,7 @@ test.describe(
                   )
                 }
               }
-            }).observe({ type: 'event', buffered: true, durationThreshold: 16 })
+            }).observe({ type: 'event', buffered: true, durationThreshold: 16 } as PerformanceObserverInit)
           })
           const page = await context.newPage()
           await page.goto('/product')

@@ -6,34 +6,35 @@ import * as apiClient from '../../api/client'
 import { ApiError } from '../../api/client'
 import type {
   LeaveTypeResponse,
-  TeamMemberSummaryResponse,
-  WorkforceGroupResponse,
   ProblemDetail,
 } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockTeamMemberSummary, mockWorkforceGroup } from '../../test/apiFixtures'
 import i18n from '../../i18n/config'
 import { TeamMemberModal } from './TeamMemberModal'
 import { MemoryRouter } from 'react-router-dom'
 
-const mockGroups: WorkforceGroupResponse[] = [
-  { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-]
+const mockGroups = [mockWorkforceGroup({ id: 1, name: 'US' })]
 
 const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: 'public-1',
     name: 'Annual Leave',
     icon: '🌴',
     color: '#093C5D',
     backgroundColor: '#D6E8ED',
     borderColor: '#0E4F75',
+    presenceType: 'OFF',
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
 ]
 
-const mockMembers: TeamMemberSummaryResponse[] = [
-  {
+const mockMembers = [
+  mockTeamMemberSummary({
     id: 5,
     fullName: 'Jordan HR',
     email: 'hr@company.com',
@@ -41,9 +42,7 @@ const mockMembers: TeamMemberSummaryResponse[] = [
     role: 'ORGANIZATION_ADMIN',
     workforceGroupId: 1,
     workforceGroupName: 'US',
-    managerId: undefined,
-    managerName: undefined,
-  },
+  }),
 ]
 
 function renderModal(onClose = vi.fn(), onWarning = vi.fn()) {

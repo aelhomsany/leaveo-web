@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/client'
+import type { UserRole } from '../../api/generated/types'
 import i18n from '../../i18n/config'
 import { AuthTestProvider, createMockAuthValue } from '../../test/authTestUtils'
 import { skipOnboardingRedirect } from '../onboarding/redirectPreference'
@@ -147,9 +148,9 @@ describe('LoginPage', () => {
 
   // getHomePath sends org roles to the Team Calendar since the Dashboard
   // merged into My Leaves (2026-09-01).
-  it.each([
+  it.each<[UserRole, string, string]>([
     ['EMPLOYEE', '/calendar', 'team-calendar'],
-  ] as const)(
+  ])(
     'routes a successful %s sign-in to the authorized home',
     async (role, destination, testId) => {
       const user = userEvent.setup()

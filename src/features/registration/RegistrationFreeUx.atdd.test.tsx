@@ -21,6 +21,8 @@ const pending: publicClient.RegistrationState = {
   safeReturnPath: '/',
   resendAvailableInSeconds: 60,
   workspaceCreated: false,
+  recoveryAction: null,
+  checkoutSessionId: null,
 }
 
 describe('Registration Free UX — Story 12.3', () => {

@@ -10,6 +10,17 @@ import {
 
 const SAMPLED_SEEDS = Array.from({ length: 24 }, (_, index) => `seed-${index * 15}`)
 
+// CSSProperties has no index signature for CSS custom properties (`--pill-bg` etc.) in the
+// installed @types/react version, so indexing with a literal custom-property key is a TS7053.
+// These wrappers type the object as the Record<string, string> it actually is at runtime, once
+// per call site, instead of casting at every index access below.
+function pillVars(seed: string | number): Record<string, string> {
+  return pillColorStyle(seed) as Record<string, string>
+}
+function chipVars(seed: string | number): Record<string, string> {
+  return chipColorStyle(seed) as Record<string, string>
+}
+
 describe('entityColor', () => {
   it('stableHash returns the same value for the same seed across calls', () => {
     expect(stableHash('workforce-group-7')).toBe(stableHash('workforce-group-7'))
@@ -29,8 +40,8 @@ describe('entityColor', () => {
   })
 
   it('pillColorStyle exposes distinct pill vars per group id', () => {
-    const styleA = pillColorStyle(1)
-    const styleB = pillColorStyle(2)
+    const styleA = pillVars(1)
+    const styleB = pillVars(2)
 
     expect(styleA['--pill-bg']).toBeTruthy()
     expect(styleA['--pill-fg']).toBeTruthy()
@@ -40,8 +51,8 @@ describe('entityColor', () => {
   })
 
   it('chipColorStyle exposes distinct chip vars per user id', () => {
-    const styleA = chipColorStyle(2)
-    const styleB = chipColorStyle(3)
+    const styleA = chipVars(2)
+    const styleB = chipVars(3)
 
     expect(styleA['--chip-bg']).toBeTruthy()
     expect(styleA['--chip-fg']).toBeTruthy()
@@ -52,27 +63,27 @@ describe('entityColor', () => {
 
   it('uses a second hash-derived dimension when distinct ids share a hue', () => {
     expect(hueFromSeed(8)).toBe(hueFromSeed(110))
-    expect(pillColorStyle(8)['--pill-bg']).not.toBe(pillColorStyle(110)['--pill-bg'])
-    expect(chipColorStyle(8)['--chip-bg']).not.toBe(chipColorStyle(110)['--chip-bg'])
+    expect(pillVars(8)['--pill-bg']).not.toBe(pillVars(110)['--pill-bg'])
+    expect(chipVars(8)['--chip-bg']).not.toBe(chipVars(110)['--chip-bg'])
   })
 
   it('pill fg/bg pairs meet WCAG AA for sampled hues', () => {
     for (const seed of SAMPLED_SEEDS) {
-      const style = pillColorStyle(seed)
+      const style = pillVars(seed)
       expect(meetsAa(style['--pill-fg']!, style['--pill-bg']!)).toBe(true)
     }
   })
 
   it('chip fg/bg pairs meet WCAG AA for sampled hues', () => {
     for (const seed of SAMPLED_SEEDS) {
-      const style = chipColorStyle(seed)
+      const style = chipVars(seed)
       expect(meetsAa(style['--chip-fg']!, style['--chip-bg']!)).toBe(true)
     }
   })
 
   it('contrastRatio never returns 1 for distinct pill fg/bg', () => {
     for (const seed of SAMPLED_SEEDS) {
-      const style = pillColorStyle(seed)
+      const style = pillVars(seed)
       expect(contrastRatio(style['--pill-fg']!, style['--pill-bg']!)).toBeGreaterThan(1)
     }
   })

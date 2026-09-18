@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockPreviewLeaveRequestResponse } from '../../test/apiFixtures'
 import { createTestQueryClient } from '../../test/queryClient'
 import { RequestLeaveModal } from './RequestLeaveModal'
 
@@ -12,22 +13,26 @@ describe('RequestLeaveModal query feedback ATDD — Story 10.8', () => {
     vi.spyOn(apiClient, 'getLeaveTypes').mockResolvedValue([
       {
         id: 1,
+        publicId: 'public-1',
         name: 'Annual Leave',
         icon: 'leave',
         color: '#093C5D',
         backgroundColor: '#D6E8ED',
         borderColor: '#0E4F75',
+        presenceType: 'OFF',
         defaultBalanceDays: 20,
         displayOrder: 1,
+        active: true,
+        halfDayAllowed: true,
       },
     ])
-    vi.spyOn(apiClient, 'previewLeaveRequest').mockResolvedValue({
+    vi.spyOn(apiClient, 'previewLeaveRequest').mockResolvedValue(mockPreviewLeaveRequestResponse({
       workingDays: 5,
       excludedWeekends: 2,
       excludedHolidays: 0,
       workforceGroupId: 1,
       workforceGroupName: 'US',
-    })
+    }))
     vi.spyOn(apiClient, 'createLeaveRequest').mockImplementation(
       () => new Promise(() => undefined),
     )

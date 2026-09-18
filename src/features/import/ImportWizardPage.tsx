@@ -115,7 +115,9 @@ function phaseFor(job: ImportJobResponse | null): Phase {
   }
 }
 
-function isDeadLettered(job: { status?: string; workStatus?: string } | null | undefined): boolean {
+function isDeadLettered(
+  job: { status?: string | null; workStatus?: string | null } | null | undefined,
+): boolean {
   return job?.status === 'FAILED' && job?.workStatus === 'DEAD_LETTER'
 }
 

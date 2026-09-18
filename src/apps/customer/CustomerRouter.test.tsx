@@ -13,6 +13,7 @@ import {
   createMockAuthForRole,
   createMockAuthValue,
 } from '../../test/authTestUtils'
+import { mockWorkforceGroup } from '../../test/apiFixtures'
 import { CustomerRoutes } from './CustomerRouter'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../..')
@@ -125,7 +126,24 @@ describe('CustomerRoutes', () => {
 
   it('[P1] renders the lazy HR policy workspace at its stable draft URL', async () => {
     vi.spyOn(apiClient, 'getPolicySettingsOverview').mockResolvedValue({ leaveTypes: [], users: [], workforceGroups: [] })
-    vi.spyOn(apiClient, 'getPolicyDraft').mockResolvedValue({ policyPublicId: 'policy-1', draftPublicId: 'draft-1', leaveTypePublicId: 'type-1', mode: 'ANNUAL_ALLOWANCE', allowanceDays: 20, balancePeriod: 'CALENDAR_YEAR', scope: 'ORGANIZATION', subjectPublicId: '', effectiveFrom: '2027-01-01', revision: 0, consumed: false })
+    vi.spyOn(apiClient, 'getPolicyDraft').mockResolvedValue({
+      policyPublicId: 'policy-1',
+      draftPublicId: 'draft-1',
+      leaveTypePublicId: 'type-1',
+      mode: 'ANNUAL_ALLOWANCE',
+      allowanceDays: 20,
+      balancePeriod: 'CALENDAR_YEAR',
+      scope: 'ORGANIZATION',
+      subjectPublicId: '',
+      effectiveFrom: '2027-01-01',
+      revision: 0,
+      consumed: false,
+      carryoverEnabled: false,
+      carryoverMaxDays: null,
+      carryoverDeadlineMonth: null,
+      carryoverDeadlineDay: null,
+      carryoverRepeat: false,
+    })
     vi.spyOn(apiClient, 'getPolicyHistory').mockResolvedValue([])
     renderCustomerRoutes(['/settings/leave-policies/draft-1'], createMockAuthForRole('ORGANIZATION_ADMIN'))
     expect(await screen.findByTestId('policy-settings-page')).toBeInTheDocument()
@@ -181,8 +199,8 @@ describe('CustomerRoutes', () => {
       // fixture month and does not double-fetch (see TeamCalendarPage.test.tsx).
       vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-06-15T12:00:00Z') })
       vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-        { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-        { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] },
+        mockWorkforceGroup({ id: 1, name: 'US' }),
+        mockWorkforceGroup({ id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] }),
       ])
       vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue([])
       vi.spyOn(apiClient, 'getCalendarMonth').mockResolvedValue(mockCalendarMonth)

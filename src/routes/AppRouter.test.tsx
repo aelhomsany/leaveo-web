@@ -13,6 +13,7 @@ import {
 } from '../test/authTestUtils'
 import { AppRoutes } from './AppRouter'
 import { mockCalendarMonth } from '../features/calendar/calendarTestFixtures'
+import { mockWorkforceGroup } from '../test/apiFixtures'
 import { ToastProvider } from '../components/ui/ToastProvider'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../..')
@@ -43,8 +44,8 @@ describe('AppRoutes', () => {
     // TeamCalendarPage.test.tsx for details). Only Date is faked.
     vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-06-15T12:00:00Z') })
     vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-      { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-      { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] },
+      mockWorkforceGroup({ id: 1, name: 'US' }),
+      mockWorkforceGroup({ id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] }),
     ])
     vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue([])
     vi.spyOn(apiClient, 'getDashboardBalances').mockResolvedValue([])

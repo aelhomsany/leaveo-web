@@ -2,44 +2,49 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as apiClient from '../../api/client'
-import type { PreviewLeaveRequestResponse } from '../../api/generated/types'
+import type { LeaveTypeResponse, PreviewLeaveRequestResponse } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockPreviewLeaveRequestResponse } from '../../test/apiFixtures'
 import { RequestLeaveModal } from './RequestLeaveModal'
 
 /**
  * Story 11.1 — RequestLeaveModal shared WorkingDayExplainer integration.
  */
 
-const mockLeaveTypes = [
+const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: 'public-1',
     name: 'Annual Leave',
     icon: '🌴',
     color: '#093C5D',
     backgroundColor: '#D6E8ED',
     borderColor: '#0E4F75',
+    presenceType: 'OFF',
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
 ]
 
-const mockPreviewFiveDays: PreviewLeaveRequestResponse = {
+const mockPreviewFiveDays: PreviewLeaveRequestResponse = mockPreviewLeaveRequestResponse({
   workingDays: 5,
   chargedDays: 5,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,
   workforceGroupName: 'US',
-}
+})
 
-const mockPreviewZeroDays: PreviewLeaveRequestResponse = {
+const mockPreviewZeroDays: PreviewLeaveRequestResponse = mockPreviewLeaveRequestResponse({
   workingDays: 0,
   chargedDays: 0,
   excludedWeekends: 2,
   excludedHolidays: 0,
   workforceGroupId: 1,
   workforceGroupName: 'US',
-}
+})
 
 function renderModal() {
   const queryClient = new QueryClient({

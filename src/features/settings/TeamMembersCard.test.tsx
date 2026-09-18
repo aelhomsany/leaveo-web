@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockTeamMemberSummary } from '../../test/apiFixtures'
 import { TeamMembersCard } from './TeamMembersCard'
 import type {
   TeamMemberSummaryResponse,
@@ -39,7 +40,7 @@ function openMemberMenu(memberName: string) {
 }
 
 const mockMembers: TeamMemberSummaryResponse[] = [
-  {
+  mockTeamMemberSummary({
     id: 1,
     fullName: 'Jordan Lee',
     email: 'jordan@company.com',
@@ -47,10 +48,8 @@ const mockMembers: TeamMemberSummaryResponse[] = [
     role: 'ORGANIZATION_ADMIN',
     workforceGroupId: 1,
     workforceGroupName: 'US',
-    managerId: undefined,
-    managerName: undefined,
-  },
-  {
+  }),
+  mockTeamMemberSummary({
     id: 2,
     fullName: 'Sarah Chen',
     email: 'sarah@company.com',
@@ -60,7 +59,7 @@ const mockMembers: TeamMemberSummaryResponse[] = [
     workforceGroupName: 'Egypt',
     managerId: 3,
     managerName: 'Alex Johnson',
-  },
+  }),
 ]
 
 describe('TeamMembersCard', () => {
@@ -171,21 +170,27 @@ describe('TeamMembersCard', () => {
 
   it('[P1] clears a stale search filter after successfully adding a member', async () => {
     const mockGroups: WorkforceGroupResponse[] = [
-      { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
+      {
+        id: 1,
+        name: 'US',
+        timezone: 'America/New_York',
+        weekendDays: ['SATURDAY', 'SUNDAY'],
+        currentEffectiveFrom: '2026-01-01',
+        scheduledChanges: [],
+        overrideCount: 0,
+      },
     ]
     vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue(mockGroups)
     vi.spyOn(apiClient, 'getLeaveTypes').mockResolvedValue([])
+    // createTeamMember returns TeamMemberInvitationResponse (the invitation just sent), not a
+    // TeamMemberDetailResponse -- this test only checks that the search filter clears afterward.
     vi.spyOn(apiClient, 'createTeamMember').mockResolvedValue({
-      id: 9,
+      id: 'invite-9',
       fullName: 'New Hire',
       email: 'new.hire@company.com',
-      department: 'Ops',
       role: 'EMPLOYEE',
-      workforceGroupId: 1,
-      workforceGroupName: 'US',
-      managerId: undefined,
-      managerName: undefined,
-      entitlements: [],
+      status: 'PENDING',
+      activeSeat: false,
     })
     const user = userEvent.setup()
     renderCard()

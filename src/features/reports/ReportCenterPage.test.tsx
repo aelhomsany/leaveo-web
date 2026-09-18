@@ -5,13 +5,40 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as apiClient from '../../api/client'
-import type { ReportExportResponse, ReportQueryResponse } from '../../api/generated/types'
+import type { ReportDefinitionKey } from '../../api/client'
+import type {
+  BalanceSnapshotRow,
+  ReportExportResponse,
+  ReportQueryResponse,
+} from '../../api/generated/types'
 import { ToastProvider } from '../../components/ui/ToastProvider'
 import i18n from '../../i18n/config'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
-import type { ReportDefinitionKey } from './reportDefinitions'
 import { REPORT_SLUG_BY_KEY } from './reportDefinitions'
 import { ReportCenterPage } from './ReportCenterPage'
+
+// Named and typed as the concrete row shape (not accessed via balanceResponse().rows[0], which is
+// typed as the full six-way row union) so a spread-and-override elsewhere stays a BalanceSnapshotRow
+// instead of an impossible hybrid of every row shape's optional fields.
+const defaultBalanceRow: BalanceSnapshotRow = {
+  rowType: 'BALANCE_SNAPSHOT',
+  userId: 5,
+  userName: 'Jordan Lee',
+  userStatus: 'ACTIVE',
+  workforceGroupId: 8,
+  workforceGroupName: 'Cairo',
+  leaveTypeId: 3,
+  leaveTypeName: 'Annual leave',
+  leaveTypeDisplayOrder: 1,
+  presence: 'OFF',
+  capped: true,
+  allocation: 25,
+  approvedUsage: 4,
+  adjustments: 0,
+  remaining: 21,
+  carryoverAvailable: 2,
+  exceptionCodes: [],
+}
 
 function balanceResponse(
   overrides: Partial<ReportQueryResponse> = {},
@@ -51,27 +78,7 @@ function balanceResponse(
       uncappedRowCount: 0,
       totalsByPresence: { OFF: { rowCount: 1, allocation: 25, approvedUsage: 4, remaining: 21 } },
     },
-    rows: [
-      {
-        rowType: 'BALANCE_SNAPSHOT',
-        userId: 5,
-        userName: 'Jordan Lee',
-        userStatus: 'ACTIVE',
-        workforceGroupId: 8,
-        workforceGroupName: 'Cairo',
-        leaveTypeId: 3,
-        leaveTypeName: 'Annual leave',
-        leaveTypeDisplayOrder: 1,
-        presence: 'OFF',
-        capped: true,
-        allocation: 25,
-        approvedUsage: 4,
-        adjustments: 0,
-        remaining: 21,
-        carryoverAvailable: 2,
-        exceptionCodes: [],
-      },
-    ],
+    rows: [defaultBalanceRow],
     page: 0,
     size: 50,
     total: 1,
@@ -95,6 +102,7 @@ const definitionFixtures: Record<
     header: 'Charged days',
     cell: '12',
     response: {
+      viewKey: 'LEAVE_USAGE:v1',
       definitionKey: 'LEAVE_USAGE',
       schemaVersion: 1,
       appliedView: { timezone: 'America/New_York', from: '2026-08-01', to: '2026-08-24' },
@@ -138,6 +146,7 @@ const definitionFixtures: Record<
     header: 'Decided at',
     cell: 'Approved',
     response: {
+      viewKey: 'REQUEST_DETAIL:v1',
       definitionKey: 'REQUEST_DETAIL',
       schemaVersion: 1,
       appliedView: { timezone: 'America/New_York', from: '2026-08-01', to: '2026-08-24' },
@@ -181,6 +190,7 @@ const definitionFixtures: Record<
     header: 'Facts',
     cell: 'Negative remaining balance',
     response: {
+      viewKey: 'EXCEPTION:v1',
       definitionKey: 'EXCEPTION',
       schemaVersion: 1,
       appliedView: { timezone: 'America/New_York' },
@@ -220,6 +230,7 @@ const definitionFixtures: Record<
     header: 'Expires on',
     cell: 'Mar 31, 2026',
     response: {
+      viewKey: 'CARRYOVER:v1',
       definitionKey: 'CARRYOVER',
       schemaVersion: 1,
       appliedView: { timezone: 'America/New_York', balanceYear: 2026, includeInactiveUsers: false },
@@ -276,6 +287,7 @@ const definitionFixtures: Record<
     header: 'Activated at',
     cell: 'Current pending step activation',
     response: {
+      viewKey: 'PENDING_AGING:v1',
       definitionKey: 'PENDING_AGING',
       schemaVersion: 1,
       appliedView: { timezone: 'America/New_York' },
@@ -375,10 +387,31 @@ function renderPageStrict() {
 describe('ReportCenterPage', () => {
   beforeEach(() => {
     vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-      { id: 8, name: 'Cairo', weekendDays: ['FRIDAY', 'SATURDAY'] },
+      {
+        id: 8,
+        name: 'Cairo',
+        timezone: 'Africa/Cairo',
+        weekendDays: ['FRIDAY', 'SATURDAY'],
+        currentEffectiveFrom: '2026-01-01',
+        scheduledChanges: [],
+        overrideCount: 0,
+      },
     ])
     vi.spyOn(apiClient, 'getLeaveTypes').mockResolvedValue([
-      { id: 3, name: 'Annual leave', icon: 'palm', color: '#167d78', displayOrder: 1 },
+      {
+        id: 3,
+        publicId: 'lt-annual',
+        name: 'Annual leave',
+        icon: 'palm',
+        color: '#167d78',
+        backgroundColor: '#E5F5F3',
+        borderColor: '#167d78',
+        presenceType: 'OFF',
+        defaultBalanceDays: 25,
+        displayOrder: 1,
+        active: true,
+        halfDayAllowed: true,
+      },
     ])
   })
 
@@ -392,7 +425,9 @@ describe('ReportCenterPage', () => {
 
   it('[P0] keeps draft options separate from the applied query and export', async () => {
     const query = vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
-    const create = vi.spyOn(apiClient, 'createReportExport').mockResolvedValue({ id: 'draft-export', status: 'QUEUED' })
+    const create = vi
+      .spyOn(apiClient, 'createReportExport')
+      .mockResolvedValue(exportJob({ id: 'draft-export' }))
     const user = userEvent.setup()
     renderPage()
     await screen.findByTestId('report-row-0')
@@ -1076,7 +1111,7 @@ describe('ReportCenterPage', () => {
           total: 51,
           rows: [
             {
-              ...(balanceResponse().rows[0]),
+              ...defaultBalanceRow,
               userId: request.page === 1 ? 9 : 5,
               userName: request.page === 1 ? 'Noor Ali' : 'Jordan Lee',
             },
@@ -1123,26 +1158,7 @@ describe('ReportCenterPage', () => {
 
   it('[P0] creates a durable export from the applied view and announces its queued state', async () => {
     vi.spyOn(apiClient, 'queryReport').mockResolvedValue(balanceResponse())
-    const queuedExport: ReportExportResponse = {
-      id: 'export-1',
-      definitionKey: 'BALANCE_SNAPSHOT',
-      schemaVersion: 1,
-      format: 'XLSX',
-      status: 'QUEUED',
-      viewKey: 'BALANCE_SNAPSHOT:v1',
-      displayTimezone: 'America/New_York',
-      asOf: '2026-08-24T12:00:00Z',
-      appliedView: balanceResponse().appliedView,
-      ordering: balanceResponse().ordering,
-      summary: balanceResponse().summary,
-      provenance: balanceResponse().provenance,
-      rowCount: 1,
-      createdAt: '2026-08-24T12:01:00Z',
-      expiresAt: '2026-08-31T12:01:00Z',
-      fileName: 'balance-snapshot.xlsx',
-      downloadAvailable: false,
-      canRetry: false,
-    }
+    const queuedExport = exportJob({ format: 'XLSX', fileName: 'balance-snapshot.xlsx' })
     const createSpy = vi
       .spyOn(apiClient, 'createReportExport')
       .mockResolvedValue(queuedExport)
@@ -1195,6 +1211,12 @@ describe('ReportCenterPage', () => {
       createdAt: '2026-08-24T12:01:00Z',
       expiresAt: '2026-08-31T12:01:00Z',
       fileName: 'balance-snapshot.csv',
+      // The API sends null here until an export actually fails; failureReason/fileName/expiresAt
+      // are all nullable String/Instant fields on the ReportExportResponse Java DTO, but the
+      // generated alias (RequiredSchema, no overrides) still types them as required non-null.
+      // Not fixed at the alias level: doing so would also require touching ReportCenterPage.tsx's
+      // `exportJob.fileName`/`exportJob.expiresAt` reads, beyond what was asked this pass.
+      failureReason: '',
       downloadAvailable: false,
       canRetry: false,
       ...overrides,

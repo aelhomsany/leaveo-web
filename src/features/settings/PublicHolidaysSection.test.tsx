@@ -91,7 +91,7 @@ describe('PublicHolidaysSection', () => {
       expect(apiClient.createPublicHoliday).toHaveBeenCalled()
     })
 
-    expect(apiClient.createPublicHoliday.mock.calls[0]?.[0]).toEqual(
+    expect(vi.mocked(apiClient.createPublicHoliday).mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({
         workforceGroupId: 1,
         dateFrom: '2026-06-06',
@@ -123,7 +123,7 @@ describe('PublicHolidaysSection', () => {
       expect(apiClient.createPublicHoliday).toHaveBeenCalled()
     })
 
-    expect(apiClient.createPublicHoliday.mock.calls[0]?.[0]).toEqual(
+    expect(vi.mocked(apiClient.createPublicHoliday).mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({
         workforceGroupId: 1,
         dateFrom: '2026-09-01',

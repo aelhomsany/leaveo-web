@@ -15,6 +15,7 @@
     "build:app": "LEAVEO_ARTIFACT=customer vite build && node scripts/finalize-spa-artifact.mjs app",
     "build:admin": "LEAVEO_ARTIFACT=admin vite build && node scripts/finalize-spa-artifact.mjs admin",
     "lint": "eslint .",
+    "typecheck:tests": "tsc -p tsconfig.test.json && tsc -p tsconfig.e2e.json",
     "preview": "node scripts/serve-spa-artifacts.mjs",
     "preview:public": "node scripts/serve-public.mjs",
     "test": "vitest",

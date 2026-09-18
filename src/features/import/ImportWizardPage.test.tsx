@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import { ApiError } from '../../api/client'
-import type { ImportJobResponse, ImportRowResultPage } from '../../api/generated/types'
+import type { ImportJobResponse, ImportJobSummaryResponse, ImportRowResultPage } from '../../api/generated/types'
 import { ToastProvider } from '../../components/ui/ToastProvider'
 import '../../i18n/config'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
@@ -34,6 +34,26 @@ function job(overrides: Partial<ImportJobResponse> = {}): ImportJobResponse {
     updatedAt: '2026-08-27T00:00:00Z',
     ...overrides,
   } as ImportJobResponse
+}
+
+/** A realistic /import-jobs list row: a resumable DRY_RUN_READY job, no worker diagnostics. */
+function jobSummary(overrides: Partial<ImportJobSummaryResponse> = {}): ImportJobSummaryResponse {
+  return {
+    publicId: 'job-1',
+    templateKey: 'PEOPLE_AND_ASSIGNMENTS',
+    status: 'DRY_RUN_READY',
+    workStatus: null,
+    failureReason: null,
+    fileName: 'people.csv',
+    rowCount: 2,
+    acceptedCount: 2,
+    rejectedCount: 0,
+    warningCount: 0,
+    artifactAvailable: true,
+    createdAt: '2026-08-27T00:00:00Z',
+    updatedAt: '2026-08-27T00:05:00Z',
+    ...overrides,
+  }
 }
 
 function emptyRows(): ImportRowResultPage {
@@ -182,21 +202,7 @@ describe('ImportWizardPage', () => {
   // 409s under the one-active-job-per-Organization guard.
   it('resumes the organization active job on mount instead of starting at the template picker', async () => {
     vi.spyOn(apiClient, 'listImportJobs').mockResolvedValue({
-      items: [
-        {
-          publicId: 'job-7',
-          templateKey: 'PEOPLE_AND_ASSIGNMENTS',
-          status: 'DRY_RUN_READY',
-          fileName: 'people.csv',
-          rowCount: 2,
-          acceptedCount: 2,
-          rejectedCount: 0,
-          warningCount: 0,
-          artifactAvailable: true,
-          createdAt: '2026-08-27T00:00:00Z',
-          updatedAt: '2026-08-27T00:05:00Z',
-        },
-      ],
+      items: [jobSummary({ publicId: 'job-7' })],
       page: 0,
       size: 10,
       total: 1,
@@ -218,21 +224,7 @@ describe('ImportWizardPage', () => {
   // an abandoned pre-commit job is superseded server-side by the create instead of blocking it.
   it('offers resume when creating a job returns 409 import-job-active', async () => {
     vi.spyOn(apiClient, 'listImportJobs').mockResolvedValue({
-      items: [
-        {
-          publicId: 'job-9',
-          templateKey: 'PEOPLE_AND_ASSIGNMENTS',
-          status: 'COMMITTING',
-          fileName: 'people.csv',
-          rowCount: 2,
-          acceptedCount: 2,
-          rejectedCount: 0,
-          warningCount: 0,
-          artifactAvailable: true,
-          createdAt: '2026-08-27T00:00:00Z',
-          updatedAt: '2026-08-27T00:05:00Z',
-        },
-      ],
+      items: [jobSummary({ publicId: 'job-9', status: 'COMMITTING' })],
       page: 0,
       size: 10,
       total: 1,
@@ -268,36 +260,27 @@ describe('ImportWizardPage', () => {
   it('distinguishes a dead-lettered job from an ordinary failure in the history table', async () => {
     vi.spyOn(apiClient, 'listImportJobs').mockResolvedValue({
       items: [
-        {
+        jobSummary({
           publicId: 'job-dead',
-          templateKey: 'PEOPLE_AND_ASSIGNMENTS',
           status: 'FAILED',
           workStatus: 'DEAD_LETTER',
           failureReason: 'Worker exceeded the retry ceiling',
-          fileName: 'people.csv',
-          rowCount: 2,
           acceptedCount: 0,
           rejectedCount: 2,
-          warningCount: 0,
           artifactAvailable: false,
-          createdAt: '2026-08-27T00:00:00Z',
-          updatedAt: '2026-08-27T00:05:00Z',
-        },
-        {
+        }),
+        jobSummary({
           publicId: 'job-failed',
-          templateKey: 'PEOPLE_AND_ASSIGNMENTS',
           status: 'FAILED',
           workStatus: 'IDLE',
-          failureReason: undefined,
+          failureReason: null,
           fileName: 'other.csv',
           rowCount: 1,
           acceptedCount: 0,
           rejectedCount: 1,
-          warningCount: 0,
-          artifactAvailable: true,
           createdAt: '2026-08-26T00:00:00Z',
           updatedAt: '2026-08-26T00:05:00Z',
-        },
+        }),
       ],
       page: 0,
       size: 10,
@@ -526,21 +509,7 @@ describe('ImportWizardPage', () => {
   // drag the user straight back into the screen they just left.
   it('does not auto-resume the job the user just backed out of', async () => {
     vi.spyOn(apiClient, 'listImportJobs').mockResolvedValue({
-      items: [
-        {
-          publicId: 'job-1',
-          templateKey: 'PEOPLE_AND_ASSIGNMENTS',
-          status: 'DRY_RUN_READY',
-          fileName: 'people.csv',
-          rowCount: 2,
-          acceptedCount: 2,
-          rejectedCount: 0,
-          warningCount: 0,
-          artifactAvailable: true,
-          createdAt: '2026-08-27T00:00:00Z',
-          updatedAt: '2026-08-27T00:05:00Z',
-        },
-      ],
+      items: [jobSummary()],
       page: 0,
       size: 10,
       total: 1,
@@ -568,21 +537,7 @@ describe('ImportWizardPage', () => {
   // actions in the history table, where it used to sit beside Resume.
   it('offers no cancel control in the history table', async () => {
     vi.spyOn(apiClient, 'listImportJobs').mockResolvedValue({
-      items: [
-        {
-          publicId: 'job-open',
-          templateKey: 'PEOPLE_AND_ASSIGNMENTS',
-          status: 'DRY_RUN_READY',
-          fileName: 'people.csv',
-          rowCount: 2,
-          acceptedCount: 2,
-          rejectedCount: 0,
-          warningCount: 0,
-          artifactAvailable: true,
-          createdAt: '2026-08-27T00:00:00Z',
-          updatedAt: '2026-08-27T00:05:00Z',
-        },
-      ],
+      items: [jobSummary({ publicId: 'job-open' })],
       page: 0,
       size: 10,
       total: 1,
