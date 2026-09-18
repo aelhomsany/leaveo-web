@@ -21,6 +21,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/push-devices/{installationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Register or refresh this app installation's push token for the caller */
+        put: operations["registerPushDevice"];
+        post?: never;
+        /** Stop pushing to this app installation; call it before signing out */
+        delete: operations["unregisterPushDevice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workforce-groups": {
         parameters: {
             query?: never;
@@ -2244,6 +2262,24 @@ export interface components {
             scheduledChanges?: components["schemas"]["ScheduledWorkingWeekChange"][];
             /** Format: int64 */
             overrideCount?: number;
+        };
+        RegisterPushDeviceRequest: {
+            /** @enum {string} */
+            platform: "IOS" | "ANDROID";
+            /** @enum {string} */
+            provider: "APNS" | "FCM";
+            token: string;
+        };
+        PushDeviceResponse: {
+            installationId?: string;
+            /** @enum {string} */
+            platform?: "IOS" | "ANDROID";
+            /** @enum {string} */
+            provider?: "APNS" | "FCM";
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         CreateWorkforceGroupRequest: {
             name?: string;
@@ -4481,6 +4517,52 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["WorkforceGroupResponse"];
                 };
+            };
+        };
+    };
+    registerPushDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                installationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPushDeviceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PushDeviceResponse"];
+                };
+            };
+        };
+    };
+    unregisterPushDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                installationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
