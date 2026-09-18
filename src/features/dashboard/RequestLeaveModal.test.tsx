@@ -231,6 +231,8 @@ describe('RequestLeaveModal — Story 3.4', () => {
         leaveTypeId: 1,
         dateFrom: '2026-06-01',
         dateTo: '2026-06-07',
+        startPart: 'FULL',
+        endPart: 'FULL',
         note: undefined,
       })
       expect(onSuccess).toHaveBeenCalled()
