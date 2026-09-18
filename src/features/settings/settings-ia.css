@@ -544,3 +544,9 @@ html[lang='ar'] .settings-active-eyebrow {
     padding: var(--space-lg);
   }
 }
+/* Arabic reset for tracked title/number chrome (arabic-letterspacing.atdd.test.ts). */
+html[lang='ar'] .settings-page-header .page-title,
+html[lang='ar'] .settings-category-number,
+html[lang='ar'] .settings-active-title {
+  letter-spacing: normal;
+}

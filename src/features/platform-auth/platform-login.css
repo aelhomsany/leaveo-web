@@ -187,3 +187,8 @@ html[lang='ar'] .platform-login-card__realm { letter-spacing: normal; text-trans
   .platform-login-card, .platform-operator-field { padding: var(--space-3xl) var(--space-2xl); }
   .platform-operator-field { min-block-size: 330px; }
 }
+/* Arabic reset for the tracked operator/login titles (arabic-letterspacing.atdd.test.ts). */
+html[lang='ar'] .platform-operator-field h1,
+html[lang='ar'] .platform-login-card h2 {
+  letter-spacing: normal;
+}

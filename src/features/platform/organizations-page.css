@@ -106,3 +106,10 @@
   .organizations-page__header .btn { width: 100%; justify-content: center; }
   .organizations-table-card { overflow-x: auto; }
 }
+/* Arabic reset for tracked heading, table header and badge chrome
+   (arabic-letterspacing.atdd.test.ts). text-transform: uppercase is caseless-inert in Arabic. */
+html[lang='ar'] .organizations-table-card__header h2,
+html[lang='ar'] .organizations-table th,
+html[lang='ar'] .org-at-limit {
+  letter-spacing: normal;
+}

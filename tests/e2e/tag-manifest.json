@@ -1,7 +1,7 @@
 {
   "version": 1,
   "suites": {
-    "arabic-rtl-release-gate.spec.ts::Arabic RTL release gate \u2014 Story 9.5": {
+    "arabic-rtl-release-gate.spec.ts::Arabic RTL release gate — Story 9.5": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -11,7 +11,7 @@
         "[P0] Given Arabic preferred, When Employee opens My Leaves, Then Request Leave is Arabic and html dir=rtl (no raw keys)"
       ]
     },
-    "approval-decision.spec.ts::Approval decision \u2014 Story 3.7": {
+    "approval-decision.spec.ts::Approval decision — Story 3.7": {
       "tags": [
         "@regression",
         "@api"
@@ -22,7 +22,7 @@
         "[P1] Manager declines a pending row and it disappears from the inbox"
       ]
     },
-    "approval-decision-confidence.spec.ts::Approval decision confidence \u2014 Story 11.4": {
+    "approval-decision-confidence.spec.ts::Approval decision confidence — Story 11.4": {
       "tags": [
         "@regression",
         "@api",
@@ -33,7 +33,7 @@
         "[P0] Given Decline on an Approval card, When the modal opens, Then it names requester and date range and blocks empty reason"
       ]
     },
-    "approval-decisions-visibility.spec.ts::Approval visibility \u2014 Story 3.8": {
+    "approval-decisions-visibility.spec.ts::Approval visibility — Story 3.8": {
       "tags": [
         "@regression",
         "@api"
@@ -42,7 +42,7 @@
         "[P2] Manager sees Approvals badge and My Leaves Review Now link"
       ]
     },
-    "approval-inbox.spec.ts::Approval inbox \u2014 Story 3.6": {
+    "approval-inbox.spec.ts::Approval inbox — Story 3.6": {
       "tags": [
         "@smoke",
         "@regression",
@@ -94,7 +94,7 @@
         "[P0-012] Given a signed-in user, When signing out, Then in-app navigation to the home route shows login"
       ]
     },
-    "auth-validation.spec.ts::Auth validation \u2014 critical UX blocks": {
+    "auth-validation.spec.ts::Auth validation — critical UX blocks": {
       "tags": [
         "@regression",
         "@ui-only"
@@ -104,7 +104,7 @@
         "[P2] Given mismatched passwords, When submitting reset form, Then submit stays disabled"
       ]
     },
-    "dashboard-balances.spec.ts::Balance cards \u2014 Story 3.1": {
+    "dashboard-balances.spec.ts::Balance cards — Story 3.1": {
       "tags": [
         "@regression",
         "@api"
@@ -113,7 +113,7 @@
         "[P1] Employee sees annual leave balance card with numbers after login"
       ]
     },
-    "dashboard-recent-and-sidebar.spec.ts::Request history and out-today \u2014 Story 3.2": {
+    "dashboard-recent-and-sidebar.spec.ts::Request history and out-today — Story 3.2": {
       "tags": [
         "@regression",
         "@api"
@@ -125,7 +125,7 @@
         "[P1] My Leaves coverage rail counts the same out-today feed"
       ]
     },
-    "demo-data-curated.spec.ts::Demo data curated \u2014 Story 10.12": {
+    "demo-data-curated.spec.ts::Demo data curated — Story 10.12": {
       "tags": [
         "@regression",
         "@api",
@@ -146,7 +146,7 @@
         "Given the user factory, When building a user, Then faker data is applied"
       ]
     },
-    "leave-request-validation.spec.ts::Leave request validation \u2014 FR-6 zero working days (Story 3.3)": {
+    "leave-request-validation.spec.ts::Leave request validation — FR-6 zero working days (Story 3.3)": {
       "tags": [
         "@regression",
         "@api"
@@ -155,7 +155,7 @@
         "[P0] Given a weekend-only date range, When preview renders, Then submit is blocked with group message"
       ]
     },
-    "my-leaves-history.spec.ts::My Leaves history \u2014 Story 3.5": {
+    "my-leaves-history.spec.ts::My Leaves history — Story 3.5": {
       "tags": [
         "@regression",
         "@api"
@@ -164,7 +164,7 @@
         "[P2] Employee sees My Leaves balances, history, and shared request CTA"
       ]
     },
-    "my-leaves-findability.spec.ts::My Leaves findability \u2014 Story 11.3": {
+    "my-leaves-findability.spec.ts::My Leaves findability — Story 11.3": {
       "tags": [
         "@regression",
         "@api",
@@ -176,7 +176,7 @@
         "[P0] My Leaves preserves cards/table containment across the required viewport matrix"
       ]
     },
-    "notification-bell.spec.ts::Notification bell \u2014 Story 5.1 / 7.11": {
+    "notification-bell.spec.ts::Notification bell — Story 5.1 / 7.11": {
       "tags": [
         "@regression",
         "@api"
@@ -221,7 +221,7 @@
         "[P0] Platform Admin edits Nile Harbor subscription and row plan badge updates"
       ]
     },
-    "responsive-containment.spec.ts::Responsive containment \u2014 Story 10.9": {
+    "responsive-containment.spec.ts::Responsive containment — Story 10.9": {
       "tags": [
         "@regression",
         "@api",
@@ -236,7 +236,7 @@
         "[P1] My Leaves history keeps the trailing desktop column keyboard-reachable"
       ]
     },
-    "visual-foundation-overflow.spec.ts::Visual foundation overflow \u2014 Story 11.1": {
+    "visual-foundation-overflow.spec.ts::Visual foundation overflow — Story 11.1": {
       "tags": [
         "@regression",
         "@api",
@@ -253,7 +253,7 @@
         "[P0] My Leaves has no page-level overflow at 1440px"
       ]
     },
-    "responsive-tables.spec.ts::Responsive tables \u2014 Story 10.3": {
+    "responsive-tables.spec.ts::Responsive tables — Story 10.3": {
       "tags": [
         "@regression",
         "@api"
@@ -276,7 +276,7 @@
         "Employee direct URL to approvals redirects to the team calendar"
       ]
     },
-    "settings-api.spec.ts::Settings API \u2014 workforce groups and holidays": {
+    "settings-api.spec.ts::Settings API — workforce groups and holidays": {
       "tags": [
         "@regression",
         "@api"
@@ -286,7 +286,7 @@
         "[P1-005] US group lists seeded public holidays"
       ]
     },
-    "settings-information-architecture.spec.ts::Settings information architecture \u2014 Story 11.5": {
+    "settings-information-architecture.spec.ts::Settings information architecture — Story 11.5": {
       "tags": [
         "@regression",
         "@api",
@@ -310,7 +310,7 @@
         "[P2] Leave Types card shows Annual Leave row"
       ]
     },
-    "settings-unified-ui.spec.ts::Settings unified UI \u2014 Story 2.7": {
+    "settings-unified-ui.spec.ts::Settings unified UI — Story 2.7": {
       "tags": [
         "@regression",
         "@api"
@@ -321,7 +321,7 @@
         "[P1] + Add Group creates a new workforce group tab"
       ]
     },
-    "calendar-mobile-agenda.spec.ts::Calendar and mobile agenda \u2014 Story 11.6": {
+    "calendar-mobile-agenda.spec.ts::Calendar and mobile agenda — Story 11.6": {
       "tags": [
         "@regression",
         "@api",
@@ -333,7 +333,7 @@
         "[P1] Given a permitted absence chip, When activated, Then request context navigation succeeds"
       ]
     },
-    "auth-first-use.spec.ts::Auth and first-use \u2014 Story 11.7": {
+    "auth-first-use.spec.ts::Auth and first-use — Story 11.7": {
       "tags": [
         "@regression",
         "@api",
@@ -343,7 +343,7 @@
         "[P1] Given Organization Admin with incomplete first-use, When My Leaves loads, Then cue CTA opens Working calendars"
       ]
     },
-    "auth-first-use.spec.ts::Auth responsive and locale proof \u2014 Story 11.7": {
+    "auth-first-use.spec.ts::Auth responsive and locale proof — Story 11.7": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -353,7 +353,7 @@
         "[P0] Given English or Arabic across the viewport matrix, When Login renders, Then form-first order and containment hold"
       ]
     },
-    "team-calendar.spec.ts::Team Calendar \u2014 Story 4.2 / 7.11": {
+    "team-calendar.spec.ts::Team Calendar — Story 4.2 / 7.11": {
       "tags": [
         "@regression",
         "@api"
@@ -371,7 +371,7 @@
         "[P0] HR blocked adding over-limit Free user sees the limit and upgrade path, modal stays open"
       ]
     },
-    "accessibility-completion.spec.ts::Accessibility completion \u2014 Story 10.10": {
+    "accessibility-completion.spec.ts::Accessibility completion — Story 10.10": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -382,7 +382,7 @@
         "[P0] Mobile drawer constrains focus away from header actions"
       ]
     },
-    "public-entry-boundaries.spec.ts::Public acquisition \u2014 Story 12.1": {
+    "public-entry-boundaries.spec.ts::Public acquisition — Story 12.1": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -393,7 +393,7 @@
         "[P0] Given mobile, desktop, keyboard, reduced-motion, and Arabic visitors, Then the public proof remains usable and contained"
       ]
     },
-    "public-entry-boundaries.spec.ts::Platform Admin boundary \u2014 Story 12.1": {
+    "public-entry-boundaries.spec.ts::Platform Admin boundary — Story 12.1": {
       "tags": [
         "@smoke",
         "@regression",
@@ -404,7 +404,7 @@
         "[P0] Given customer and Platform Admin credentials, When each is used in both realms, Then only its own realm accepts it"
       ]
     },
-    "pricing-routing.spec.ts::Pricing plan routing \u2014 Story 12.2": {
+    "pricing-routing.spec.ts::Pricing plan routing — Story 12.2": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -414,7 +414,7 @@
         "[P0] Given the published plan comparison, When Pricing renders, Then every plan routes exactly and its CTA shares one baseline"
       ]
     },
-    "contact-sales.spec.ts::Contact Sales handoff \u2014 Story 12.2": {
+    "contact-sales.spec.ts::Contact Sales handoff — Story 12.2": {
       "tags": [
         "@regression",
         "@api",
@@ -424,19 +424,19 @@
         "[P0] Given a >200 or complex prospect, When Contact Sales is submitted, Then the lead is recorded with no workspace and an explicit success state"
       ]
     },
-    "free-registration.spec.ts::Verified Free provisioning \u2014 Story 12.3": {
+    "free-registration.spec.ts::Verified Free provisioning — Story 12.3": {
       "tags": [
         "@regression",
         "@api",
         "@story-12-3"
       ],
       "tests": [
-        "[P0] Given a Free 1\u20135 registration, When email is verified and provisioning succeeds, Then one workspace exists, handoff lands first-use, and retries do not duplicate",
+        "[P0] Given a Free 1–5 registration, When email is verified and provisioning succeeds, Then one workspace exists, handoff lands first-use, and retries do not duplicate",
         "[P0] Given an expired verification link, When the administrator opens it, Then a non-enumerating recovery state is the only next action",
         "[P0] Given a Free org at five active Users, When HR adds User #6, Then the exact limit and upgrade path are visible and no member is created"
       ]
     },
-    "free-registration.spec.ts::Verified Free registration layout \u2014 Story 12.3": {
+    "free-registration.spec.ts::Verified Free registration layout — Story 12.3": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -446,7 +446,7 @@
         "[P0] Given /register at EN and AR viewports, When the page renders, Then there is no horizontal overflow and Free stays card-free"
       ]
     },
-    "paid-registration.spec.ts::Paid checkout return layout \u2014 Story 12.4": {
+    "paid-registration.spec.ts::Paid checkout return layout — Story 12.4": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -456,7 +456,7 @@
         "[P1] Given authoritative payment is still pending, When EN and AR return pages reflow, Then they show Confirming Payment without false success or overflow"
       ]
     },
-    "paid-registration.spec.ts::Paid registration \u2014 Story 12.4": {
+    "paid-registration.spec.ts::Paid registration — Story 12.4": {
       "tags": [
         "@regression",
         "@api",
@@ -466,7 +466,7 @@
         "[P0] Given a verified Growth registration, When Checkout and webhook succeed, Then one paid workspace is provisioned and handoff lands first-use without duplicate charge"
       ]
     },
-    "paid-registration.spec.ts::Paid registration recovery \u2014 Story 12.4": {
+    "paid-registration.spec.ts::Paid registration recovery — Story 12.4": {
       "tags": [
         "@regression",
         "@api",
@@ -476,7 +476,7 @@
         "[P0] Given payment confirmed but provisioning failed, When recovery runs, Then no second Checkout is started and Creation Source stays SELF_SERVICE"
       ]
     },
-    "billing-recovery.spec.ts::Billing remediation \u2014 Story 12.4": {
+    "billing-recovery.spec.ts::Billing remediation — Story 12.4": {
       "tags": [
         "@regression",
         "@api",
@@ -486,7 +486,7 @@
         "[P0] Given PAST_DUE_GRACE then RESTRICTED, When workforce mutation is attempted, Then the user cannot proceed without visible remediation path"
       ]
     },
-    "guided-onboarding.spec.ts::Guided onboarding resume \u2014 Story 12.5": {
+    "guided-onboarding.spec.ts::Guided onboarding resume — Story 12.5": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -496,7 +496,7 @@
         "[P0] Given an Organization Admin exits mid-setup, When they return on another session, Then onboarding opens the next evidence-based safe action"
       ]
     },
-    "guided-onboarding.spec.ts::Commercial Activation \u2014 Story 12.5": {
+    "guided-onboarding.spec.ts::Commercial Activation — Story 12.5": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -518,17 +518,17 @@
         "[P0] real Platform Admin login lands in admin shell without org navigation"
       ]
     },
-    "guided-onboarding.spec.ts::Commercial Activation, API-backed \u2014 Story 12.5": {
+    "guided-onboarding.spec.ts::Commercial Activation, API-backed — Story 12.5": {
       "tags": [
         "@regression",
         "@api",
         "@story-12-5"
       ],
       "tests": [
-        "[P0] Given the real onboarding endpoint, When an Organization Admin opens onboarding, Then the rendered evidence is the server\u2019s and the activation surface never contradicts itself"
+        "[P0] Given the real onboarding endpoint, When an Organization Admin opens onboarding, Then the rendered evidence is the server’s and the activation surface never contradicts itself"
       ]
     },
-    "accessibility-completion.spec.ts::Free registration accessibility checkpoints \u2014 Story 12.3": {
+    "accessibility-completion.spec.ts::Free registration accessibility checkpoints — Story 12.3": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -538,7 +538,7 @@
         "[P0] Given a keyboard, zoom, reflow, reduced-motion or touch visitor, When the Free registration form renders, Then every accessibility checkpoint holds"
       ]
     },
-    "accessibility-completion.spec.ts::Paid Checkout return accessibility checkpoints \u2014 Story 12.4": {
+    "accessibility-completion.spec.ts::Paid Checkout return accessibility checkpoints — Story 12.4": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -548,7 +548,7 @@
         "[P0] Given a keyboard, zoom, reflow, reduced-motion or touch visitor, When the paid Checkout-return recovery panel renders, Then every accessibility checkpoint holds"
       ]
     },
-    "accessibility-completion.spec.ts::Guided onboarding accessibility checkpoints \u2014 Story 12.5": {
+    "accessibility-completion.spec.ts::Guided onboarding accessibility checkpoints — Story 12.5": {
       "tags": [
         "@regression",
         "@ui-only",
@@ -558,7 +558,7 @@
         "[P0] Given a keyboard, zoom, reflow, reduced-motion or touch visitor, When the guided onboarding page renders, Then every accessibility checkpoint holds"
       ]
     },
-    "leave-cancellation.spec.ts::Leave cancellation \u2014 Plan VUELTA": {
+    "leave-cancellation.spec.ts::Leave cancellation — Plan VUELTA": {
       "tags": [
         "@regression",
         "@api"
@@ -568,7 +568,7 @@
         "[P1] Employee cannot ask to cancel a started leave without a reason, and sees the outcome"
       ]
     },
-    "leave-carryover.spec.ts::Leave carry-over \u2014 Plan RESTO": {
+    "leave-carryover.spec.ts::Leave carry-over — Plan RESTO": {
       "tags": [
         "@regression",
         "@api"
@@ -579,6 +579,13 @@
     }
   },
   "permanentlySkippedTests": [
-    "arabic-rtl-release-gate.spec.ts::Arabic RTL release gate \u2014 Story 9.5::[P0] Given Arabic preferred, When Employee opens My Leaves, Then Request Leave is Arabic and html dir=rtl (no raw keys)"
+    "arabic-rtl-release-gate.spec.ts::Arabic RTL release gate — Story 9.5::[P0] Given Arabic preferred, When Employee opens My Leaves, Then Request Leave is Arabic and html dir=rtl (no raw keys)",
+    "billing-recovery.spec.ts::Billing remediation — Story 12.4::[P0] Given PAST_DUE_GRACE then RESTRICTED, When workforce mutation is attempted, Then the user cannot proceed without visible remediation path",
+    "contact-sales.spec.ts::Contact Sales handoff — Story 12.2::[P0] Given a >200 or complex prospect, When Contact Sales is submitted, Then the lead is recorded with no workspace and an explicit success state",
+    "free-registration.spec.ts::Verified Free provisioning — Story 12.3::[P0] Given a Free 1–5 registration, When email is verified and provisioning succeeds, Then one workspace exists, handoff lands first-use, and retries do not duplicate",
+    "free-registration.spec.ts::Verified Free provisioning — Story 12.3::[P0] Given an expired verification link, When the administrator opens it, Then a non-enumerating recovery state is the only next action",
+    "free-registration.spec.ts::Verified Free provisioning — Story 12.3::[P0] Given a Free org at five active Users, When HR adds User #6, Then the exact limit and upgrade path are visible and no member is created",
+    "paid-registration.spec.ts::Paid registration — Story 12.4::[P0] Given a verified Growth registration, When Checkout and webhook succeed, Then one paid workspace is provisioned and handoff lands first-use without duplicate charge",
+    "paid-registration.spec.ts::Paid registration recovery — Story 12.4::[P0] Given payment confirmed but provisioning failed, When recovery runs, Then no second Checkout is started and Creation Source stays SELF_SERVICE"
   ]
 }

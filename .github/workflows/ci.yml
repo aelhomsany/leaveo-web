@@ -8,6 +8,12 @@ env:
   # deployments must supply their own key; CI only needs the gate to be satisfiable.
   VITE_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
 
+# Supersede an in-flight run for the same ref on feature branches / PRs (faster iteration),
+# but never cancel a run on dev — that one carries the deploy and must finish.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -57,6 +63,11 @@ jobs:
       # and playwright.config.ts switches to a chromium+webkit project matrix under that flag. With
       # chromium alone the public step cannot launch webkit at all. This never surfaced because the
       # job it lives in had never run -- `npm ci` failed ahead of it on every push until 2026-09-01.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit
       - name: Build web app for preview
@@ -145,6 +156,11 @@ jobs:
         working-directory: leaveo-web
         run: npm ci
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('leaveo-web/package-lock.json') }}
       - name: Install Playwright browsers
         working-directory: leaveo-web
         run: npx playwright install --with-deps chromium
@@ -232,3 +248,28 @@ jobs:
             leaveo-web/playwright-report/
             leaveo-web/test-results/
           retention-days: 7
+
+  # Deploy to the test environment (test.leaveo.net / app-test.leaveo.net) only when all
+  # three test jobs are green AND the commit landed ON dev. PRs to dev never reach here.
+  deploy:
+    name: Deploy to test env
+    needs: [build, e2e, e2e-with-api]
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-test-web
+      cancel-in-progress: false
+    steps:
+      - name: Deploy over SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" 'bash ~/leaveo/bin/deploy-web.sh'
