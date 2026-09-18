@@ -204,3 +204,8 @@ html[lang='ar'] .my-settings-page-eyebrow {
     padding-block-end: var(--space-md);
   }
 }
+/* Arabic reset for tracked title chrome (arabic-letterspacing.atdd.test.ts). */
+html[lang='ar'] .my-settings-page-header .page-title,
+html[lang='ar'] .my-settings-section-title {
+  letter-spacing: normal;
+}

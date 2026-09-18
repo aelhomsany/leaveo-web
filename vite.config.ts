@@ -117,6 +117,13 @@ export default defineConfig(() => {
   const projectRoot = process.cwd()
   const apiProxyTarget = process.env.API_URL ?? 'http://localhost:8080'
   const webPort = Number(process.env.WEB_PORT ?? 5173)
+  // Extra Host headers this dev/preview server answers to, beyond localhost (which Vite
+  // always allows). Comma-separated ALLOWED_HOSTS keeps deployment hostnames (e.g. the test
+  // env's app-test/test subdomains) out of committed config; unset means localhost-only.
+  const allowedHosts = (process.env.ALLOWED_HOSTS ?? '')
+    .split(',')
+    .map((h) => h.trim())
+    .filter(Boolean)
   const input: Record<string, string> =
     artifact === 'public'
       ? { public: resolve(projectRoot, 'public.html') }
@@ -162,6 +169,7 @@ export default defineConfig(() => {
       // API answers /auth/refresh with 403 "Origin is not allowed", so the session never restores
       // and every route bounces to /login — which looks exactly like a broken login.
       strictPort: true,
+      allowedHosts,
       proxy: {
         '/api': {
           target: apiProxyTarget,
@@ -172,6 +180,7 @@ export default defineConfig(() => {
     preview: {
       port: webPort,
       strictPort: true,
+      allowedHosts,
       proxy: {
         '/api': {
           target: apiProxyTarget,

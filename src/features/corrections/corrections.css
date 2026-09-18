@@ -224,3 +224,8 @@ html[lang='ar'] .corrections-card-kicker { letter-spacing: normal; }
   .corrections-result-metrics { grid-template-columns: 1fr; }
   .corrections-card-heading { margin-block-end: var(--space-lg); }
 }
+/* Arabic reset for tracked title/heading chrome (arabic-letterspacing.atdd.test.ts). */
+html[lang='ar'] .corrections-page-header .page-title,
+html[lang='ar'] .corrections-card-heading h2 {
+  letter-spacing: normal;
+}

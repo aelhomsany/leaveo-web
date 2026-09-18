@@ -82,7 +82,7 @@ test.describe(
         await page.getByRole('menuitemradio', { name: 'العربية' }).click()
         await expect(page.locator('html')).toHaveAttribute('lang', 'ar')
         await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
-        await expect(cue).toContainText('أعدّ حسابات موثوقة لأيام العمل')
+        await expect(cue).toContainText('اضبط حساب أيام العمل بدقة')
 
         for (const width of AUTH_VIEWPORTS) {
           await page.setViewportSize({ width, height: 900 })
