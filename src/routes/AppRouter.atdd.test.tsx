@@ -62,7 +62,11 @@ describe('AppRouter page identity ATDD — Story 10.1', () => {
       renderAppRoutes(['/'], createMockAuthForRole('EMPLOYEE'))
 
       await screen.findByTestId('team-calendar-page', undefined, { timeout: 3000 })
-      expect(document.title).toBe('Team Calendar — Leaveo')
+      // usePageTitle runs in a router-level effect that commits after the page's
+      // testid is queryable, so poll rather than read document.title synchronously:
+      // under full-suite load the effect can lag findByTestId and read the '' an
+      // earlier afterEach left behind.
+      await expect.poll(() => document.title).toBe('Team Calendar — Leaveo')
     },
   )
 
@@ -72,7 +76,7 @@ describe('AppRouter page identity ATDD — Story 10.1', () => {
       renderAppRoutes(['/settings'], createMockAuthForRole('ORGANIZATION_ADMIN'))
 
       await screen.findByRole('heading', { name: 'Organization Settings' })
-      expect(document.title).toBe('Organization Settings — Leaveo')
+      await expect.poll(() => document.title).toBe('Organization Settings — Leaveo')
     },
   )
 
@@ -89,7 +93,7 @@ describe('AppRouter page identity ATDD — Story 10.1', () => {
       )
 
       expect(await screen.findByTestId('login-page')).toBeInTheDocument()
-      expect(document.title).toBe('Sign in — Leaveo')
+      await expect.poll(() => document.title).toBe('Sign in — Leaveo')
     },
   )
 
