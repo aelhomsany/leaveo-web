@@ -31,7 +31,6 @@ function overview(): PolicySettingsOverviewResponse {
         displayOrder: 1,
         active: true,
         policyPublicId: 'p-1',
-        latestDraft: undefined,
       },
     ],
     users: [{ publicId: 'user-1', name: 'Jordan Lee' }],

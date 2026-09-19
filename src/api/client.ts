@@ -74,13 +74,6 @@ import type {
   ReportExportResponse,
   CreateLeaveTypeRequest,
   UpdateLeaveTypeRequest,
-  CreatePolicyDraftRequest,
-  UpdatePolicyDraftRequest,
-  PolicyDraftResponse,
-  PublishPolicyRequest,
-  PolicyPreviewResponse,
-  PolicyPublicationResponse,
-  PolicyHistoryItem,
   PolicySettingsOverviewResponse,
   PolicyRulesResponse,
   PolicyRuleImpactRequest,
@@ -532,12 +525,6 @@ export const deactivateLeaveType = (publicId: string) => request<LeaveTypeRespon
 export const reactivateLeaveType = (publicId: string) => request<LeaveTypeResponse>(`/api/v1/settings/leave-types/${publicId}/reactivate`, { method: 'POST' })
 export const reorderLeaveTypes = (publicIds: string[]) => request<LeaveTypeResponse[]>('/api/v1/settings/leave-types/reorder', { method: 'POST', body: { publicIds } })
 export const getPolicySettingsOverview = () => request<PolicySettingsOverview>('/api/v1/settings/leave-policies/overview', { method: 'GET' })
-export const createPolicyDraft = (payload: CreatePolicyDraftRequest) => request<PolicyDraftResponse>('/api/v1/settings/leave-policies/drafts', { method: 'POST', body: payload })
-export const getPolicyDraft = (publicId: string) => request<PolicyDraftResponse>(`/api/v1/settings/leave-policies/drafts/${publicId}`, { method: 'GET' })
-export const updatePolicyDraft = (publicId: string, payload: UpdatePolicyDraftRequest) => request<PolicyDraftResponse>(`/api/v1/settings/leave-policies/drafts/${publicId}`, { method: 'PATCH', body: payload })
-export const previewPolicy = (publicId: string) => request<PolicyPreviewResponse>(`/api/v1/settings/leave-policies/drafts/${publicId}/preview`, { method: 'POST' })
-export const publishPolicy = (publicId: string, idempotencyKey: string, payload: PublishPolicyRequest) => request<PolicyPublicationResponse>(`/api/v1/settings/leave-policies/drafts/${publicId}/publish`, { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey }, body: payload })
-export const getPolicyHistory = (policyPublicId: string) => request<PolicyHistoryItem[]>(`/api/v1/settings/leave-policies/${policyPublicId}/history`, { method: 'GET' })
 
 // Plan LLANO P2-2 — a Leave Type's allowance rules, edited in place with one Save.
 const policyRules = (leaveTypePublicId: string) => `/api/v1/settings/leave-policies/${leaveTypePublicId}/rules`
@@ -1233,12 +1220,6 @@ export const apiClient = {
   reactivateLeaveType,
   reorderLeaveTypes,
   getPolicySettingsOverview,
-  createPolicyDraft,
-  getPolicyDraft,
-  updatePolicyDraft,
-  previewPolicy,
-  publishPolicy,
-  getPolicyHistory,
   getPolicyRules,
   previewPolicyRuleImpact,
   savePolicyRule,

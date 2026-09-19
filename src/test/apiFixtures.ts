@@ -165,7 +165,6 @@ export function mockLeaveTypePolicySummary(
     displayOrder: 1,
     active: true,
     policyPublicId: 'policy-1',
-    latestDraft: null,
     ...overrides,
   }
 }
