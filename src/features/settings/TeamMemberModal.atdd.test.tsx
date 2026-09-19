@@ -9,23 +9,28 @@ import type {
   WorkforceGroupResponse,
 } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockWorkforceGroup } from '../../test/apiFixtures'
 import { TeamMemberModal } from './TeamMemberModal'
 import { MemoryRouter } from 'react-router-dom'
 
 const mockGroups: WorkforceGroupResponse[] = [
-  { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
+  mockWorkforceGroup({ id: 1, name: 'US' }),
 ]
 
 const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: 'public-1',
     name: 'Annual Leave',
     icon: '🌴',
     color: '#093C5D',
     backgroundColor: '#D6E8ED',
     borderColor: '#0E4F75',
+    presenceType: 'OFF',
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
 ]
 

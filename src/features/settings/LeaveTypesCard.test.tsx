@@ -10,59 +10,80 @@ import {
   AuthTestProvider,
   createMockAuthForRole,
 } from "../../test/authTestUtils";
+import { mockLeaveTypePolicySummary } from "../../test/apiFixtures";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { LeaveTypesCard } from "./LeaveTypesCard";
 
 const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: "public-1",
     name: "Annual Leave",
     icon: "🏖️",
     color: "#093C5D",
     backgroundColor: "#D6E8ED",
     borderColor: "#0E4F75",
+    presenceType: "OFF",
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
   {
     id: 2,
+    publicId: "public-2",
     name: "Sick Leave",
     icon: "🤒",
     color: "#EF4444",
     backgroundColor: "#FEF2F2",
     borderColor: "#FECACA",
+    presenceType: "OFF",
     defaultBalanceDays: 10,
     displayOrder: 2,
+    active: true,
+    halfDayAllowed: true,
   },
   {
     id: 3,
+    publicId: "public-3",
     name: "Work From Home",
     icon: "🏠",
     color: "#2D6A4F",
     backgroundColor: "#E4F5DC",
     borderColor: "#CBF3BB",
+    presenceType: "WFH",
     defaultBalanceDays: 30,
     displayOrder: 3,
+    active: true,
+    halfDayAllowed: false,
   },
   {
     id: 4,
+    publicId: "public-4",
     name: "Maternity/Paternity",
     icon: "👶",
     color: "#854D0E",
     backgroundColor: "#FEF9C3",
     borderColor: "#FDE68A",
+    presenceType: "OFF",
     defaultBalanceDays: 90,
     displayOrder: 4,
+    active: true,
+    halfDayAllowed: false,
   },
   {
     id: 5,
+    publicId: "public-5",
     name: "Unpaid Leave",
     icon: "📋",
     color: "#5A7A80",
     backgroundColor: "#ECF4E8",
     borderColor: "#B8DCC4",
+    presenceType: "OFF",
     defaultBalanceDays: null,
     displayOrder: 5,
+    active: true,
+    halfDayAllowed: true,
   },
 ];
 
@@ -437,6 +458,11 @@ describe("LeaveTypesCard", () => {
       effectiveFrom: "2027-01-01",
       revision: 0,
       consumed: false,
+      carryoverEnabled: false,
+      carryoverMaxDays: null,
+      carryoverDeadlineMonth: null,
+      carryoverDeadlineDay: null,
+      carryoverRepeat: false,
     });
     const first = renderLeaveTypesCard();
     await user.click(
@@ -597,12 +623,12 @@ describe("LeaveTypesCard", () => {
       vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(withPresence);
       vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
         leaveTypes: [
-          { leaveTypePublicId: "lt-1", name: "Annual Leave" },
-          {
+          mockLeaveTypePolicySummary({ leaveTypePublicId: "lt-1", name: "Annual Leave" }),
+          mockLeaveTypePolicySummary({
             leaveTypePublicId: "lt-2",
             name: "Sick Leave",
             latestDraft: { draftPublicId: "draft-1", revision: 3 },
-          },
+          }),
         ],
         users: [],
         workforceGroups: [],
@@ -614,5 +640,188 @@ describe("LeaveTypesCard", () => {
         await screen.findByTestId("leave-types-glance-drafts"),
       ).toHaveTextContent("1");
     });
+  });
+});
+
+/**
+ * Plan MEDIA. Half days are on by default for every leave type; the toggle is how an organization
+ * keeps one to whole days, and the row names only that restriction. A type whose response carries
+ * no flag at all reads as allowed, as the column defaults to true.
+ */
+describe("LeaveTypesCard half-day toggle — Plan MEDIA", () => {
+  const halfDayToggle = () =>
+    screen.getByRole("checkbox", { name: "Can be taken in half days" });
+
+  // wfhNoHalfDayFlag deliberately omits halfDayAllowed (built field-by-field, not spread from
+  // mockLeaveTypes[2], since that now always carries the key) to exercise a real API response
+  // that predates Plan MEDIA and never sends the flag at all -- LeaveTypesCard must still read
+  // that as allowed. The cast is the narrowest way to feed that shape into LeaveTypeResponse[],
+  // which -- correctly, for every other row -- requires the key.
+  const wfhNoHalfDayFlag = {
+    id: mockLeaveTypes[2].id,
+    publicId: "public-3",
+    name: mockLeaveTypes[2].name,
+    icon: mockLeaveTypes[2].icon,
+    color: mockLeaveTypes[2].color,
+    backgroundColor: mockLeaveTypes[2].backgroundColor,
+    borderColor: mockLeaveTypes[2].borderColor,
+    presenceType: "WFH" as const,
+    defaultBalanceDays: mockLeaveTypes[2].defaultBalanceDays,
+    displayOrder: mockLeaveTypes[2].displayOrder,
+    active: true,
+  } as LeaveTypeResponse;
+
+  const types: LeaveTypeResponse[] = [
+    { ...mockLeaveTypes[0], publicId: "public-1", presenceType: "OFF", active: true, halfDayAllowed: true },
+    { ...mockLeaveTypes[1], publicId: "public-2", presenceType: "OFF", active: true, halfDayAllowed: false },
+    // No halfDayAllowed at all.
+    wfhNoHalfDayFlag,
+  ];
+
+  beforeEach(() => {
+    vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(types);
+    vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
+      leaveTypes: [],
+      users: [],
+      workforceGroups: [],
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function openEdit(user: ReturnType<typeof userEvent.setup>, typeName: string) {
+    await openRowMenu(user, typeName);
+    await user.click(
+      screen.getByRole("menuitem", { name: `Edit ${isolate(typeName)}` }),
+    );
+    return halfDayToggle();
+  }
+
+  async function saveEdit(
+    user: ReturnType<typeof userEvent.setup>,
+    update: { mock: { calls: unknown[] } },
+  ) {
+    const calls = update.mock.calls.length;
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() => expect(update.mock.calls).toHaveLength(calls + 1));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+  }
+
+  // MEDIA-UI-VAL-006. Create: the toggle starts on, an unticked toggle is sent as false, and the
+  // next "Add Leave Type" starts on again rather than inheriting the last choice.
+  it("[P1] defaults the toggle on for a new type and sends halfDayAllowed as set", async () => {
+    const user = userEvent.setup();
+    const create = vi
+      .spyOn(apiClient, "createLeaveType")
+      .mockResolvedValue(types[0]);
+    renderLeaveTypesCard();
+
+    await user.click(
+      await screen.findByRole("button", { name: /add leave type/i }),
+    );
+    expect(halfDayToggle()).toBeChecked();
+    expect(
+      screen.getByText(
+        "People can request a morning or an afternoon of this type. Turn it off for types that only make sense as whole days.",
+      ),
+    ).toBeInTheDocument();
+    await user.type(screen.getByLabelText(/^name$/i), "Bereavement Leave");
+    await user.type(screen.getByLabelText(/^icon$/i), "B");
+    await user.click(halfDayToggle());
+    expect(halfDayToggle()).not.toBeChecked();
+    await user.click(screen.getByRole("button", { name: /create leave type/i }));
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+    expect(create).toHaveBeenLastCalledWith({
+      name: "Bereavement Leave",
+      icon: "B",
+      color: LEAVE_TYPE_DEFAULT_PRESENTATION.color,
+      backgroundColor: LEAVE_TYPE_DEFAULT_PRESENTATION.backgroundColor,
+      borderColor: LEAVE_TYPE_DEFAULT_PRESENTATION.borderColor,
+      presenceType: LEAVE_TYPE_DEFAULT_PRESENTATION.presenceType,
+      halfDayAllowed: false,
+    });
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole("button", { name: /add leave type/i }));
+    expect(halfDayToggle()).toBeChecked();
+    await user.type(screen.getByLabelText(/^name$/i), "Study Leave");
+    await user.type(screen.getByLabelText(/^icon$/i), "S");
+    await user.click(screen.getByRole("button", { name: /create leave type/i }));
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
+    expect(create).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: "Study Leave", halfDayAllowed: true }),
+    );
+  });
+
+  // MEDIA-UI-VAL-006. Edit: the toggle opens on the type's own setting and saves it back -- kept
+  // when untouched, flipped when changed, and "on" for a type whose response has no flag.
+  it("[P1] opens edit on the type's own setting and round-trips halfDayAllowed", async () => {
+    const user = userEvent.setup();
+    const update = vi
+      .spyOn(apiClient, "updateLeaveType")
+      .mockImplementation(
+        async (publicId) => types.find((type) => type.publicId === publicId) ?? types[0],
+      );
+    renderLeaveTypesCard();
+
+    // Off, saved untouched: stays off.
+    expect(await openEdit(user, "Sick Leave")).not.toBeChecked();
+    await saveEdit(user, update);
+    expect(update).toHaveBeenLastCalledWith(
+      "public-2",
+      expect.objectContaining({ name: "Sick Leave", halfDayAllowed: false }),
+    );
+
+    // Off, switched on.
+    await user.click(await openEdit(user, "Sick Leave"));
+    expect(halfDayToggle()).toBeChecked();
+    await saveEdit(user, update);
+    expect(update).toHaveBeenLastCalledWith(
+      "public-2",
+      expect.objectContaining({ halfDayAllowed: true }),
+    );
+
+    // On, switched off.
+    await user.click(await openEdit(user, "Annual Leave"));
+    expect(halfDayToggle()).not.toBeChecked();
+    await saveEdit(user, update);
+    expect(update).toHaveBeenLastCalledWith(
+      "public-1",
+      expect.objectContaining({ halfDayAllowed: false }),
+    );
+
+    // No flag in the response, saved untouched: on.
+    expect(await openEdit(user, "Work From Home")).toBeChecked();
+    await saveEdit(user, update);
+    expect(update).toHaveBeenLastCalledWith(
+      "public-3",
+      expect.objectContaining({ halfDayAllowed: true }),
+    );
+  });
+
+  // MEDIA-UI-VAL-006. The row says "Whole days only" only when half days are off -- not for a type
+  // that allows them, and not for one whose response carries no flag.
+  it("[P1] names the whole-days restriction on that row only", async () => {
+    renderLeaveTypesCard();
+
+    const restricted = await screen.findByTestId("leave-type-row-2");
+    expect(within(restricted).getByText("Whole days only")).toBeInTheDocument();
+    expect(screen.getByTestId("leave-type-row-1")).not.toHaveTextContent(
+      "Whole days only",
+    );
+    expect(screen.getByTestId("leave-type-row-3")).not.toHaveTextContent(
+      "Whole days only",
+    );
+    expect(
+      within(screen.getByTestId("leave-types-list")).getAllByText(
+        "Whole days only",
+      ),
+    ).toHaveLength(1);
   });
 });

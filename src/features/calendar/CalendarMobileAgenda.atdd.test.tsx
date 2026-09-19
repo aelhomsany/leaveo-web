@@ -14,13 +14,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import type { CalendarMonthResponse, LeaveRequestContextResponse } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockWorkforceGroup } from '../../test/apiFixtures'
 import { TeamCalendarPage } from './TeamCalendarPage'
 import { mockCalendarMonth } from './calendarTestFixtures'
 import { RequestContextPage } from '../leave-requests/RequestContextPage'
 
 const workforceGroups = [
-  { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] as const },
-  { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] as const },
+  mockWorkforceGroup({ id: 1, name: 'US' }),
+  mockWorkforceGroup({ id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] }),
 ]
 
 const requestContext = {

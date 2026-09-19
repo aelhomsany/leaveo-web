@@ -92,14 +92,17 @@ describe('analyticsGateway rollback switch — Story 12.2', () => {
   })
 
   it('[P2] Given the switch is untouched and consent is accepted, When the same events fire, Then both are sent', async () => {
-    const fetchMock = vi.fn(async () => new Response(null, { status: 202 }))
+    // Typed with fetch's own (input, init) signature -- not the no-arg shape used by the
+    // other fetchMocks in this file -- because this is the one test that reads the call
+    // arguments back out (`.mock.calls.map(([, init]) => ...)`) to inspect the POST body.
+    const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 202 }))
     vi.stubGlobal('fetch', fetchMock)
 
     await emitBothStoryEvents()
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
     const names = fetchMock.mock.calls.map(
-      ([, init]) => JSON.parse(String((init as RequestInit).body)).eventName as string,
+      ([, init]) => JSON.parse(String(init?.body)).eventName as string,
     )
     expect(names).toEqual(['pricing_plan_selected.v1', 'contact_sales_started.v1'])
   })

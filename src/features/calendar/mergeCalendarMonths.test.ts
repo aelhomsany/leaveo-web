@@ -26,7 +26,12 @@ function monthResponse(
     monthEnd: lastDayOf(month),
     absences: [],
     holidays: [],
-    availableCountByDate,
+    // `availableCountByDate` is required (never actually omitted by the server -- CalendarService
+    // always computes it), but this suite deliberately builds an input the real contract can no
+    // longer send, to pin mergeCalendarMonths's own `!= null` fallback (still implemented
+    // unconditionally in production). Narrow cast, not a widened type: `undefined` is real data a
+    // caller of this helper may still pass.
+    availableCountByDate: availableCountByDate as Record<string, number>,
     ...overrides,
   }
 }

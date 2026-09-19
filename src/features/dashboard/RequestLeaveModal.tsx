@@ -44,6 +44,32 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced
 }
 
+/**
+ * Plan MEDIA. The server's rules, enforced here by never sending the combinations that break them: a
+ * range of two days or more cannot start on a morning (you would be back at lunchtime on a day you
+ * are away for) nor end on an afternoon. The clamp matters beyond the dropdowns -- a person can pick
+ * "morning" on a single day and then push the end date out.
+ */
+function clampParts(
+  singleDay: boolean,
+  halfDayAllowed: boolean,
+  startPart: DayPart,
+  endPart: DayPart,
+): [DayPart, DayPart] {
+  if (!halfDayAllowed) {
+    return [FULL_DAY, FULL_DAY]
+  }
+  if (singleDay) {
+    // One control drives both ends of a single day; sending the same part twice is what the
+    // server reads as "half of that one day".
+    return [startPart, startPart]
+  }
+  return [
+    startPart === FIRST_HALF ? FULL_DAY : startPart,
+    endPart === SECOND_HALF ? FULL_DAY : endPart,
+  ]
+}
+
 export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModalProps) {
   const { t, i18n } = useTranslation(['dashboard', 'common'])
   const { user } = useAuth()
@@ -56,7 +82,7 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
   const [dateTo, setDateTo] = useState('')
   // Plan MEDIA: what the person picked, not necessarily what is sent. The legal parts depend on the
   // shape of the range and on the leave type, both of which can change after a part is chosen, so
-  // the selections are clamped on the way out (see effectiveStartPart) rather than rewritten here.
+  // the selections are clamped on the way out (see clampParts) rather than rewritten here.
   // Rewriting them would silently discard a choice the moment a date typo made it briefly illegal.
   const [startPart, setStartPart] = useState<DayPart>(FULL_DAY)
   const [endPart, setEndPart] = useState<DayPart>(FULL_DAY)
@@ -79,36 +105,33 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
   // should not silently take half days away from an organization that has them.
   const halfDayAllowed = selectedLeaveType?.halfDayAllowed !== false
 
-  // One charged day, so the request is a morning or an afternoon rather than a range with ends.
+  // One date, so the request is a morning or an afternoon rather than a range with ends. One date,
+  // not one charged day: how many days a range charges is only known once the preview answers.
   const singleDay = dateFrom !== '' && dateFrom === dateTo
 
-  // The server's rules, enforced here by never offering the combinations that break them: a range
-  // of two days or more cannot start on a morning (you would be back at lunchtime on a day you are
-  // away for) nor end on an afternoon. The clamp matters beyond the dropdowns -- a person can pick
-  // "morning" on a single day and then push the end date out.
-  const effectiveStartPart: DayPart = !halfDayAllowed
-    ? FULL_DAY
-    : singleDay
-      ? startPart
-      : startPart === FIRST_HALF
-        ? FULL_DAY
-        : startPart
-  const effectiveEndPart: DayPart = !halfDayAllowed
-    ? FULL_DAY
-    : singleDay
-      ? // One control drives both ends of a single day; sending the same part twice is what the
-        // server reads as "half of that one day".
-        startPart
-      : endPart === SECOND_HALF
-        ? FULL_DAY
-        : endPart
+  // What submit sends, clamped against the dates as they are now.
+  const [effectiveStartPart, effectiveEndPart] = clampParts(
+    singleDay,
+    halfDayAllowed,
+    startPart,
+    endPart,
+  )
+  // The preview runs on the debounced dates, so its parts are clamped against those same dates.
+  // Clamping against the live ones pairs a single day's parts with the range still being narrowed
+  // for the length of the debounce -- a combination the server refuses.
+  const [previewStartPart, previewEndPart] = clampParts(
+    debouncedFrom !== '' && debouncedFrom === debouncedTo,
+    halfDayAllowed,
+    startPart,
+    endPart,
+  )
 
   const previewQuery = useLeaveRequestPreview(
     debouncedFrom,
     debouncedTo,
     leaveTypeId === '' ? undefined : leaveTypeId,
-    effectiveStartPart,
-    effectiveEndPart,
+    previewStartPart,
+    previewEndPart,
   )
 
   const clientDateInvalid =
@@ -237,6 +260,10 @@ export function RequestLeaveModal({ open, onClose, onSuccess }: RequestLeaveModa
     viewerUngrouped ||
     leaveTypeId === '' ||
     !previewEnabled ||
+    // The preview prices the debounced dates and submit sends the typed ones. Until the two agree,
+    // the charge on screen belongs to dates the form no longer holds.
+    dateFrom !== debouncedFrom ||
+    dateTo !== debouncedTo ||
     clientDateInvalid ||
     previewQuery.isPending ||
     previewQuery.isFetching ||

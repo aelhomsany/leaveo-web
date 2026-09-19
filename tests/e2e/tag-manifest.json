@@ -576,6 +576,15 @@
       "tests": [
         "[P1] Carried days are shown, used first on approval, and returned on cancellation"
       ]
+    },
+    "leave-half-day.spec.ts::Half-day leave — Plan MEDIA": {
+      "tags": [
+        "@regression",
+        "@api"
+      ],
+      "tests": [
+        "[P1] Employee books a morning off at half a day, the manager approves it, and the agenda shows the morning"
+      ]
     }
   },
   "permanentlySkippedTests": [

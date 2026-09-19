@@ -69,7 +69,7 @@ class ContractedExecutionReporter implements Reporter {
     else entry.executed += 1
   }
 
-  onEnd(result: FullResult): { status?: FullResult['status'] } | void {
+  async onEnd(result: FullResult): Promise<{ status?: FullResult['status'] } | void> {
     if (!this.enabled) return
     const inert = [...this.suites.entries()]
       .filter(([, entry]) => entry.contracted && entry.executed === 0 && entry.skipped > 0)

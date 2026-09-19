@@ -8336,11 +8336,18 @@ export type BalanceCardResponse = Omit<
     carryover?: CarryoverBalanceResponse | null;
     totalAvailableDays?: number | null;
 };
+// lastErrorCategory and lastPostedAt stay null until the webhook first fails or posts.
+export type ChatWebhookResponse = Omit<
+    RequiredSchema<"ChatWebhookResponse">,
+    "lastErrorCategory" | "lastPostedAt"
+> & {
+    lastErrorCategory: string | null;
+    lastPostedAt: string | null;
+};
+export type ChatWebhookUpsertRequest = components["schemas"]["ChatWebhookUpsertRequest"];
 // Story 16.2: privacy-redacted fields are ABSENT from the response, not blanked, so they must be
 // optional here. RequiredSchema<> would type them as always-present and let a component read
 // `absence.leaveTypeName` with no guard — the compile error is the point.
-export type ChatWebhookResponse = RequiredSchema<"ChatWebhookResponse">;
-export type ChatWebhookUpsertRequest = components["schemas"]["ChatWebhookUpsertRequest"];
 export type CalendarAbsenceResponse = Omit<
     RequiredSchema<"CalendarAbsenceResponse">,
     "userFullName" | "userInitials" | "userWorkforceGroupName" | "leaveTypeId" | "leaveTypeName"
@@ -8417,12 +8424,33 @@ export type PendingCancellationResponse = Omit<
     leaveTypeIcon: string | null;
     leaveTypeColor: string | null;
 };
+// compensationOfId is null unless the correction's kind is COMPENSATION.
+export type BalanceCorrectionResponse = Omit<RequiredSchema<"BalanceCorrectionResponse">, "compensationOfId"> & {
+    compensationOfId: number | null;
+};
+// Nullable on the wire: note when none was given, the decision fields until someone decides, and
+// all six on the create response (LeaveRequestService.toResponse sets none of them).
 export type LeaveRequestResponse = Omit<
     RequiredSchema<"LeaveRequestResponse">,
-    "approvalEvidence" | "cancellation"
+    | "approvalEvidence"
+    | "cancellation"
+    | "note"
+    | "approvedById"
+    | "declinedById"
+    | "declineReason"
+    | "balanceApplied"
+    | "decidedOnBehalf"
+    | "nominalApproverFirstName"
 > & {
     approvalEvidence?: ApprovalStepEvidenceResponse[];
     cancellation: LeaveCancellationCapability;
+    note: string | null;
+    approvedById: number | null;
+    declinedById: number | null;
+    declineReason: string | null;
+    balanceApplied: boolean | null;
+    decidedOnBehalf: boolean | null;
+    nominalApproverFirstName: string | null;
 };
 export type LeaveRequestContextResponse = Omit<RequiredSchema<"LeaveRequestContextResponse">, "approvalEvidence"> & {
     approvalEvidence?: ApprovalStepEvidenceResponse[];
@@ -8464,6 +8492,30 @@ export type OutTodayResponse = Omit<
     leaveTypeIcon?: string;
 };
 export type PendingApprovalCountResponse = RequiredSchema<"PendingApprovalCountResponse">;
+// When availability cannot be evaluated the counts, evaluatedRange and holidays are null, not zero
+// or empty (ApprovalDecisionFactsAdapter); suppressionReason and pendingAgeDays are null when unset.
+export type DecisionFactsV1 = Omit<
+    components["schemas"]["DecisionFactsV1"],
+    | "scheduledCount"
+    | "approvedOffCount"
+    | "pendingOffCount"
+    | "wfhCount"
+    | "availableCount"
+    | "evaluatedRange"
+    | "holidays"
+    | "pendingAgeDays"
+    | "suppressionReason"
+> & {
+    scheduledCount?: number | null;
+    approvedOffCount?: number | null;
+    pendingOffCount?: number | null;
+    wfhCount?: number | null;
+    availableCount?: number | null;
+    evaluatedRange?: components["schemas"]["AvailabilityDateRangeV1"] | null;
+    holidays?: components["schemas"]["RelevantHolidayV1"][] | null;
+    pendingAgeDays?: number | null;
+    suppressionReason?: string | null;
+};
 export type PendingApprovalResponse = Omit<
     RequiredSchema<"PendingApprovalResponse">,
     | "weekendDays"
@@ -8474,6 +8526,12 @@ export type PendingApprovalResponse = Omit<
     | "submittedAt"
     | "approvalEvidence"
     | "decisionFacts"
+    | "note"
+    | "decidedOnBehalf"
+    | "nominalApproverFirstName"
+    | "balanceCarryoverAvailable"
+    | "carryoverDaysToUse"
+    | "carryoverExpiresOn"
 > & {
     weekendDays?: string[];
     balanceCapped?: boolean | null;
@@ -8482,11 +8540,16 @@ export type PendingApprovalResponse = Omit<
     balanceSufficient?: boolean | null;
     submittedAt?: string | null;
     approvalEvidence?: ApprovalStepEvidenceResponse[];
-    decisionFacts?: components["schemas"]["DecisionFactsV1"] | null;
-    // Plan RESTO: set only for an annual allowance.
-    balanceCarryoverAvailable?: number | null;
-    carryoverDaysToUse?: number | null;
-    carryoverExpiresOn?: string | null;
+    decisionFacts?: DecisionFactsV1 | null;
+    // note, decidedOnBehalf and nominalApproverFirstName are null when unset. Plan RESTO: the three
+    // carry-over fields are null unless the leave type is an annual allowance. They were declared
+    // here before but missing from the Omit list, so Required<> still made them required.
+    note: string | null;
+    decidedOnBehalf: boolean | null;
+    nominalApproverFirstName: string | null;
+    balanceCarryoverAvailable: number | null;
+    carryoverDaysToUse: number | null;
+    carryoverExpiresOn: string | null;
 };
 export type PreviewLeaveRequestRequest = components["schemas"]["PreviewLeaveRequestRequest"];
 // Plan RESTO: the carry-over split is only computed for an annual allowance; null otherwise.
@@ -8509,24 +8572,56 @@ export type ProblemDetail = {
     [key: string]: unknown;
 };
 export type PublicHolidayResponse = RequiredSchema<"PublicHolidayResponse">;
-export type RecentApprovalDecisionResponse = Omit<RequiredSchema<"RecentApprovalDecisionResponse">, "approvalEvidence"> & {
+// nominalApproverFirstName is null unless the decision was made on someone else's behalf.
+export type RecentApprovalDecisionResponse = Omit<
+    RequiredSchema<"RecentApprovalDecisionResponse">,
+    "approvalEvidence" | "nominalApproverFirstName"
+> & {
     approvalEvidence?: ApprovalStepEvidenceResponse[];
+    nominalApproverFirstName: string | null;
 };
+// statusHint is null except on PENDING cards and APPROVED ones with a named approver. The API also
+// marks `cancellation` nullable (on cards the viewer did not request); it stays required here
+// because own-history rows always carry one.
 export type RecentRequestResponse = Omit<
     RequiredSchema<"RecentRequestResponse">,
-    "approvalEvidence" | "cancellation"
+    "approvalEvidence" | "cancellation" | "statusHint"
 > & {
     approvalEvidence?: ApprovalStepEvidenceResponse[];
     cancellation: LeaveCancellationCapability;
+    statusHint: string | null;
 };
-export type AuditEventResponse = RequiredSchema<"AuditEventResponse">;
+// nominalApproverFirstName is null on SUBMITTED events and whenever nobody acted on another's behalf.
+export type AuditEventResponse = Omit<RequiredSchema<"AuditEventResponse">, "nominalApproverFirstName"> & {
+    nominalApproverFirstName: string | null;
+};
 export type AcceptInvitationRequest = RequiredSchema<"AcceptInvitationRequest">;
 export type ResetPasswordRequest = RequiredSchema<"ResetPasswordRequest">;
-export type TeamMemberDetailResponse = Omit<RequiredSchema<"TeamMemberDetailResponse">, "entitlements"> & {
+// A member with no manager or no Workforce Group gets null ids and names, not absent fields, and
+// deactivatedAt is null while the member is active.
+export type TeamMemberDetailResponse = Omit<
+    RequiredSchema<"TeamMemberDetailResponse">,
+    "entitlements" | "managerId" | "managerName" | "deactivatedAt" | "workforceGroupId" | "workforceGroupName"
+> & {
     entitlements: EntitlementResponse[];
+    managerId: number | null;
+    managerName: string | null;
+    deactivatedAt: string | null;
+    workforceGroupId: number | null;
+    workforceGroupName: string | null;
 };
 export type TeamMemberInvitationResponse = RequiredSchema<"TeamMemberInvitationResponse">;
-export type TeamMemberSummaryResponse = RequiredSchema<"TeamMemberSummaryResponse">;
+// Nullable exactly as in TeamMemberDetailResponse.
+export type TeamMemberSummaryResponse = Omit<
+    RequiredSchema<"TeamMemberSummaryResponse">,
+    "managerId" | "managerName" | "deactivatedAt" | "workforceGroupId" | "workforceGroupName"
+> & {
+    managerId: number | null;
+    managerName: string | null;
+    deactivatedAt: string | null;
+    workforceGroupId: number | null;
+    workforceGroupName: string | null;
+};
 export type TokenResponse = RequiredSchema<"TokenResponse">;
 export type UnreadCountResponse = RequiredSchema<"UnreadCountResponse">;
 export type UpcomingAbsenceResponse = Omit<
@@ -8647,9 +8742,39 @@ export type UpdateNotificationPreferenceRequest = {
 export type UpdateOnboardingPresentationRequest = components["schemas"]["UpdateOnboardingPresentationRequest"];
 
 export type ReportQueryRequest = components["schemas"]["ReportQueryRequest"];
-export type ReportQueryResponse = RequiredSchema<"ReportQueryResponse">;
+// The API's @Schema(oneOf) on `summary` and `rows` leaves out the CARRYOVER members that
+// ReportSummary and ReportRow serialize, and ExceptionReportRow.facts (a Map<String, Object>) comes
+// out of springdoc as Record<string, never>. Both are put right here.
+export type ReportQueryResponse = Omit<RequiredSchema<"ReportQueryResponse">, "summary" | "rows"> & {
+    summary:
+        | components["schemas"]["BalanceSnapshotSummary"]
+        | components["schemas"]["LeaveUsageSummary"]
+        | components["schemas"]["RequestDetailSummary"]
+        | components["schemas"]["ExceptionReportSummary"]
+        | components["schemas"]["PendingAgingSummary"]
+        | components["schemas"]["CarryoverSummary"];
+    rows: (
+        | components["schemas"]["BalanceSnapshotRow"]
+        | components["schemas"]["LeaveUsageRow"]
+        | components["schemas"]["RequestDetailRow"]
+        | (Omit<components["schemas"]["ExceptionReportRow"], "facts"> & {
+              facts?: Record<string, unknown>;
+          })
+        | components["schemas"]["PendingAgingRow"]
+        | components["schemas"]["CarryoverRow"]
+    )[];
+};
 export type CreateReportExportRequest = components["schemas"]["CreateReportExportRequest"];
-export type ReportExportResponse = RequiredSchema<"ReportExportResponse">;
+// The same missing CARRYOVER member as ReportQueryResponse.summary.
+export type ReportExportResponse = Omit<RequiredSchema<"ReportExportResponse">, "summary"> & {
+    summary:
+        | components["schemas"]["BalanceSnapshotSummary"]
+        | components["schemas"]["LeaveUsageSummary"]
+        | components["schemas"]["RequestDetailSummary"]
+        | components["schemas"]["ExceptionReportSummary"]
+        | components["schemas"]["PendingAgingSummary"]
+        | components["schemas"]["CarryoverSummary"];
+};
 export type BalanceSnapshotRow = RequiredSchema<"BalanceSnapshotRow">;
 export type LeaveUsageRow = RequiredSchema<"LeaveUsageRow">;
 export type RequestDetailRow = RequiredSchema<"RequestDetailRow">;
@@ -8668,30 +8793,48 @@ type NullableCarryoverRule = {
     carryoverDeadlineDay: number | null;
 };
 type CarryoverRuleKeys = "carryoverMaxDays" | "carryoverDeadlineMonth" | "carryoverDeadlineDay";
-export type PolicyDraftResponse = Omit<RequiredSchema<"PolicyDraftResponse">, CarryoverRuleKeys> &
-    NullableCarryoverRule;
+// subjectPublicId is null for an ORGANIZATION-scope draft.
+export type PolicyDraftResponse = Omit<RequiredSchema<"PolicyDraftResponse">, CarryoverRuleKeys | "subjectPublicId"> &
+    NullableCarryoverRule & { subjectPublicId: string | null };
 export type PublishPolicyRequest = components["schemas"]["PublishPolicyRequest"];
-export type PolicyPreviewResponse = RequiredSchema<"PolicyPreviewResponse">;
-export type PolicyPublicationResponse = RequiredSchema<"PolicyPublicationResponse">;
-export type PolicyHistoryItem = Omit<RequiredSchema<"PolicyHistoryItem">, CarryoverRuleKeys> &
+// The same nullable carry-over rule as the draft and the history item.
+export type PolicyPreviewResponse = Omit<RequiredSchema<"PolicyPreviewResponse">, CarryoverRuleKeys> &
     NullableCarryoverRule;
-export type PolicySettingsOverviewResponse = RequiredSchema<"PolicySettingsOverviewResponse">;
+export type PolicyPublicationResponse = RequiredSchema<"PolicyPublicationResponse">;
+// allowanceDays is null for an UNLIMITED policy version.
+export type PolicyHistoryItem = Omit<RequiredSchema<"PolicyHistoryItem">, CarryoverRuleKeys | "allowanceDays"> &
+    NullableCarryoverRule & { allowanceDays: number | null };
+// defaultBalanceDays is null when uncapped, policyPublicId when the leave type has no policy yet (a
+// LEFT JOIN in PolicySettingsOverviewService), and latestDraft when no draft is open.
+export type LeaveTypePolicySummary = Omit<
+    RequiredSchema<"LeaveTypePolicySummary">,
+    "defaultBalanceDays" | "policyPublicId" | "latestDraft"
+> & {
+    defaultBalanceDays: number | null;
+    policyPublicId: string | null;
+    latestDraft: components["schemas"]["DraftSummary"] | null;
+};
+export type PolicySettingsOverviewResponse = Omit<RequiredSchema<"PolicySettingsOverviewResponse">, "leaveTypes"> & {
+    leaveTypes: LeaveTypePolicySummary[];
+};
 export type CreateImportJobRequest = components["schemas"]["CreateImportJobRequest"];
 /**
  * Story 15.5 D4 — `workStatus` (the worker's own lifecycle, whose `DEAD_LETTER` value is what
- * distinguishes a retired job from an ordinary validation failure) and `failureReason` are added
- * to the API DTOs alongside this change. They are declared here as an intersection until the
- * OpenAPI document is regenerated; both stay optional so a server that has not shipped them yet
- * still type-checks.
+ * distinguishes a retired job from an ordinary validation failure) and `failureReason`. Both can be
+ * null: `workStatus` until the worker claims the job, `failureReason` unless the job failed.
  */
 type ImportJobDiagnostics = {
-    workStatus?: string;
-    failureReason?: string | null;
+    workStatus: string | null;
+    failureReason: string | null;
 };
-export type ImportJobResponse = Omit<RequiredSchema<"ImportJobResponse">, "failureReason"> &
-    ImportJobDiagnostics;
-export type ImportJobSummaryResponse = RequiredSchema<"ImportJobSummaryResponse"> &
-    ImportJobDiagnostics;
+export type ImportJobResponse = Omit<
+    RequiredSchema<"ImportJobResponse">,
+    "workStatus" | "failureReason"
+> & ImportJobDiagnostics;
+export type ImportJobSummaryResponse = Omit<
+    RequiredSchema<"ImportJobSummaryResponse">,
+    "workStatus" | "failureReason"
+> & ImportJobDiagnostics;
 export type ImportJobListPage = Omit<RequiredSchema<"ImportJobListPage">, "items"> & {
     items: ImportJobSummaryResponse[];
 };
@@ -8718,7 +8861,6 @@ export type BalanceCorrectionPreviewResponse = {
     afterRemainingDays: number;
 };
 export type CompensateBalanceCorrectionRequest = components["schemas"]["CompensateBalanceCorrectionRequest"];
-export type BalanceCorrectionResponse = RequiredSchema<"BalanceCorrectionResponse">;
 export type BalanceCorrectionListItemResponse = RequiredSchema<"BalanceCorrectionListItemResponse">;
 export type BalanceCorrectionListPage = RequiredSchema<"BalanceCorrectionListPage">;
 

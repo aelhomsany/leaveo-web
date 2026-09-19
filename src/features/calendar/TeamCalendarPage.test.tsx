@@ -9,23 +9,15 @@ import type {
   CalendarMonthResponse,
   OutTodayResponse,
   RecentRequestResponse,
-  WorkforceGroupResponse,
 } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockRecentRequestResponse, mockWorkforceGroup } from '../../test/apiFixtures'
 import { TeamCalendarPage } from './TeamCalendarPage'
 import { mockCalendarMonth } from './calendarTestFixtures'
 
-const workforceGroups: WorkforceGroupResponse[] = [
-  {
-    id: 1,
-    name: 'US',
-    weekendDays: ['SATURDAY', 'SUNDAY'],
-  },
-  {
-    id: 2,
-    name: 'Egypt',
-    weekendDays: ['FRIDAY', 'SATURDAY'],
-  },
+const workforceGroups = [
+  mockWorkforceGroup({ id: 1, name: 'US' }),
+  mockWorkforceGroup({ id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] }),
 ]
 
 function calendarForMonth(month: string): CalendarMonthResponse {
@@ -556,7 +548,7 @@ describe('TeamCalendarPage landing additions — Dashboard merge (2026-09-01)', 
     workingDates: [date],
   })
 
-  const pendingOwnRequest: RecentRequestResponse = {
+  const pendingOwnRequest: RecentRequestResponse = mockRecentRequestResponse({
     id: 77,
     leaveTypeId: 1,
     leaveTypeName: 'Annual Leave',
@@ -565,7 +557,7 @@ describe('TeamCalendarPage landing additions — Dashboard merge (2026-09-01)', 
     dateTo: '2026-06-17',
     workingDays: 2,
     status: 'PENDING',
-  }
+  })
 
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-06-15T12:00:00Z') })

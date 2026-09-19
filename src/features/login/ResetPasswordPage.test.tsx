@@ -6,11 +6,15 @@ import { ResetPasswordPage } from './ResetPasswordPage'
 
 vi.mock('../../api/client', () => ({
   postResetPassword: vi.fn(),
+  // Mirrors the real ApiError's actual (status, problem) constructor (src/api/client.ts) -- this
+  // local double used to take a redundant (status, message, problem) shape that only happened to
+  // type-check because `vi.mock` factories are invisible to tsc, which was still checking call
+  // sites against the real 2-arg class.
   ApiError: class ApiError extends Error {
     status: number
     problem?: { type?: string }
-    constructor(status: number, message: string, problem?: { type?: string }) {
-      super(message)
+    constructor(status: number, problem?: { type?: string }) {
+      super('mock api error')
       this.status = status
       this.problem = problem
     }
@@ -108,7 +112,7 @@ describe('ResetPasswordPage', () => {
     const user = userEvent.setup()
     const { postResetPassword, ApiError } = await import('../../api/client')
     vi.mocked(postResetPassword).mockRejectedValueOnce(
-      new ApiError(400, 'invalid', {
+      new ApiError(400, {
         type: 'https://leaveo.net/errors/reset-token-invalid',
       }),
     )

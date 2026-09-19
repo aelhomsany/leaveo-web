@@ -5,32 +5,37 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import { ApiError } from '../../api/client'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
-import type { PreviewLeaveRequestResponse, ProblemDetail } from '../../api/generated/types'
+import { mockPreviewLeaveRequestResponse } from '../../test/apiFixtures'
+import type { LeaveTypeResponse, ProblemDetail } from '../../api/generated/types'
 import i18n from '../../i18n/config'
 import { RequestLeaveModal } from './RequestLeaveModal'
 
-const mockLeaveTypes = [
+const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: 'public-1',
     name: 'Annual Leave',
     icon: '🌴',
     color: '#093C5D',
     backgroundColor: '#D6E8ED',
     borderColor: '#0E4F75',
+    presenceType: 'OFF',
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
 ]
 
 function renderModal(onClose = vi.fn()) {
   vi.spyOn(apiClient, 'getLeaveTypes').mockResolvedValue(mockLeaveTypes)
-  vi.spyOn(apiClient, 'previewLeaveRequest').mockResolvedValue({
+  vi.spyOn(apiClient, 'previewLeaveRequest').mockResolvedValue(mockPreviewLeaveRequestResponse({
     workingDays: 2,
     chargedDays: 2,
     excludedWeekends: 0,
     excludedHolidays: 0,
     workforceGroupName: 'US',
-  } satisfies PreviewLeaveRequestResponse)
+  }))
 
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },

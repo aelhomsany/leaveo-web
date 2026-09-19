@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import type { PendingApprovalResponse, RecentApprovalDecisionResponse } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockPendingApprovalResponse } from '../../test/apiFixtures'
 import { ToastProvider } from '../../components/ui/ToastProvider'
 import { ApprovalsPage } from './ApprovalsPage'
 
@@ -20,16 +21,10 @@ type EnrichedPending = PendingApprovalResponse & {
 }
 
 const mockPending: EnrichedPending[] = [
-  {
+  mockPendingApprovalResponse({
     requestId: 101,
     employeeUserId: 7,
     employeeFullName: 'Sarah Chen',
-    leaveTypeId: 1,
-    leaveTypeName: 'Annual Leave',
-    leaveTypeIcon: 'leave',
-    leaveTypeColor: '#093C5D',
-    leaveTypeBackgroundColor: '#D6E8ED',
-    leaveTypeBorderColor: '#0E4F75',
     dateFrom: '2026-06-15',
     dateTo: '2026-06-17',
     workingDays: 2,
@@ -41,17 +36,11 @@ const mockPending: EnrichedPending[] = [
     balanceAfterApproval: 10,
     balanceSufficient: true,
     submittedAt: '2026-06-01T10:00:00Z',
-  },
-  {
+  }),
+  mockPendingApprovalResponse({
     requestId: 102,
     employeeUserId: 8,
     employeeFullName: 'Jamie Lee',
-    leaveTypeId: 1,
-    leaveTypeName: 'Annual Leave',
-    leaveTypeIcon: 'leave',
-    leaveTypeColor: '#093C5D',
-    leaveTypeBackgroundColor: '#D6E8ED',
-    leaveTypeBorderColor: '#0E4F75',
     dateFrom: '2026-06-20',
     dateTo: '2026-06-20',
     workingDays: 1,
@@ -63,7 +52,7 @@ const mockPending: EnrichedPending[] = [
     balanceAfterApproval: 7,
     balanceSufficient: true,
     submittedAt: '2026-06-02T10:00:00Z',
-  },
+  }),
 ]
 
 const mockZeroDay: EnrichedPending[] = [

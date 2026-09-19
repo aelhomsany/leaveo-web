@@ -43,36 +43,36 @@ describe('contracted execution reporter', () => {
     vi.unstubAllEnvs()
   })
 
-  it('fails a run where a selected @api P0 suite executed nothing', () => {
+  it('fails a run where a selected @api P0 suite executed nothing', async () => {
     vi.stubEnv('E2E_REQUIRE_CONTRACTED', 'true')
-    expect(run([apiP0], ['skipped'])).toEqual({ status: 'failed' })
+    await expect(run([apiP0], ['skipped'])).resolves.toEqual({ status: 'failed' })
   })
 
-  it('passes when the contracted suite actually ran', () => {
+  it('passes when the contracted suite actually ran', async () => {
     vi.stubEnv('E2E_REQUIRE_CONTRACTED', 'true')
-    expect(run([apiP0], ['passed'])).toBeUndefined()
+    await expect(run([apiP0], ['passed'])).resolves.toBeUndefined()
   })
 
-  it('passes when one test in the suite ran and another was skipped', () => {
+  it('passes when one test in the suite ran and another was skipped', async () => {
     vi.stubEnv('E2E_REQUIRE_CONTRACTED', 'true')
     const second = { ...apiP0, title: '[P0] Given recovery, When it runs, Then no second charge' }
-    expect(run([apiP0, second], ['passed', 'skipped'])).toBeUndefined()
+    await expect(run([apiP0, second], ['passed', 'skipped'])).resolves.toBeUndefined()
   })
 
-  it('ignores a skipped @ui-only P0 suite, which needs an artifact this runner does not build', () => {
+  it('ignores a skipped @ui-only P0 suite, which needs an artifact this runner does not build', async () => {
     vi.stubEnv('E2E_REQUIRE_CONTRACTED', 'true')
     const uiOnly = { ...apiP0, tags: ['@regression', '@ui-only', '@story-12-4'] }
-    expect(run([uiOnly], ['skipped'])).toBeUndefined()
+    await expect(run([uiOnly], ['skipped'])).resolves.toBeUndefined()
   })
 
-  it('ignores a skipped @api suite with no P0 test', () => {
+  it('ignores a skipped @api suite with no P0 test', async () => {
     vi.stubEnv('E2E_REQUIRE_CONTRACTED', 'true')
     const p1 = { ...apiP0, title: '[P1] Given a layout, When it reflows, Then nothing overflows' }
-    expect(run([p1], ['skipped'])).toBeUndefined()
+    await expect(run([p1], ['skipped'])).resolves.toBeUndefined()
   })
 
-  it('stays inert unless the runner opts in, so ad-hoc commands are unaffected', () => {
+  it('stays inert unless the runner opts in, so ad-hoc commands are unaffected', async () => {
     vi.stubEnv('E2E_REQUIRE_CONTRACTED', '')
-    expect(run([apiP0], ['skipped'])).toBeUndefined()
+    await expect(run([apiP0], ['skipped'])).resolves.toBeUndefined()
   })
 })

@@ -11,7 +11,7 @@ import {
 import { vi } from "vitest";
 import { ApiError } from "../../api/client";
 import * as api from "../../api/client";
-import type { PolicyPreviewResponse } from "../../api/generated/types";
+import type { PolicyHistoryItem, PolicyPreviewResponse } from "../../api/generated/types";
 import { ToastProvider } from "../../components/ui/ToastProvider";
 import {
   AuthTestProvider,
@@ -94,7 +94,39 @@ const preview: PolicyPreviewResponse = {
     "ALLOWANCE_BELOW_USED:member-1",
     "NO_ACTIVE_MEMBERS_IN_SCOPE",
   ],
+  carryoverEnabled: false,
+  carryoverMaxDays: null,
+  carryoverDeadlineMonth: null,
+  carryoverDeadlineDay: null,
+  carryoverRepeat: false,
 };
+
+/** A realistic published history entry: no carryover rule, real fields filled by the four tests
+ * below that only care about a subset of them. */
+function mockPolicyHistoryItem(
+  overrides: Partial<PolicyHistoryItem> = {},
+): PolicyHistoryItem {
+  return {
+    publicationPublicId: "publication-1",
+    versionPublicId: "version-1",
+    assignmentPublicId: "assignment-1",
+    versionNumber: 1,
+    mode: "ANNUAL_ALLOWANCE",
+    allowanceDays: 20,
+    scope: "ORGANIZATION",
+    subjectPublicId: "",
+    effectiveFrom: "2027-01-01",
+    publishedByUserPublicId: "publisher-1",
+    publishedAt: "2026-08-26T10:01:00Z",
+    impactSummary: { affectedMemberCount: 1, conflictCount: 0 },
+    carryoverEnabled: false,
+    carryoverMaxDays: null,
+    carryoverDeadlineMonth: null,
+    carryoverDeadlineDay: null,
+    carryoverRepeat: false,
+    ...overrides,
+  };
+}
 
 function mockBase(
   history: Awaited<ReturnType<typeof api.getPolicyHistory>> = [],
@@ -285,20 +317,10 @@ describe("PolicySettingsPage", () => {
     vi.mocked(api.getPolicyHistory)
       .mockResolvedValueOnce([])
       .mockResolvedValue([
-        {
-          publicationPublicId: "publication-1",
-          versionPublicId: "version-1",
-          assignmentPublicId: "assignment-1",
-          versionNumber: 1,
-          mode: "ANNUAL_ALLOWANCE",
-          allowanceDays: 20,
+        mockPolicyHistoryItem({
           scope: "WORKFORCE_GROUP",
           subjectPublicId: "group-1",
-          effectiveFrom: "2027-01-01",
-          publishedByUserPublicId: "publisher-1",
-          publishedAt: "2026-08-26T10:01:00Z",
-          impactSummary: { affectedMemberCount: 1, conflictCount: 0 },
-        },
+        }),
       ]);
     vi.spyOn(api, "previewPolicy").mockResolvedValue(preview);
     const publish = vi
@@ -307,11 +329,15 @@ describe("PolicySettingsPage", () => {
       .mockResolvedValueOnce({
         publicationPublicId: "publication-1",
         policyPublicId: "policy-1",
-        policyVersionPublicId: "version-1",
+        // Was "policyVersionPublicId" (a typo -- PolicyPublicationResponse has no such field) and
+        // carried a "replayed" field the real DTO doesn't have either and nothing here reads;
+        // affectedMemberCount/conflictCount are the two fields that were missing outright.
+        versionPublicId: "version-1",
         assignmentPublicId: "assignment-1",
         versionNumber: 1,
         publishedAt: "2026-08-26T10:01:00Z",
-        replayed: true,
+        affectedMemberCount: 1,
+        conflictCount: 0,
       });
     renderPage();
     await user.click(
@@ -340,48 +366,43 @@ describe("PolicySettingsPage", () => {
 
   it("[P0] renders complete ordered named history and retries an error into the empty state", async () => {
     mockBase([
-      {
+      mockPolicyHistoryItem({
         publicationPublicId: "pub-0",
         versionPublicId: "v0",
         assignmentPublicId: "a0",
         versionNumber: 0,
-        mode: "ANNUAL_ALLOWANCE",
         allowanceDays: 16,
-        scope: "ORGANIZATION",
         subjectPublicId: "",
         effectiveFrom: "2025-01-01",
         publishedByUserPublicId: "unmapped-publisher-id",
         publishedAt: "2024-08-26T11:00:00Z",
         impactSummary: { affectedMemberCount: 1, conflictCount: 0 },
-      },
-      {
+      }),
+      mockPolicyHistoryItem({
         publicationPublicId: "pub-1",
         versionPublicId: "v1",
         assignmentPublicId: "a1",
         versionNumber: 1,
-        mode: "ANNUAL_ALLOWANCE",
         allowanceDays: 18,
-        scope: "ORGANIZATION",
         subjectPublicId: "",
         effectiveFrom: "2026-01-01",
         publishedByUserPublicId: "publisher-1",
         publishedAt: "2025-08-26T11:00:00Z",
         impactSummary: { affectedMemberCount: 1, conflictCount: 0 },
-      },
-      {
+      }),
+      mockPolicyHistoryItem({
         publicationPublicId: "pub-2",
         versionPublicId: "v2",
         assignmentPublicId: "a2",
         versionNumber: 2,
         mode: "UNLIMITED",
         allowanceDays: null,
-        scope: "ORGANIZATION",
         subjectPublicId: "",
         effectiveFrom: "2027-01-01",
         publishedByUserPublicId: "publisher-1",
         publishedAt: "2026-08-26T11:00:00Z",
         impactSummary: { affectedMemberCount: 2, conflictCount: 3 },
-      },
+      }),
     ]);
     const view = renderPage();
     expect(await screen.findByText("Version 2")).toBeInTheDocument();

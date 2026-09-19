@@ -101,10 +101,10 @@ describe('CorrectionsPage', () => {
       createdAt: '2026-08-27T00:00:00Z',
       beforeRemainingDays: 20,
       afterRemainingDays: 18,
-      compensationOfId: undefined,
+      compensationOfId: null,
       notificationRequested: false,
       notificationSent: false,
-    } as BalanceCorrectionResponse)
+    })
 
     const user = userEvent.setup()
     renderPage()

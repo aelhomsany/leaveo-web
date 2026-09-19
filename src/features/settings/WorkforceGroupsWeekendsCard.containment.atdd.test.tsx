@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockWorkforceGroup } from '../../test/apiFixtures'
 import { SettingsCategoryNav } from './SettingsCategoryNav'
 import { SETTINGS_CATEGORIES } from './settingsCategories'
 import { WorkforceGroupsWeekendsCard } from './WorkforceGroupsWeekendsCard'
@@ -53,9 +54,9 @@ describe('WorkforceGroupsWeekendsCard containment ATDD — Story 10.9', () => {
     async () => {
       const user = userEvent.setup()
       vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-        { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-        { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] },
-        { id: 3, name: 'Remote EMEA', weekendDays: ['SATURDAY', 'SUNDAY'] },
+        mockWorkforceGroup({ id: 1, name: 'US' }),
+        mockWorkforceGroup({ id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] }),
+        mockWorkforceGroup({ id: 3, name: 'Remote EMEA' }),
       ])
       vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue([])
 
@@ -87,9 +88,9 @@ describe('WorkforceGroupsWeekendsCard containment ATDD — Story 10.9', () => {
     async () => {
       const user = userEvent.setup()
       vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-        { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-        { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] },
-        { id: 3, name: 'Remote EMEA', weekendDays: ['SATURDAY', 'SUNDAY'] },
+        mockWorkforceGroup({ id: 1, name: 'US' }),
+        mockWorkforceGroup({ id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] }),
+        mockWorkforceGroup({ id: 3, name: 'Remote EMEA' }),
       ])
       vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue([])
 
@@ -116,9 +117,9 @@ describe('WorkforceGroupsWeekendsCard containment ATDD — Story 10.9', () => {
   test('[P0] Home and End jump to the first and last workforce group tabs', async () => {
     const user = userEvent.setup()
     vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-      { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-      { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] },
-      { id: 3, name: 'Remote EMEA', weekendDays: ['SATURDAY', 'SUNDAY'] },
+      mockWorkforceGroup({ id: 1, name: 'US' }),
+      mockWorkforceGroup({ id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] }),
+      mockWorkforceGroup({ id: 3, name: 'Remote EMEA' }),
     ])
     vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue([])
 

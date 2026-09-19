@@ -26,6 +26,7 @@ const base: CalendarAbsenceResponse = {
   dateTo: '2026-06-12',
   workingDays: 3,
   workingDates: ['2026-06-10', '2026-06-11', '2026-06-12'],
+  dayParts: ['FULL', 'FULL', 'FULL'],
   canViewRequestContext: true,
   viewerRelationship: 'ORGANIZATION_ADMIN',
 }

@@ -21,8 +21,7 @@
   "dayParts": {
     "FIRST_HALF": "Morning",
     "FULL": "Whole day",
-    "SECOND_HALF": "Afternoon",
-    "halfDay": "Half day"
+    "SECOND_HALF": "Afternoon"
   },
   "handoff": {
     "title": "Signing you in",

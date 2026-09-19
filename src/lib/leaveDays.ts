@@ -35,27 +35,3 @@ export function formatLeaveDays(days: number | null | undefined): string {
   }
   return Number.isInteger(days) ? String(days) : days.toFixed(1)
 }
-
-/** Whether a day count includes a half -- 0.5, 2.5, but not 3. */
-export function isHalfDayCount(days: number | null | undefined): boolean {
-  return days != null && !Number.isNaN(days) && !Number.isInteger(days)
-}
-
-/** Whether any of a request's charged days is a half. */
-export function hasHalfDayPart(parts: readonly DayPart[] | null | undefined): boolean {
-  return parts != null && parts.some((part) => part !== FULL_DAY)
-}
-
-/**
- * The single part a whole request reduces to, or null when it is not that simple.
- *
- * Only the boundary days may be half, so a request is "a morning" or "an afternoon" exactly when it
- * charges one day. Anything longer gets its half shown as a fraction of days instead, which is the
- * only honest summary of "Friday afternoon through Monday lunchtime".
- */
-export function singleDayPart(parts: readonly DayPart[] | null | undefined): DayPart | null {
-  if (parts == null || parts.length !== 1 || parts[0] === FULL_DAY) {
-    return null
-  }
-  return parts[0]
-}

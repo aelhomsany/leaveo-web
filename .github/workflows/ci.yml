@@ -42,6 +42,10 @@ jobs:
       - run: npm ci
       - run: npm run verify:i18n
       - run: npm run build
+      # The build type-checks production code only: tsconfig.app.json excludes every test file, and
+      # tests/ sits in no config at all. Unchecked, the tests drifted to 299 errors against the
+      # generated API types before this step existed (2026-09-18).
+      - run: npm run typecheck:tests
       - run: npm test -- --run
 
   e2e:

@@ -5,36 +5,45 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { vi } from 'vitest'
 import * as apiClient from '../../api/client'
-import type { LeaveTypeResponse, TeamMemberSummaryResponse } from '../../api/generated/types'
+import type { LeaveTypeResponse } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockTeamMemberSummary, mockWorkforceGroup } from '../../test/apiFixtures'
 import { ToastProvider } from '../../components/ui/ToastProvider'
 import { SettingsPage } from './SettingsPage'
 
 const mockLeaveTypes: LeaveTypeResponse[] = [
   {
     id: 1,
+    publicId: 'public-1',
     name: 'Annual Leave',
     icon: '🏖️',
     color: '#093C5D',
     backgroundColor: '#D6E8ED',
     borderColor: '#0E4F75',
+    presenceType: 'OFF',
     defaultBalanceDays: 20,
     displayOrder: 1,
+    active: true,
+    halfDayAllowed: true,
   },
   {
     id: 5,
+    publicId: 'public-5',
     name: 'Unpaid Leave',
     icon: '📋',
     color: '#5A7A80',
     backgroundColor: '#ECF4E8',
     borderColor: '#B8DCC4',
+    presenceType: 'OFF',
     defaultBalanceDays: null,
     displayOrder: 5,
+    active: true,
+    halfDayAllowed: false,
   },
 ]
 
-const mockTeamMembers: TeamMemberSummaryResponse[] = [
-  {
+const mockTeamMembers = [
+  mockTeamMemberSummary({
     id: 1,
     fullName: 'Jordan Lee',
     email: 'jordan@company.com',
@@ -42,9 +51,7 @@ const mockTeamMembers: TeamMemberSummaryResponse[] = [
     role: 'ORGANIZATION_ADMIN',
     workforceGroupId: 1,
     workforceGroupName: 'US',
-    managerId: undefined,
-    managerName: undefined,
-  },
+  }),
 ]
 
 function renderSettingsPage(initialPath = '/settings') {
@@ -67,8 +74,8 @@ function renderSettingsPage(initialPath = '/settings') {
 
 function mockSettingsApis() {
   vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-    { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
-    { id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] },
+    mockWorkforceGroup({ id: 1, name: 'US' }),
+    mockWorkforceGroup({ id: 2, name: 'Egypt', weekendDays: ['FRIDAY', 'SATURDAY'] }),
   ])
   vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue([
     {

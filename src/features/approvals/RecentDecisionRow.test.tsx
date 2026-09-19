@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { beforeAll, describe, expect, it } from 'vitest'
 import i18n from '../../i18n/config'
 import type { RecentApprovalDecisionResponse } from '../../api/generated/types'
+import { mockRecentApprovalDecision } from '../../test/apiFixtures'
 import { RecentDecisionRow } from './RecentDecisionRow'
 
 function renderRow(decision: RecentApprovalDecisionResponse) {
@@ -17,7 +18,7 @@ function renderRow(decision: RecentApprovalDecisionResponse) {
 function baseDecision(
   overrides: Partial<RecentApprovalDecisionResponse> = {},
 ): RecentApprovalDecisionResponse {
-  return {
+  return mockRecentApprovalDecision({
     requestId: 1,
     employeeFullName: 'Riley Report',
     leaveTypeName: 'Annual Leave',
@@ -27,7 +28,7 @@ function baseDecision(
     actorFirstName: 'Alex',
     decidedAt: '2026-08-12T10:00:00Z',
     ...overrides,
-  }
+  })
 }
 
 describe('RecentDecisionRow', () => {

@@ -11,6 +11,7 @@ import type {
   UpcomingAbsenceResponse,
 } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockLeaveRequestResponse } from '../../test/apiFixtures'
 import { ToastProvider } from '../../components/ui/ToastProvider'
 import { ApprovalsPage } from './ApprovalsPage'
 import i18n from '../../i18n/config'
@@ -59,6 +60,12 @@ const mockPendingApprovals: PendingApprovalResponse[] = [
     note: 'Family trip',
     workforceGroupName: 'US',
     overlappingApprovedAbsences: 0,
+    approvalLevel: 1,
+    decidedOnBehalf: false,
+    nominalApproverFirstName: null,
+    balanceCarryoverAvailable: null,
+    carryoverDaysToUse: null,
+    carryoverExpiresOn: null,
   },
 ]
 
@@ -77,9 +84,11 @@ const mockRecentDecisions: RecentApprovalDecisionResponse[] = [
     dateTo: '2026-05-03',
     workingDays: 2,
     status: 'APPROVED',
+    decisionResult: 'APPROVED',
     actorFirstName: 'Alex',
     decidedAt: '2026-05-02T10:00:00Z',
     decidedOnBehalf: false,
+    nominalApproverFirstName: null,
   },
 ]
 
@@ -287,14 +296,9 @@ describe('ApprovalsPage', () => {
 
   it('[P1] approve fires mutation, shows durable success feedback, and invalidates related queries', async () => {
     vi.spyOn(apiClient, 'getPendingApprovals').mockResolvedValue(mockPendingApprovals)
-    const approveSpy = vi.spyOn(apiClient, 'approveLeaveRequest').mockResolvedValue({
-      id: 101,
-      leaveTypeId: 1,
-      dateFrom: '2026-06-15',
-      dateTo: '2026-06-17',
-      days: 2,
-      status: 'APPROVED',
-    })
+    const approveSpy = vi.spyOn(apiClient, 'approveLeaveRequest').mockResolvedValue(
+      mockLeaveRequestResponse(),
+    )
 
     const { queryClient } = renderApprovalsPage('MANAGER')
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
@@ -334,14 +338,9 @@ describe('ApprovalsPage', () => {
       approvalEvidence: [],
     }
     vi.spyOn(apiClient, 'getPendingApprovals').mockResolvedValue([levelTwoApproval])
-    const concernSpy = vi.spyOn(apiClient, 'recordApprovalConcern').mockResolvedValue({
-      id: 101,
-      leaveTypeId: 1,
-      dateFrom: '2026-06-15',
-      dateTo: '2026-06-17',
-      days: 2,
-      status: 'APPROVED',
-    })
+    const concernSpy = vi.spyOn(apiClient, 'recordApprovalConcern').mockResolvedValue(
+      mockLeaveRequestResponse(),
+    )
     const user = userEvent.setup()
 
     renderApprovalsPage('MANAGER')
@@ -406,15 +405,9 @@ describe('ApprovalsPage', () => {
 
   it('[P1] decline fires mutation, shows durable success feedback, and invalidates related queries', async () => {
     vi.spyOn(apiClient, 'getPendingApprovals').mockResolvedValue(mockPendingApprovals)
-    const declineSpy = vi.spyOn(apiClient, 'declineLeaveRequest').mockResolvedValue({
-      id: 101,
-      leaveTypeId: 1,
-      dateFrom: '2026-06-15',
-      dateTo: '2026-06-17',
-      days: 2,
-      status: 'DECLINED',
-      declineReason: 'Coverage gap that week',
-    })
+    const declineSpy = vi.spyOn(apiClient, 'declineLeaveRequest').mockResolvedValue(
+      mockLeaveRequestResponse({ status: 'DECLINED', declineReason: 'Coverage gap that week' }),
+    )
 
     const { queryClient } = renderApprovalsPage('MANAGER')
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
@@ -490,14 +483,7 @@ describe('ApprovalsPage', () => {
 
   it('[P1] approve invalidates pending count and recent decisions queries', async () => {
     vi.spyOn(apiClient, 'getPendingApprovals').mockResolvedValue(mockPendingApprovals)
-    vi.spyOn(apiClient, 'approveLeaveRequest').mockResolvedValue({
-      id: 101,
-      leaveTypeId: 1,
-      dateFrom: '2026-06-15',
-      dateTo: '2026-06-17',
-      days: 2,
-      status: 'APPROVED',
-    })
+    vi.spyOn(apiClient, 'approveLeaveRequest').mockResolvedValue(mockLeaveRequestResponse())
 
     const { queryClient } = renderApprovalsPage('MANAGER')
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
@@ -525,14 +511,7 @@ describe('ApprovalsPage', () => {
     vi.spyOn(apiClient, 'getPendingApprovals')
       .mockResolvedValueOnce([levelOne])
       .mockResolvedValue([levelTwo])
-    vi.spyOn(apiClient, 'approveLeaveRequest').mockResolvedValue({
-      id: 101,
-      leaveTypeId: 1,
-      dateFrom: '2026-06-15',
-      dateTo: '2026-06-17',
-      days: 2,
-      status: 'APPROVED',
-    })
+    vi.spyOn(apiClient, 'approveLeaveRequest').mockResolvedValue(mockLeaveRequestResponse())
     const user = userEvent.setup()
 
     renderApprovalsPage('MANAGER')
@@ -560,9 +539,11 @@ describe('ApprovalsPage', () => {
       dateTo: '2026-06-17',
       workingDays: 2,
       status: 'APPROVED',
+      decisionResult: 'APPROVED',
       actorFirstName: 'Alex',
       decidedAt: '2026-06-21T10:00:00Z',
       decidedOnBehalf: false,
+      nominalApproverFirstName: null,
     }
 
     vi.spyOn(apiClient, 'getPendingApprovals')
@@ -571,14 +552,7 @@ describe('ApprovalsPage', () => {
     vi.spyOn(apiClient, 'getRecentApprovalDecisions')
       .mockResolvedValueOnce([])
       .mockResolvedValue([approvedDecision])
-    vi.spyOn(apiClient, 'approveLeaveRequest').mockResolvedValue({
-      id: 101,
-      leaveTypeId: 1,
-      dateFrom: '2026-06-15',
-      dateTo: '2026-06-17',
-      days: 2,
-      status: 'APPROVED',
-    })
+    vi.spyOn(apiClient, 'approveLeaveRequest').mockResolvedValue(mockLeaveRequestResponse())
 
     const user = userEvent.setup()
     renderApprovalsPage('MANAGER')
@@ -598,15 +572,9 @@ describe('ApprovalsPage', () => {
 
   it('[P1] decline invalidates pending count and recent decisions queries', async () => {
     vi.spyOn(apiClient, 'getPendingApprovals').mockResolvedValue(mockPendingApprovals)
-    vi.spyOn(apiClient, 'declineLeaveRequest').mockResolvedValue({
-      id: 101,
-      leaveTypeId: 1,
-      dateFrom: '2026-06-15',
-      dateTo: '2026-06-17',
-      days: 2,
-      status: 'DECLINED',
-      declineReason: 'Coverage gap that week',
-    })
+    vi.spyOn(apiClient, 'declineLeaveRequest').mockResolvedValue(
+      mockLeaveRequestResponse({ status: 'DECLINED', declineReason: 'Coverage gap that week' }),
+    )
 
     const { queryClient } = renderApprovalsPage('MANAGER')
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')

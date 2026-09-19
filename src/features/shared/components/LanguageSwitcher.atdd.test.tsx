@@ -4,7 +4,9 @@ import { LanguageSwitcher } from './LanguageSwitcher'
 
 describe('LanguageSwitcher ATDD — Story 9.4', () => {
   it.todo('[P1] Desktop language switcher (Globe button + label) in Header', () => {
-    render(<LanguageSwitcher variant="desktop" />)
+    // The shipped component takes a `compact` boolean, not a `variant` string --
+    // this scaffold predates that API (still a RED-phase todo, never executed).
+    render(<LanguageSwitcher compact={false} />)
 
     const button = screen.getByRole('button', { name: /change language/i })
     expect(button).toBeInTheDocument()
@@ -12,7 +14,7 @@ describe('LanguageSwitcher ATDD — Story 9.4', () => {
   })
 
   it.todo('[P1] Mobile language picker inside UserMenu', () => {
-    render(<LanguageSwitcher variant="mobile" />)
+    render(<LanguageSwitcher compact />)
 
     // Mobile uses a list or combobox inside the UserMenu drawer
     expect(screen.getByRole('combobox', { name: /select language/i })).toBeInTheDocument()

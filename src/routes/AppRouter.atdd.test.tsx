@@ -12,6 +12,7 @@ import {
   createMockAuthValue,
 } from '../test/authTestUtils'
 import { mockCalendarMonth } from '../features/calendar/calendarTestFixtures'
+import { mockWorkforceGroup } from '../test/apiFixtures'
 import { AppRoutes } from './AppRouter'
 import { ToastProvider } from '../components/ui/ToastProvider'
 
@@ -40,7 +41,7 @@ describe('AppRouter page identity ATDD — Story 10.1', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-06-15T12:00:00Z') })
     vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-      { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
+      mockWorkforceGroup({ id: 1, name: 'US' }),
     ])
     vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue([])
     vi.spyOn(apiClient, 'getDashboardBalances').mockResolvedValue([])
@@ -111,7 +112,7 @@ describe('AppRouter profile route ATDD — Story 9.3', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-06-15T12:00:00Z') })
     vi.spyOn(apiClient, 'getWorkforceGroups').mockResolvedValue([
-      { id: 1, name: 'US', weekendDays: ['SATURDAY', 'SUNDAY'] },
+      mockWorkforceGroup({ id: 1, name: 'US' }),
     ])
     vi.spyOn(apiClient, 'getPublicHolidays').mockResolvedValue([])
     vi.spyOn(apiClient, 'getDashboardBalances').mockResolvedValue([])

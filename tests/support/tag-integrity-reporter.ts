@@ -11,6 +11,7 @@ type ManifestSuite = {
 type TagManifest = {
   version: number
   suites: Record<string, ManifestSuite>
+  permanentlySkippedTests?: string[]
 }
 
 const manifestPath = fileURLToPath(new URL('../e2e/tag-manifest.json', import.meta.url))
@@ -24,8 +25,8 @@ const storyTagPattern = /^@story-\d+-\d+$/
 const reservedTagTokenPattern = /@(smoke|regression|api|ui-only|a11y|keyboard|story-[^\s:]*)/
 const expectedTagCounts = new Map([
   ['@smoke', 7],
-  ['@regression', 104],
-  ['@api', 82],
+  ['@regression', 105],
+  ['@api', 83],
   ['@ui-only', 22],
 ])
 const approvedSmokeIdentities = new Set([
@@ -256,7 +257,7 @@ class TagIntegrityReporter implements Reporter {
     }
   }
 
-  onEnd(): { status?: FullResult['status'] } | void {
+  async onEnd(): Promise<{ status?: FullResult['status'] } | void> {
     if (this.diagnostics.length === 0) {
       process.stdout.write(`E2E tag integrity passed (${Object.keys(manifest.suites).length} suites).\n`)
       return

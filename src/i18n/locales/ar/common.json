@@ -21,8 +21,7 @@
   "dayParts": {
     "FIRST_HALF": "صباحًا",
     "FULL": "يوم كامل",
-    "SECOND_HALF": "بعد الظهر",
-    "halfDay": "نصف يوم"
+    "SECOND_HALF": "بعد الظهر"
   },
   "handoff": {
     "title": "جارٍ تسجيل الدخول",

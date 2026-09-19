@@ -5,6 +5,7 @@ import { vi } from 'vitest'
 import * as apiClient from '../../api/client'
 import type { BalanceCardResponse, RecentRequestResponse } from '../../api/generated/types'
 import { AuthTestProvider, createMockAuthForRole } from '../../test/authTestUtils'
+import { mockRecentRequestResponse } from '../../test/apiFixtures'
 import { ToastProvider } from '../../components/ui/ToastProvider'
 import { MyLeavesPage } from './MyLeavesPage'
 
@@ -38,7 +39,7 @@ const mockBalances: BalanceCardResponse[] = [
 ]
 
 const mockHistory: RecentRequestResponse[] = [
-  {
+  mockRecentRequestResponse({
     id: 3,
     leaveTypeId: 1,
     leaveTypeName: 'Annual Leave',
@@ -53,8 +54,8 @@ const mockHistory: RecentRequestResponse[] = [
     statusHint: 'Approved by Alex',
     declineReason: null,
     approverFirstName: 'Alex',
-  },
-  {
+  }),
+  mockRecentRequestResponse({
     id: 2,
     leaveTypeId: 2,
     leaveTypeName: 'Sick Leave',
@@ -69,8 +70,8 @@ const mockHistory: RecentRequestResponse[] = [
     statusHint: null,
     declineReason: 'Team needs in-office coverage for sprint review',
     approverFirstName: null,
-  },
-  {
+  }),
+  mockRecentRequestResponse({
     id: 1,
     leaveTypeId: 1,
     leaveTypeName: 'Annual Leave',
@@ -85,7 +86,7 @@ const mockHistory: RecentRequestResponse[] = [
     statusHint: 'Waiting for approval',
     declineReason: null,
     approverFirstName: null,
-  },
+  }),
 ]
 
 type MyLeavesApiClient = typeof apiClient & {
