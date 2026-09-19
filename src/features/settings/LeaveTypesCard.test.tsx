@@ -10,7 +10,6 @@ import {
   AuthTestProvider,
   createMockAuthForRole,
 } from "../../test/authTestUtils";
-import { mockLeaveTypePolicySummary } from "../../test/apiFixtures";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { LeaveTypesCard } from "./LeaveTypesCard";
 
@@ -143,11 +142,6 @@ describe("LeaveTypesCard", () => {
     vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(
       mockLeaveTypes,
     );
-    vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-      leaveTypes: [],
-      users: [],
-      workforceGroups: [],
-    });
 
     renderLeaveTypesCard();
 
@@ -172,11 +166,6 @@ describe("LeaveTypesCard", () => {
     vi.spyOn(apiClient, "getManagedLeaveTypes").mockRejectedValue(
       new Error("fail"),
     );
-    vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-      leaveTypes: [],
-      users: [],
-      workforceGroups: [],
-    });
 
     renderLeaveTypesCard(onWarning);
 
@@ -195,11 +184,6 @@ describe("LeaveTypesCard", () => {
         active: true,
       })),
     );
-    vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-      leaveTypes: [],
-      users: [],
-      workforceGroups: [],
-    });
     vi.spyOn(apiClient, "deactivateLeaveType").mockResolvedValue({
       ...mockLeaveTypes[0],
       publicId: "public-1",
@@ -240,11 +224,6 @@ describe("LeaveTypesCard", () => {
         active: true,
       }));
     vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(types);
-    vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-      leaveTypes: [],
-      users: [],
-      workforceGroups: [],
-    });
     const create = vi
       .spyOn(apiClient, "createLeaveType")
       .mockRejectedValueOnce(
@@ -340,11 +319,6 @@ describe("LeaveTypesCard", () => {
         active: index === 0,
       }));
     vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(types);
-    vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-      leaveTypes: [],
-      users: [],
-      workforceGroups: [],
-    });
     vi.spyOn(apiClient, "reorderLeaveTypes").mockRejectedValue(
       new Error("reorder"),
     );
@@ -417,159 +391,27 @@ describe("LeaveTypesCard", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("[P0] resumes the existing draft and creates then navigates when no draft exists", async () => {
+  it("[P0] opens each Leave Type's allowance rules at the type's own URL", async () => {
     const user = userEvent.setup();
-    const types = mockLeaveTypes
-      .slice(0, 2)
-      .map((item, index) => ({
-        ...item,
-        publicId: `public-${index + 1}`,
-        presenceType: "OFF" as const,
-        active: true,
-      }));
-    vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(types);
-    vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-      leaveTypes: [
-        {
-          ...types[0],
-          leaveTypePublicId: "public-1",
-          policyPublicId: "policy-1",
-          latestDraft: { draftPublicId: "existing-draft", revision: 2 },
-        },
-        {
-          ...types[1],
-          leaveTypePublicId: "public-2",
-          policyPublicId: "policy-2",
-          latestDraft: null,
-        },
-      ],
-      users: [],
-      workforceGroups: [],
-    });
-    vi.spyOn(apiClient, "createPolicyDraft").mockResolvedValue({
-      policyPublicId: "policy-2",
-      draftPublicId: "new-draft",
-      leaveTypePublicId: "public-2",
-      mode: "ANNUAL_ALLOWANCE",
-      allowanceDays: 10,
-      balancePeriod: "CALENDAR_YEAR",
-      scope: "ORGANIZATION",
-      subjectPublicId: null,
-      effectiveFrom: "2027-01-01",
-      revision: 0,
-      consumed: false,
-      carryoverEnabled: false,
-      carryoverMaxDays: null,
-      carryoverDeadlineMonth: null,
-      carryoverDeadlineDay: null,
-      carryoverRepeat: false,
-    });
-    const first = renderLeaveTypesCard();
-    await user.click(
-      await screen.findByRole("button", { name: /resume draft/i }),
+    vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(
+      mockLeaveTypes.slice(0, 2),
     );
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "/settings/leave-policies/existing-draft",
-    );
-    first.unmount();
-    renderLeaveTypesCard();
-    await user.click(
-      await screen.findByRole("button", { name: /configure policy/i }),
-    );
-    await waitFor(() =>
-      expect(apiClient.createPolicyDraft).toHaveBeenCalledWith(
-        expect.objectContaining({ leaveTypePublicId: "public-2" }),
-      ),
-    );
-    // Navigation happens in the mutation's onSuccess, so the waitFor above -- which only
-    // proves the request was issued -- can pass while the promise is still pending.
-    await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent(
-        "/settings/leave-policies/new-draft",
-      ),
-    );
-  });
-
-  it("[P0] blocks policy actions until failed overview retry restores authoritative resume/create choices", async () => {
-    const user = userEvent.setup();
-    const types = mockLeaveTypes.slice(0, 2).map((item, index) => ({
-      ...item,
-      publicId: `public-${index + 1}`,
-      presenceType: "OFF" as const,
-      active: true,
-    }));
-    vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(types);
-    vi.spyOn(apiClient, "getPolicySettingsOverview")
-      .mockRejectedValueOnce(new Error("overview"))
-      .mockResolvedValueOnce({
-        leaveTypes: [
-          { ...types[0], leaveTypePublicId: "public-1", policyPublicId: "policy-1", latestDraft: { draftPublicId: "existing-draft", revision: 2 } },
-          { ...types[1], leaveTypePublicId: "public-2", policyPublicId: "policy-2", latestDraft: null },
-        ],
-        users: [],
-        workforceGroups: [],
-      });
-    const create = vi.spyOn(apiClient, "createPolicyDraft");
     renderLeaveTypesCard();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/policy actions are unavailable/i);
-    const unavailable = screen.getAllByRole("button", { name: /configure policy/i });
-    expect(unavailable).toHaveLength(2);
-    unavailable.forEach((button) => expect(button).toBeDisabled());
-    await user.click(unavailable[0]);
-    expect(create).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: /^retry$/i }));
-    expect(await screen.findByRole("button", { name: /resume draft/i })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /configure policy/i })).toBeEnabled();
-  });
-
-  it("[P1] shows a distinct capability-unavailable message when the policy gate is off, not the generic draft error", async () => {
-    const user = userEvent.setup();
-    const onWarning = vi.fn();
-    const types = mockLeaveTypes.slice(0, 1).map((item) => ({
-      ...item,
-      publicId: "public-1",
-      presenceType: "OFF" as const,
-      active: true,
-    }));
-    vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(types);
-    vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-      leaveTypes: [
-        {
-          ...types[0],
-          leaveTypePublicId: "public-1",
-          policyPublicId: "policy-1",
-          latestDraft: null,
-        },
-      ],
-      users: [],
-      workforceGroups: [],
-    });
-    vi.spyOn(apiClient, "createPolicyDraft").mockRejectedValueOnce(
-      new apiClient.ApiError(403, {
-        type: "https://leaveo.net/errors/forbidden",
-        title: "Forbidden",
-        status: 403,
-        detail: "This capability is not available. Compare plans or contact Sales.",
-        code: "capability-unavailable",
+    // Plan LLANO P2-2: there is no draft to create or resume first, so the button is a plain link
+    // to the rules page and needs nothing but the type itself.
+    await user.click(
+      await screen.findByRole("button", {
+        name: `Allowance rules: ${isolate("Sick Leave")}`,
       }),
     );
-    renderLeaveTypesCard(onWarning);
-
-    await user.click(
-      await screen.findByRole("button", { name: /configure policy/i }),
-    );
-
-    await waitFor(() =>
-      expect(onWarning).toHaveBeenCalledWith(
-        "Configurable policies are not yet available for this organization.",
-      ),
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/settings/leave-policies/public-2",
     );
   });
 
   // The rail answers what the list makes you count. Every figure here is one a reader would
-  // otherwise get by scanning rows: status and entitlement live on each row, and whether a type
-  // still has an unfinished policy draft is only visible as Configure vs Resume on its button.
+  // otherwise get by scanning rows: status and entitlement live on each row.
   describe("supporting rail", () => {
     const withPresence: LeaveTypeResponse[] = [
       { ...mockLeaveTypes[0], presenceType: "OFF" },
@@ -581,11 +423,6 @@ describe("LeaveTypesCard", () => {
 
     it("counts a type with no active flag as active, and splits presence off from WFH", async () => {
       vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(withPresence);
-      vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-        leaveTypes: [],
-        users: [],
-        workforceGroups: [],
-      });
 
       renderLeaveTypesCard();
 
@@ -602,43 +439,6 @@ describe("LeaveTypesCard", () => {
       // take somebody off the calendar. The deactivated type is out of both figures.
       expect(screen.getByTestId("leave-types-presence-wfh")).toHaveTextContent("1");
       expect(screen.getByTestId("leave-types-presence-off")).toHaveTextContent("3");
-    });
-
-    it("shows an em dash for drafts when the overview call fails, not zero", async () => {
-      vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(withPresence);
-      vi.spyOn(apiClient, "getPolicySettingsOverview").mockRejectedValue(
-        new Error("overview unavailable"),
-      );
-
-      renderLeaveTypesCard();
-
-      // "No drafts" is a different claim from "we could not find out" — the card already renders
-      // its own retry for this call, so the rail must not quietly answer zero on its behalf.
-      expect(
-        await screen.findByTestId("leave-types-glance-drafts"),
-      ).toHaveTextContent("—");
-    });
-
-    it("counts the leave types that still carry an unfinished policy draft", async () => {
-      vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(withPresence);
-      vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-        leaveTypes: [
-          mockLeaveTypePolicySummary({ leaveTypePublicId: "lt-1", name: "Annual Leave" }),
-          mockLeaveTypePolicySummary({
-            leaveTypePublicId: "lt-2",
-            name: "Sick Leave",
-            latestDraft: { draftPublicId: "draft-1", revision: 3 },
-          }),
-        ],
-        users: [],
-        workforceGroups: [],
-      });
-
-      renderLeaveTypesCard();
-
-      expect(
-        await screen.findByTestId("leave-types-glance-drafts"),
-      ).toHaveTextContent("1");
     });
   });
 });
@@ -680,11 +480,6 @@ describe("LeaveTypesCard half-day toggle — Plan MEDIA", () => {
 
   beforeEach(() => {
     vi.spyOn(apiClient, "getManagedLeaveTypes").mockResolvedValue(types);
-    vi.spyOn(apiClient, "getPolicySettingsOverview").mockResolvedValue({
-      leaveTypes: [],
-      users: [],
-      workforceGroups: [],
-    });
   });
 
   afterEach(() => {

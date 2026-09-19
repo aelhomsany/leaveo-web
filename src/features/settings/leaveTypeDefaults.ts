@@ -17,33 +17,3 @@ export const LEAVE_TYPE_DEFAULT_PRESENTATION: {
   borderColor: '#0E4F75',
   presenceType: 'OFF',
 }
-
-/**
- * The next day in the Organization's operational timezone — the calendar the server judges
- * `effectiveFrom` against (`PolicyDraftService` uses `LocalDate.now(operationalZone.of(orgId))`).
- * Computing this in UTC seeds the wrong day for any Organization at an offset.
- */
-export function nextEffectiveDate(organizationTimezone?: string | null): string {
-  const zone = organizationTimezone || 'UTC'
-  let parts: Intl.DateTimeFormatPart[]
-  try {
-    parts = new Intl.DateTimeFormat('en-CA', {
-      timeZone: zone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(new Date())
-  } catch {
-    parts = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'UTC',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(new Date())
-  }
-  const at = (type: string) => parts.find((part) => part.type === type)?.value ?? '01'
-  // Local calendar date in that zone, advanced one day through UTC arithmetic on a date-only value.
-  const today = new Date(`${at('year')}-${at('month')}-${at('day')}T00:00:00Z`)
-  today.setUTCDate(today.getUTCDate() + 1)
-  return today.toISOString().slice(0, 10)
-}

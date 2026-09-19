@@ -82,6 +82,10 @@ import type {
   PolicyPublicationResponse,
   PolicyHistoryItem,
   PolicySettingsOverviewResponse,
+  PolicyRulesResponse,
+  PolicyRuleImpactRequest,
+  PolicyRuleImpactResponse,
+  SavePolicyRuleRequest,
   CreateImportJobRequest,
   ImportJobResponse,
   ImportJobListPage,
@@ -534,6 +538,13 @@ export const updatePolicyDraft = (publicId: string, payload: UpdatePolicyDraftRe
 export const previewPolicy = (publicId: string) => request<PolicyPreviewResponse>(`/api/v1/settings/leave-policies/drafts/${publicId}/preview`, { method: 'POST' })
 export const publishPolicy = (publicId: string, idempotencyKey: string, payload: PublishPolicyRequest) => request<PolicyPublicationResponse>(`/api/v1/settings/leave-policies/drafts/${publicId}/publish`, { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey }, body: payload })
 export const getPolicyHistory = (policyPublicId: string) => request<PolicyHistoryItem[]>(`/api/v1/settings/leave-policies/${policyPublicId}/history`, { method: 'GET' })
+
+// Plan LLANO P2-2 — a Leave Type's allowance rules, edited in place with one Save.
+const policyRules = (leaveTypePublicId: string) => `/api/v1/settings/leave-policies/${leaveTypePublicId}/rules`
+export const getPolicyRules = (leaveTypePublicId: string) => request<PolicyRulesResponse>(policyRules(leaveTypePublicId), { method: 'GET' })
+export const previewPolicyRuleImpact = (leaveTypePublicId: string, payload: PolicyRuleImpactRequest) => request<PolicyRuleImpactResponse>(`${policyRules(leaveTypePublicId)}/impact`, { method: 'POST', body: payload })
+export const savePolicyRule = (leaveTypePublicId: string, payload: SavePolicyRuleRequest) => request<PolicyRulesResponse>(policyRules(leaveTypePublicId), { method: 'POST', body: payload })
+export const removePolicyRule = (leaveTypePublicId: string, assignmentPublicId: string, expectedRevision: string) => request<PolicyRulesResponse>(`${policyRules(leaveTypePublicId)}/${assignmentPublicId}?expectedRevision=${encodeURIComponent(expectedRevision)}`, { method: 'DELETE' })
 
 // Story 16.2 — calendar visibility configuration (HR only).
 export const getCalendarPrivacy = () => request<CalendarPrivacyVersionResponse>('/api/v1/settings/calendar-privacy', { method: 'GET' })
@@ -1228,6 +1239,10 @@ export const apiClient = {
   previewPolicy,
   publishPolicy,
   getPolicyHistory,
+  getPolicyRules,
+  previewPolicyRuleImpact,
+  savePolicyRule,
+  removePolicyRule,
   createImportJob,
   uploadImportSource,
   getImportJob,
