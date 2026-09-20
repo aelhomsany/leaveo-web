@@ -1,5 +1,12 @@
 name: CI
-on: [push, pull_request]
+on:
+  # A push to a branch that has an open PR used to fire this workflow twice -- once as `push`,
+  # once as `pull_request` -- running the whole suite against the same commit for the same
+  # answer, and doubling both the wait and the billed minutes. Pushes now build only the
+  # branches that deploy; work in progress is covered by its pull request.
+  push:
+    branches: [dev, main]
+  pull_request:
 
 env:
   # Cloudflare's documented always-passes test site key. The public build refuses to
