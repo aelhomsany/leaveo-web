@@ -5,20 +5,15 @@ import { useNavigate } from "react-router-dom";
 import {
   ApiError,
   createLeaveType,
-  createPolicyDraft,
   deactivateLeaveType,
   getManagedLeaveTypes,
-  getPolicySettingsOverview,
   reactivateLeaveType,
   reorderLeaveTypes,
   updateLeaveType,
 } from "../../api/client";
 import { fieldErrorsFromApiError } from "../../api/fieldViolations";
 import { isolate } from "../../i18n/bidi";
-import {
-  LEAVE_TYPE_DEFAULT_PRESENTATION,
-  nextEffectiveDate,
-} from "./leaveTypeDefaults";
+import { LEAVE_TYPE_DEFAULT_PRESENTATION } from "./leaveTypeDefaults";
 import type { LeaveTypeResponse } from "../../api/generated/types";
 import { useAuth } from "../../auth/useAuth";
 import { Modal } from "../../components/ui/Modal";
@@ -121,11 +116,6 @@ export function LeaveTypesCard({
   const typesQuery = useQuery({
     queryKey: ["managed-leave-types", orgId],
     queryFn: getManagedLeaveTypes,
-    enabled: orgId != null,
-  });
-  const overviewQuery = useQuery({
-    queryKey: ["policy-settings-overview", orgId],
-    queryFn: getPolicySettingsOverview,
     enabled: orgId != null,
   });
   useEffect(() => {
@@ -254,26 +244,6 @@ export function LeaveTypesCard({
     onSuccess: refresh,
     onError: () => onWarning?.(t("leaveTypes.errors.reorder")),
   });
-  const draftMutation = useMutation({
-    mutationFn: (type: NonNullable<typeof typesQuery.data>[number]) =>
-      createPolicyDraft({
-        leaveTypePublicId: type.publicId!,
-        mode:
-          type.defaultBalanceDays == null ? "UNLIMITED" : "ANNUAL_ALLOWANCE",
-        allowanceDays: type.defaultBalanceDays ?? undefined,
-        balancePeriod: "CALENDAR_YEAR",
-        scope: "ORGANIZATION",
-        effectiveFrom: nextEffectiveDate(user?.organizationTimezone),
-      }),
-    onSuccess: (draft) =>
-      navigate(`/settings/leave-policies/${draft.draftPublicId}`),
-    onError: (cause) =>
-      onWarning?.(
-        cause instanceof ApiError && cause.problem.code === "capability-unavailable"
-          ? t("policy.errors.capabilityUnavailable")
-          : t("leaveTypes.errors.draft"),
-      ),
-  });
   const move = (index: number, offset: number) => {
     // Filter before mapping: dropping an id after the map would shorten the array and desynchronise
     // it from `index`, which comes from the unfiltered render list, and swap unrelated rows.
@@ -338,14 +308,10 @@ export function LeaveTypesCard({
     type.defaultBalanceDays == null
       ? t("leaveTypes.unlimited")
       : t("leaveTypes.defaultDays", { count: type.defaultBalanceDays });
-  // The rail answers what the list makes you count: the rows carry status and entitlement each,
-  // and whether a type still has an unfinished policy draft is only visible as Configure vs
-  // Resume on its own button. Active is `!== false` rather than `=== true` because the field is
-  // optional in the schema and an absent flag has always meant active here.
+  // The rail answers what the list makes you count: the rows carry status and entitlement each.
+  // Active is `!== false` rather than `=== true` because the field is optional in the schema and
+  // an absent flag has always meant active here.
   const activeTypes = types.filter((type) => type.active !== false);
-  const draftCount = overviewQuery.data?.leaveTypes.filter(
-    (item) => item.latestDraft,
-  ).length;
   const wfhCount = activeTypes.filter(
     (type) => type.presenceType === "WFH",
   ).length;
@@ -572,27 +538,11 @@ export function LeaveTypesCard({
             {t("leaveTypes.actions.add")}
           </button>
         </div>
-        {overviewQuery.isError && (
-          <div role="alert" className="settings-card-error-inline">
-            <p>{t("leaveTypes.errors.overview")}</p>
-            <button
-              className="btn btn-outline btn-sm"
-              type="button"
-              onClick={() => overviewQuery.refetch()}
-            >
-              {t("leaveTypes.actions.retry")}
-            </button>
-          </div>
-        )}
         {types.length === 0 ? (
           <p className="settings-card-loading-inline">{t("leaveTypes.none")}</p>
         ) : (
           <div className="settings-list-body" data-testid="leave-types-list">
-            {types.map((type, index) => {
-              const policy = overviewQuery.data?.leaveTypes.find(
-                (item) => item.leaveTypePublicId === type.publicId,
-              );
-              return (
+            {types.map((type, index) => (
                 <div
                   key={type.publicId ?? type.id}
                   className="settings-list-item leave-type-row"
@@ -653,33 +603,20 @@ export function LeaveTypesCard({
                         <ChevronDownIcon size={16} />
                       </button>
                     </div>
+                    {/* Plan LLANO: every type has rules from the day it is created, so this
+                        always opens them; there is no draft to start or resume. */}
                     <button
                       type="button"
                       className="btn btn-primary btn-sm"
-                      aria-label={t(
-                        policy?.latestDraft
-                          ? "leaveTypes.aria.resume"
-                          : "leaveTypes.aria.configure",
-                        { name: isolate(type.name) },
-                      )}
-                      disabled={
-                        !overviewQuery.isSuccess || draftMutation.isPending
-                      }
+                      aria-label={t("leaveTypes.aria.rules", {
+                        name: isolate(type.name),
+                      })}
+                      disabled={!type.publicId}
                       onClick={() =>
-                        !overviewQuery.isSuccess
-                          ? undefined
-                          : policy?.latestDraft?.draftPublicId
-                            ? navigate(
-                                `/settings/leave-policies/${policy.latestDraft.draftPublicId}`,
-                              )
-                            : draftMutation.mutate(type)
+                        navigate(`/settings/leave-policies/${type.publicId}`)
                       }
                     >
-                      {t(
-                        policy?.latestDraft
-                          ? "leaveTypes.actions.resume"
-                          : "leaveTypes.actions.configure",
-                      )}
+                      {t("leaveTypes.actions.rules")}
                     </button>
                     <RowActionsMenu
                       testId={`leave-type-menu-${type.id}`}
@@ -722,8 +659,7 @@ export function LeaveTypesCard({
                     />
                   </div>
                 </div>
-              );
-            })}
+            ))}
           </div>
         )}
         {statusTarget && (
@@ -875,14 +811,6 @@ export function LeaveTypesCard({
               <dt>{t("leaveTypes.rail.inactive")}</dt>
               <dd data-testid="leave-types-glance-inactive">
                 {types.length - activeTypes.length}
-              </dd>
-            </div>
-            <div className="support-note-kv">
-              <dt>{t("leaveTypes.rail.drafts")}</dt>
-              {/* An em dash, not 0: the overview call can fail on its own (the card already
-                  renders a retry for it), and "no drafts" is a different claim from "unknown". */}
-              <dd data-testid="leave-types-glance-drafts">
-                {draftCount == null ? "—" : draftCount}
               </dd>
             </div>
           </dl>

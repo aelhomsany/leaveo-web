@@ -447,14 +447,12 @@
       "save": "Save Changes",
       "deactivate": "Deactivate",
       "reactivate": "Reactivate",
-      "configure": "Configure Policy",
-      "resume": "Resume Draft",
+      "rules": "Rules",
       "cancel": "Cancel",
       "close": "Close",
       "create": "Create Leave Type",
       "confirmDeactivate": "Confirm Deactivation",
-      "confirmReactivate": "Confirm Reactivation",
-      "retry": "Retry"
+      "confirmReactivate": "Confirm Reactivation"
     },
     "aria": {
       "moveUp": "Move Up: {{name}}",
@@ -462,8 +460,7 @@
       "edit": "Edit {{name}}",
       "deactivate": "Deactivate {{name}}",
       "reactivate": "Reactivate {{name}}",
-      "configure": "Configure Policy: {{name}}",
-      "resume": "Resume Draft: {{name}}",
+      "rules": "Allowance rules: {{name}}",
       "moreActions": "More actions: {{name}}"
     },
     "fields": {
@@ -498,9 +495,7 @@
       "create": "Unable to create leave type",
       "update": "Unable to update leave type",
       "status": "Unable to update leave type",
-      "reorder": "Unable to reorder leave types",
-      "draft": "Unable to open a policy draft",
-      "overview": "Unable to load current policy drafts. Policy actions are unavailable."
+      "reorder": "Unable to reorder leave types"
     },
     "groups": {
       "appearance": "Appearance",
@@ -513,7 +508,6 @@
       "glanceTitle": "At a glance",
       "active": "Active leave types",
       "inactive": "Inactive",
-      "drafts": "Policies in draft",
       "entitlementsTitle": "Default entitlements",
       "presenceTitle": "Presence",
       "presenceOff": "Counted as off",
@@ -715,33 +709,78 @@
     }
   },
   "policy": {
-    "title": "Policy Settings",
-    "subtitle": "Review authoritative impact before publishing one effective-dated policy.",
-    "loading": "Loading policy draft…",
+    "title": "{{name}}: allowance rules",
+    "subtitle": "Who gets how many days, from when. Change a rule and see who it affects before you save.",
+    "loading": "Loading allowance rules…",
+    "readOnly": "Changing allowance rules is not available for this organization. The rules below still apply.",
     "actions": {
       "back": "Back to Leave Policies",
-      "review": "Review Impact",
-      "publish": "Publish Policy",
-      "confirm": "Confirm Publication",
+      "add": "Add a rule",
+      "change": "Change",
+      "remove": "Remove",
+      "confirmRemove": "Remove Rule",
+      "save": "Save",
       "cancel": "Cancel",
-      "close": "Close",
-      "retry": "Retry",
-      "reloadLatest": "Reload Latest Draft"
+      "retry": "Retry"
+    },
+    "aria": {
+      "change": "Change the rule for {{name}}"
     },
     "states": {
-      "draft": "Draft",
-      "published": "Published"
+      "inForce": "In force",
+      "upcoming": "Upcoming",
+      "ended": "Ended"
+    },
+    "sections": {
+      "company": "Company",
+      "companyEmpty": "No company rule yet.",
+      "groups": "Groups",
+      "groupsEmpty": "No group has its own rule. Everyone in a group follows the company rule.",
+      "people": "People",
+      "peopleEmpty": "Nobody has a rule of their own. Each person follows their group's rule or the company rule."
+    },
+    "rules": {
+      "daysAYear_zero": "{{count}} days a year",
+      "daysAYear_one": "{{count}} day a year",
+      "daysAYear_two": "{{count}} days a year",
+      "daysAYear_few": "{{count}} days a year",
+      "daysAYear_many": "{{count}} days a year",
+      "daysAYear_other": "{{count}} days a year",
+      "from": "From {{date}}",
+      "fromTo": "{{from}} to {{to}}",
+      "setAutomatically": "Set up automatically",
+      "setBy": "Set by {{name}} on {{date}}",
+      "setByFormer": "Set by a former member on {{date}}",
+      "everyone": "Everyone",
+      "unknownPerson": "A person who has left",
+      "unknownGroup": "A deleted group",
+      "earlier_zero": "Earlier rules ({{count}})",
+      "earlier_one": "Earlier rules ({{count}})",
+      "earlier_two": "Earlier rules ({{count}})",
+      "earlier_few": "Earlier rules ({{count}})",
+      "earlier_many": "Earlier rules ({{count}})",
+      "earlier_other": "Earlier rules ({{count}})"
     },
     "editor": {
-      "title": "Policy Draft"
+      "changeTitle": "Change this rule",
+      "addTitle": "Add a rule for a group or a person"
     },
     "fields": {
-      "mode": "Allowance mode",
-      "allowance": "Allowance days",
-      "scope": "Scope",
-      "subject": "Scope target",
-      "selectSubject": "Select a target",
-      "effectiveFrom": "Effective date"
+      "scope": "For",
+      "group": "Group",
+      "person": "Person",
+      "selectSubject": "Select…",
+      "mode": "Allowance",
+      "allowance": "Days a year",
+      "effectiveFrom": "Starts on"
+    },
+    "modes": {
+      "annual": "Annual allowance",
+      "unlimited": "Unlimited"
+    },
+    "scopes": {
+      "group": "A group",
+      "user": "A person"
     },
     "carryover": {
       "day": "Day",
@@ -756,7 +795,6 @@
       "selectDay": "Select a day",
       "selectMonth": "Select a month",
       "summaryNoLimit": "Carries all unused days · until {{date}}",
-      "summaryOff": "No carry-over",
       "summaryRepeat": "carries again",
       "summary_zero": "Carries up to {{count}} days · until {{date}}",
       "summary_one": "Carries up to {{count}} day · until {{date}}",
@@ -765,32 +803,21 @@
       "summary_many": "Carries up to {{count}} days · until {{date}}",
       "summary_other": "Carries up to {{count}} days · until {{date}}"
     },
-    "modes": {
-      "annual": "Annual allowance",
-      "unlimited": "Unlimited"
-    },
-    "scopes": {
-      "organization": "Organization",
-      "group": "Workforce Group",
-      "user": "User",
-      "unknownUser": "Selected user",
-      "unknownGroup": "Selected workforce group"
-    },
-    "review": {
-      "title": "Publication Review",
-      "empty": "Save and review the draft to load current impact evidence.",
-      "affected": "Affected people",
-      "people_zero": "No people",
-      "people_one": "{{count}} person",
-      "people_two": "{{count}} people",
-      "people_few": "{{count}} people",
-      "people_many": "{{count}} people",
-      "people_other": "{{count}} people",
-      "conflicts": "Conflicts",
-      "noConflicts": "No conflicts",
-      "balance": "{{used}} used, {{allowance}} proposed, {{remaining}} remaining",
-      "unknownMember": "Affected member",
-      "noImpacts": "No individual balances change in this scope.",
+    "impact": {
+      "title": "Who this changes",
+      "incomplete": "Fill in the rule to see who it changes.",
+      "loading": "Working out who this changes…",
+      "error": "The impact could not be worked out. You can still save.",
+      "invalid": "Fix the highlighted field to see who this changes.",
+      "replaces": "Saving replaces the rule that starts on {{date}}; nothing has used it yet.",
+      "people_zero": "Nobody's allowance changes.",
+      "people_one": "{{count}} person's allowance changes.",
+      "people_two": "{{count}} people's allowances change.",
+      "people_few": "{{count}} people's allowances change.",
+      "people_many": "{{count}} people's allowances change.",
+      "people_other": "{{count}} people's allowances change.",
+      "unknownMember": "A member",
+      "balance": "{{used}} used, {{allowance}} allowance, {{remaining}} left",
       "balanceUnlimited": "{{used}} used, unlimited allowance",
       "carryover_zero": "carries nothing into next year",
       "carryover_one": "carries {{count}} day into next year",
@@ -799,56 +826,28 @@
       "carryover_many": "carries {{count}} days into next year",
       "carryover_other": "carries {{count}} days into next year"
     },
-    "confirm": {
-      "title": "Confirm Policy Publication",
-      "summary_zero": "Publish for {{scope}} from {{date}}, affecting no people.",
-      "summary_one": "Publish for {{scope}} from {{date}}, affecting {{count}} person.",
-      "summary_two": "Publish for {{scope}} from {{date}}, affecting {{count}} people.",
-      "summary_few": "Publish for {{scope}} from {{date}}, affecting {{count}} people.",
-      "summary_many": "Publish for {{scope}} from {{date}}, affecting {{count}} people.",
-      "summary_other": "Publish for {{scope}} from {{date}}, affecting {{count}} people.",
-      "history": "I understand stored historical requests will not be recalculated."
+    "conflicts": {
+      "allowanceBelowUsed": "{{name}} has already used more days than this allowance. Saving is still allowed.",
+      "noActiveMembers": "Nobody follows this rule on its start date yet.",
+      "unknown": "This rule has an impact worth checking."
     },
     "overview": {
-      "loading": "Loading policy targets…",
-      "error": "Unable to load current policy targets. Review is unavailable."
+      "error": "Unable to load your groups and people. Adding a rule is unavailable."
     },
-    "conflicts": {
-      "allowanceBelowUsed": "{{name}} has already used more days than the proposed allowance.",
-      "noActiveMembers": "There are no active members in this scope.",
-      "unknown": "The policy has an impact conflict that must be reviewed."
-    },
-    "history": {
-      "title": "Version History",
-      "loading": "Loading version history…",
-      "empty": "No published versions yet.",
-      "error": "Unable to load version history.",
-      "version": "Version {{number}}",
-      "unknownPublisher": "Former or unavailable user",
-      "allowance_zero": "No allowance days",
-      "allowance_one": "{{count}} allowance day",
-      "allowance_two": "{{count}} allowance days",
-      "allowance_few": "{{count}} allowance days",
-      "allowance_many": "{{count}} allowance days",
-      "allowance_other": "{{count}} allowance days",
-      "conflicts_zero": "No conflicts",
-      "conflicts_one": "{{count}} conflict",
-      "conflicts_two": "{{count}} conflicts",
-      "conflicts_few": "{{count}} conflicts",
-      "conflicts_many": "{{count}} conflicts",
-      "conflicts_other": "{{count}} conflicts"
+    "remove": {
+      "title": "Remove this upcoming rule?",
+      "copy": "{{terms}}, starting on {{date}}, will not take effect. The rule before it continues instead."
     },
     "errors": {
       "capabilityUnavailable": "Configurable policies are not yet available for this organization.",
-      "load": "Unable to load this policy draft.",
-      "preview": "The preview could not be loaded. Your input is preserved; reload the preview and try again.",
-      "stale": "The preview is stale. Your input is preserved; review the current impact again.",
-      "validation": "Some policy fields need attention. Your input is preserved.",
-      "publishRetry": "Publication could not be confirmed. Retry using the same reviewed impact.",
-      "idempotencyConflict": "This publication was already submitted with different impact evidence. Your input is preserved; review the current impact again."
+      "load": "Unable to load the allowance rules.",
+      "stale": "Someone changed these rules while you were editing. The list is up to date again and your changes are kept; check them and save again.",
+      "validation": "Some fields need attention. Your changes are kept.",
+      "save": "The rule could not be saved. Your changes are kept; try again."
     },
     "success": {
-      "published": "Policy published"
+      "saved": "Rule saved",
+      "removed": "Rule removed"
     }
   },
   "subtitle": "Company policy, team, and leave entitlements",

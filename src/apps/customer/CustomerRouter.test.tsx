@@ -124,30 +124,20 @@ describe('CustomerRoutes', () => {
     expect(screen.queryByTestId('admin-shell')).not.toBeInTheDocument()
   })
 
-  it('[P1] renders the lazy HR policy workspace at its stable draft URL', async () => {
+  it('[P1] renders the lazy allowance rules page at its Leave Type URL', async () => {
     vi.spyOn(apiClient, 'getPolicySettingsOverview').mockResolvedValue({ leaveTypes: [], users: [], workforceGroups: [] })
-    vi.spyOn(apiClient, 'getPolicyDraft').mockResolvedValue({
-      policyPublicId: 'policy-1',
-      draftPublicId: 'draft-1',
+    const getPolicyRules = vi.spyOn(apiClient, 'getPolicyRules').mockResolvedValue({
       leaveTypePublicId: 'type-1',
-      mode: 'ANNUAL_ALLOWANCE',
-      allowanceDays: 20,
-      balancePeriod: 'CALENDAR_YEAR',
-      scope: 'ORGANIZATION',
-      subjectPublicId: '',
-      effectiveFrom: '2027-01-01',
-      revision: 0,
-      consumed: false,
-      carryoverEnabled: false,
-      carryoverMaxDays: null,
-      carryoverDeadlineMonth: null,
-      carryoverDeadlineDay: null,
-      carryoverRepeat: false,
+      leaveTypeName: 'Annual Leave',
+      today: '2026-09-19',
+      revision: 'r1',
+      changesAvailable: true,
+      rules: [],
     })
-    vi.spyOn(apiClient, 'getPolicyHistory').mockResolvedValue([])
-    renderCustomerRoutes(['/settings/leave-policies/draft-1'], createMockAuthForRole('ORGANIZATION_ADMIN'))
-    expect(await screen.findByTestId('policy-settings-page')).toBeInTheDocument()
-    expect(document.title).toBe('Policy Settings — Leaveo')
+    renderCustomerRoutes(['/settings/leave-policies/type-1'], createMockAuthForRole('ORGANIZATION_ADMIN'))
+    expect(await screen.findByTestId('policy-rules-page')).toBeInTheDocument()
+    expect(getPolicyRules).toHaveBeenCalledWith('type-1')
+    await waitFor(() => expect(document.title).toBe('Allowance Rules — Leaveo'))
   })
 
   describe('reports routes', () => {

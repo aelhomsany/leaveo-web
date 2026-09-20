@@ -217,24 +217,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/settings/leave-policies/drafts": {
+    "/api/v1/settings/leave-policies/{leaveTypePublicId}/rules": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List a leave type's allowance rules: company, groups and people, with their dates and state */
+        get: operations["getPolicyRules"];
         put?: never;
-        /** Create an effective-dated leave policy draft */
-        post: operations["createPolicyDraft"];
+        /** Save an allowance rule against the revision of the list it was made on */
+        post: operations["savePolicyRule"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/settings/leave-policies/drafts/{draftPublicId}/publish": {
+    "/api/v1/settings/leave-policies/{leaveTypePublicId}/rules/impact": {
         parameters: {
             query?: never;
             header?: never;
@@ -243,25 +244,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Publish a preview-bound policy draft exactly once */
-        post: operations["publishPolicy"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/settings/leave-policies/drafts/{draftPublicId}/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Preview authoritative policy publication impact */
-        post: operations["previewPolicyPublication"];
+        /** Show who a proposed allowance rule would change, and how; nothing is saved */
+        post: operations["previewPolicyRuleImpact"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1300,24 +1284,6 @@ export interface paths {
         patch: operations["updateLeaveType"];
         trace?: never;
     };
-    "/api/v1/settings/leave-policies/drafts/{publicId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read a policy draft and its current revision */
-        get: operations["getPolicyDraft"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Revise a policy draft using its expected revision */
-        patch: operations["updatePolicyDraft"];
-        trace?: never;
-    };
     "/api/v1/public-holidays/{id}": {
         parameters: {
             query?: never;
@@ -1432,23 +1398,6 @@ export interface paths {
         };
         /** Stream the caller's profile image */
         get: operations["getProfileImageContent"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/settings/leave-policies/{policyPublicId}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read immutable policy publication history */
-        get: operations["getPolicyPublicationHistory"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2201,6 +2150,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings/leave-policies/{leaveTypePublicId}/rules/{assignmentPublicId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove an upcoming allowance rule that nothing has used */
+        delete: operations["removePolicyRule"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/chat/slack": {
         parameters: {
             query?: never;
@@ -2431,14 +2397,12 @@ export interface components {
             /** @description Every leave type public ID in the organization, exactly once, in the desired order */
             publicIds: string[];
         };
-        CreatePolicyDraftRequest: {
-            leaveTypePublicId: string;
+        SavePolicyRuleRequest: {
+            expectedRevision: string;
             /** @enum {string} */
             mode: "ANNUAL_ALLOWANCE" | "UNLIMITED";
             /** Format: int32 */
             allowanceDays?: number;
-            /** @enum {string} */
-            balancePeriod: "CALENDAR_YEAR";
             /** @enum {string} */
             scope: "ORGANIZATION" | "WORKFORCE_GROUP" | "USER";
             subjectPublicId?: string;
@@ -2453,102 +2417,30 @@ export interface components {
             carryoverDeadlineDay?: number;
             carryoverRepeat?: boolean;
         };
-        PolicyDraftResponse: {
-            policyPublicId?: string;
-            draftPublicId?: string;
-            leaveTypePublicId?: string;
+        PolicyRule: {
+            assignmentPublicId?: string;
+            /** @enum {string} */
+            scope?: "ORGANIZATION" | "WORKFORCE_GROUP" | "USER";
+            /** @description Null for the company rule. */
+            subjectPublicId?: string | null;
+            /** @description The person's or group's name; null for the company rule, or when the subject no longer exists. */
+            subjectName?: string | null;
+            /** Format: date */
+            effectiveFrom?: string;
+            /**
+             * Format: date
+             * @description The day before the next rule for the same company, group or person starts; null when none follows.
+             */
+            endsOn?: string | null;
+            /** @enum {string} */
+            state?: "ENDED" | "IN_FORCE" | "UPCOMING";
             /** @enum {string} */
             mode?: "ANNUAL_ALLOWANCE" | "UNLIMITED";
-            /** Format: int32 */
-            allowanceDays?: number;
-            /** @enum {string} */
-            balancePeriod?: "CALENDAR_YEAR";
-            /** @enum {string} */
-            scope?: "ORGANIZATION" | "WORKFORCE_GROUP" | "USER";
-            subjectPublicId?: string;
-            /** Format: date */
-            effectiveFrom?: string;
-            /** Format: int64 */
-            revision?: number;
-            consumed?: boolean;
-            carryoverEnabled?: boolean;
-            /** Format: int32 */
-            carryoverMaxDays?: number;
-            /** Format: int32 */
-            carryoverDeadlineMonth?: number;
-            /** Format: int32 */
-            carryoverDeadlineDay?: number;
-            carryoverRepeat?: boolean;
-        };
-        PublishPolicyRequest: {
-            /** Format: int64 */
-            expectedDraftRevision: number;
-            previewHash: string;
-            /** Format: int64 */
-            policyRevision: number;
-            /** Format: int64 */
-            workforceRevision: number;
-            /** Format: int64 */
-            entitlementRevision: number;
-        };
-        PolicyPublicationResponse: {
-            publicationPublicId?: string;
-            policyPublicId?: string;
-            versionPublicId?: string;
-            assignmentPublicId?: string;
-            /** Format: int32 */
-            versionNumber?: number;
-            /** Format: date-time */
-            publishedAt?: string;
-            /** Format: int32 */
-            affectedMemberCount?: number;
-            /** Format: int32 */
-            conflictCount?: number;
-        };
-        PolicyMemberImpact: {
-            memberPublicId?: string;
-            /** Format: double */
-            usedDays?: number;
-            /** Format: int32 */
-            proposedAllowance?: number;
             /**
-             * Format: double
-             * @description Proposed allowance minus days already taken; may be fractional, and negative where the draft would cut an allowance below what is spent.
+             * Format: int32
+             * @description Null when unlimited.
              */
-            projectedRemaining?: number | null;
-            /**
-             * Format: double
-             * @description Days this member would carry into the next year if they took no more leave; null when the draft does not carry over or the allowance is unlimited.
-             */
-            projectedCarryoverDays?: number | null;
-        };
-        PolicyPreviewResponse: {
-            draftPublicId?: string;
-            policyPublicId?: string;
-            /** Format: int64 */
-            draftRevision?: number;
-            /** Format: int64 */
-            policyRevision?: number;
-            /** Format: int64 */
-            workforceRevision?: number;
-            /** Format: int64 */
-            entitlementRevision?: number;
-            decisionHash?: string;
-            /** Format: date-time */
-            asOf?: string;
-            /** Format: int32 */
-            balanceYear?: number;
-            /** @enum {string} */
-            scope?: "ORGANIZATION" | "WORKFORCE_GROUP" | "USER";
-            subjectPublicId?: string;
-            /** Format: date */
-            effectiveFrom?: string;
-            /** Format: date */
-            previousEffectiveFrom?: string;
-            /** Format: int32 */
-            affectedMemberCount?: number;
-            impacts?: components["schemas"]["PolicyMemberImpact"][];
-            conflicts?: string[];
+            allowanceDays?: number | null;
             carryoverEnabled?: boolean;
             /**
              * Format: int32
@@ -2560,6 +2452,78 @@ export interface components {
             /** Format: int32 */
             carryoverDeadlineDay?: number | null;
             carryoverRepeat?: boolean;
+            /** @description Null when the rule was set up automatically. */
+            setByName?: string | null;
+            /**
+             * Format: date-time
+             * @description Null when the rule was set up automatically.
+             */
+            setAt?: string | null;
+            /** @description True when the rule starts today or later and nothing has used it yet, so a save on its start date replaces it; an upcoming one can also be removed. */
+            changeable?: boolean;
+        };
+        PolicyRulesResponse: {
+            leaveTypePublicId?: string;
+            leaveTypeName?: string;
+            /**
+             * Format: date
+             * @description Today in the Organization's operational time zone; what the rule states are relative to.
+             */
+            today?: string;
+            /** @description Changes whenever any rule of this Leave Type does. Send it back as expectedRevision. */
+            revision?: string;
+            /** @description False when this Organization's plan or billing state does not allow changing rules: impact, save and remove answer 403 or 409, and the list stays readable. */
+            changesAvailable?: boolean;
+            rules?: components["schemas"]["PolicyRule"][];
+        };
+        PolicyRuleImpactRequest: {
+            /** @enum {string} */
+            mode: "ANNUAL_ALLOWANCE" | "UNLIMITED";
+            /** Format: int32 */
+            allowanceDays?: number;
+            /** @enum {string} */
+            scope: "ORGANIZATION" | "WORKFORCE_GROUP" | "USER";
+            subjectPublicId?: string;
+            /** Format: date */
+            effectiveFrom: string;
+            carryoverEnabled?: boolean;
+            /** Format: int32 */
+            carryoverMaxDays?: number;
+            /** Format: int32 */
+            carryoverDeadlineMonth?: number;
+            /** Format: int32 */
+            carryoverDeadlineDay?: number;
+            carryoverRepeat?: boolean;
+        };
+        PolicyMemberImpact: {
+            memberPublicId?: string;
+            /** Format: double */
+            usedDays?: number;
+            /** Format: int32 */
+            proposedAllowance?: number;
+            /**
+             * Format: double
+             * @description Proposed allowance minus days already taken; may be fractional, and negative where the rule would cut an allowance below what is spent.
+             */
+            projectedRemaining?: number | null;
+            /**
+             * Format: double
+             * @description Days this member would carry into the next year if they took no more leave; null when the rule does not carry over or the allowance is unlimited.
+             */
+            projectedCarryoverDays?: number | null;
+        };
+        PolicyRuleImpactResponse: {
+            /** @description The rule these people follow on the proposed start date today: the one a save replaces when correction is true, otherwise the one the new rule follows. Null only when the Leave Type has no rules yet. */
+            replaces?: string | null;
+            /** @description True when a save replaces an unused rule that starts on the same date, rather than adding one. */
+            correction?: boolean;
+            /** Format: int32 */
+            balanceYear?: number;
+            /** Format: int32 */
+            affectedMemberCount?: number;
+            impacts?: components["schemas"]["PolicyMemberImpact"][];
+            /** @description ALLOWANCE_BELOW_USED:<memberPublicId> or NO_ACTIVE_MEMBERS_IN_SCOPE. */
+            conflicts?: string[];
         };
         CalendarPrivacyRuleInput: {
             /** @enum {string} */
@@ -3733,29 +3697,6 @@ export interface components {
             /** @description Whether this type may be taken in half days; omitted keeps the current setting, and a new type allows them. */
             halfDayAllowed?: boolean;
         };
-        UpdatePolicyDraftRequest: {
-            /** Format: int64 */
-            expectedRevision: number;
-            /** @enum {string} */
-            mode: "ANNUAL_ALLOWANCE" | "UNLIMITED";
-            /** Format: int32 */
-            allowanceDays?: number;
-            /** @enum {string} */
-            balancePeriod: "CALENDAR_YEAR";
-            /** @enum {string} */
-            scope: "ORGANIZATION" | "WORKFORCE_GROUP" | "USER";
-            subjectPublicId?: string;
-            /** Format: date */
-            effectiveFrom: string;
-            carryoverEnabled?: boolean;
-            /** Format: int32 */
-            carryoverMaxDays?: number;
-            /** Format: int32 */
-            carryoverDeadlineMonth?: number;
-            /** Format: int32 */
-            carryoverDeadlineDay?: number;
-            carryoverRepeat?: boolean;
-        };
         UpdatePublicHolidayRequest: {
             /** Format: date */
             dateFrom?: string;
@@ -3871,45 +3812,6 @@ export interface components {
             effectiveFrom?: string;
             status?: string;
         };
-        ImpactSummary: {
-            /** Format: int32 */
-            affectedMemberCount?: number;
-            /** Format: int32 */
-            conflictCount?: number;
-        };
-        PolicyHistoryItem: {
-            publicationPublicId?: string;
-            versionPublicId?: string;
-            assignmentPublicId?: string;
-            /** Format: int32 */
-            versionNumber?: number;
-            /** @enum {string} */
-            mode?: "ANNUAL_ALLOWANCE" | "UNLIMITED";
-            /** Format: int32 */
-            allowanceDays?: number;
-            /** @enum {string} */
-            scope?: "ORGANIZATION" | "WORKFORCE_GROUP" | "USER";
-            subjectPublicId?: string;
-            /** Format: date */
-            effectiveFrom?: string;
-            publishedByUserPublicId?: string;
-            /** Format: date-time */
-            publishedAt?: string;
-            impactSummary?: components["schemas"]["ImpactSummary"];
-            carryoverEnabled?: boolean;
-            /** Format: int32 */
-            carryoverMaxDays?: number;
-            /** Format: int32 */
-            carryoverDeadlineMonth?: number;
-            /** Format: int32 */
-            carryoverDeadlineDay?: number;
-            carryoverRepeat?: boolean;
-        };
-        DraftSummary: {
-            draftPublicId?: string;
-            /** Format: int64 */
-            revision?: number;
-        };
         LeaveTypePolicySummary: {
             leaveTypePublicId?: string;
             name?: string;
@@ -3924,7 +3826,6 @@ export interface components {
             displayOrder?: number;
             active?: boolean;
             policyPublicId?: string;
-            latestDraft?: components["schemas"]["DraftSummary"];
         };
         NamedTarget: {
             publicId?: string;
@@ -4914,73 +4815,12 @@ export interface operations {
             };
         };
     };
-    createPolicyDraft: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePolicyDraftRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PolicyDraftResponse"];
-                };
-            };
-        };
-    };
-    publishPolicy: {
-        parameters: {
-            query?: never;
-            header?: {
-                "Idempotency-Key"?: string;
-            };
-            path: {
-                draftPublicId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PublishPolicyRequest"];
-            };
-        };
-        responses: {
-            /** @description Idempotent replay of a prior publication */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PolicyPublicationResponse"];
-                };
-            };
-            /** @description Published for the first time */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PolicyPublicationResponse"];
-                };
-            };
-        };
-    };
-    previewPolicyPublication: {
+    getPolicyRules: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                draftPublicId: string;
+                leaveTypePublicId: string;
             };
             cookie?: never;
         };
@@ -4992,7 +4832,59 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PolicyPreviewResponse"];
+                    "*/*": components["schemas"]["PolicyRulesResponse"];
+                };
+            };
+        };
+    };
+    savePolicyRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                leaveTypePublicId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavePolicyRuleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PolicyRulesResponse"];
+                };
+            };
+        };
+    };
+    previewPolicyRuleImpact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                leaveTypePublicId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyRuleImpactRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PolicyRuleImpactResponse"];
                 };
             };
         };
@@ -6937,54 +6829,6 @@ export interface operations {
             };
         };
     };
-    getPolicyDraft: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                publicId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PolicyDraftResponse"];
-                };
-            };
-        };
-    };
-    updatePolicyDraft: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                publicId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePolicyDraftRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PolicyDraftResponse"];
-                };
-            };
-        };
-    };
     delete_1: {
         parameters: {
             query?: never;
@@ -7209,28 +7053,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
-                };
-            };
-        };
-    };
-    getPolicyPublicationHistory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                policyPublicId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PolicyHistoryItem"][];
                 };
             };
         };
@@ -8275,6 +8097,31 @@ export interface operations {
             };
         };
     };
+    removePolicyRule: {
+        parameters: {
+            query: {
+                expectedRevision: string;
+            };
+            header?: never;
+            path: {
+                leaveTypePublicId: string;
+                assignmentPublicId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PolicyRulesResponse"];
+                };
+            };
+        };
+    };
     disconnect: {
         parameters: {
             query?: never;
@@ -8783,40 +8630,28 @@ export type PendingAgingRow = RequiredSchema<"PendingAgingRow">;
 export type CreateLeaveTypeRequest = components["schemas"]["CreateLeaveTypeRequest"];
 export type ReorderLeaveTypesRequest = components["schemas"]["ReorderLeaveTypesRequest"];
 export type UpdateLeaveTypeRequest = components["schemas"]["UpdateLeaveTypeRequest"];
-export type CreatePolicyDraftRequest = components["schemas"]["CreatePolicyDraftRequest"];
-export type UpdatePolicyDraftRequest = components["schemas"]["UpdatePolicyDraftRequest"];
-// Plan RESTO: a rule with carry-over off sends no maximum or deadline, and "no limit" is a null
-// maximum.
-type NullableCarryoverRule = {
-    carryoverMaxDays: number | null;
-    carryoverDeadlineMonth: number | null;
-    carryoverDeadlineDay: number | null;
-};
-type CarryoverRuleKeys = "carryoverMaxDays" | "carryoverDeadlineMonth" | "carryoverDeadlineDay";
-// subjectPublicId is null for an ORGANIZATION-scope draft.
-export type PolicyDraftResponse = Omit<RequiredSchema<"PolicyDraftResponse">, CarryoverRuleKeys | "subjectPublicId"> &
-    NullableCarryoverRule & { subjectPublicId: string | null };
-export type PublishPolicyRequest = components["schemas"]["PublishPolicyRequest"];
-// The same nullable carry-over rule as the draft and the history item.
-export type PolicyPreviewResponse = Omit<RequiredSchema<"PolicyPreviewResponse">, CarryoverRuleKeys> &
-    NullableCarryoverRule;
-export type PolicyPublicationResponse = RequiredSchema<"PolicyPublicationResponse">;
-// allowanceDays is null for an UNLIMITED policy version.
-export type PolicyHistoryItem = Omit<RequiredSchema<"PolicyHistoryItem">, CarryoverRuleKeys | "allowanceDays"> &
-    NullableCarryoverRule & { allowanceDays: number | null };
-// defaultBalanceDays is null when uncapped, policyPublicId when the leave type has no policy yet (a
-// LEFT JOIN in PolicySettingsOverviewService), and latestDraft when no draft is open.
+// defaultBalanceDays is null when uncapped, and policyPublicId when the leave type has no policy
+// yet (a LEFT JOIN in PolicySettingsOverviewService).
 export type LeaveTypePolicySummary = Omit<
     RequiredSchema<"LeaveTypePolicySummary">,
-    "defaultBalanceDays" | "policyPublicId" | "latestDraft"
+    "defaultBalanceDays" | "policyPublicId"
 > & {
     defaultBalanceDays: number | null;
     policyPublicId: string | null;
-    latestDraft: components["schemas"]["DraftSummary"] | null;
 };
 export type PolicySettingsOverviewResponse = Omit<RequiredSchema<"PolicySettingsOverviewResponse">, "leaveTypes"> & {
     leaveTypes: LeaveTypePolicySummary[];
 };
+// Plan LLANO P2-2: the rules page. subjectPublicId and subjectName are null for the company rule,
+// endsOn for the last rule of a stream, setByName and setAt for a rule set up automatically.
+export type PolicyRule = RequiredSchema<"PolicyRule">;
+export type PolicyRulesResponse = Omit<RequiredSchema<"PolicyRulesResponse">, "rules"> & {
+    rules: PolicyRule[];
+};
+export type PolicyRuleImpactRequest = components["schemas"]["PolicyRuleImpactRequest"];
+export type SavePolicyRuleRequest = components["schemas"]["SavePolicyRuleRequest"];
+// replaces is null only for a Leave Type with no rules yet.
+export type PolicyRuleImpactResponse = RequiredSchema<"PolicyRuleImpactResponse">;
 export type CreateImportJobRequest = components["schemas"]["CreateImportJobRequest"];
 /**
  * Story 15.5 D4 — `workStatus` (the worker's own lifecycle, whose `DEAD_LETTER` value is what

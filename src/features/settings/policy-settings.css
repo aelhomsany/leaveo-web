@@ -1,3 +1,4 @@
+/* Plan LLANO P2-2: a Leave Type's allowance rules, grouped by who they are for. */
 .policy-page {
   display: grid;
   gap: var(--space-section-gap);
@@ -13,33 +14,6 @@
   margin-block-end: var(--space-sm);
   color: var(--color-primary);
 }
-.policy-workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
-  gap: var(--space-section-gap);
-}
-.policy-editor,
-.policy-review,
-.policy-history {
-  padding: var(--space-card-padding);
-}
-.policy-editor {
-  display: grid;
-  gap: var(--space-md);
-}
-.policy-editor .form-field {
-  display: grid;
-  gap: var(--space-xs);
-}
-.policy-editor input,
-.policy-editor select {
-  inline-size: 100%;
-}
-.policy-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
 .policy-alert {
   padding: var(--space-md);
   border: 1px solid var(--color-error-border);
@@ -47,32 +21,155 @@
   background: var(--color-error-bg);
   color: var(--color-error-fg);
 }
-.policy-review dl {
+.policy-notice {
+  margin: 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+.policy-section {
   display: grid;
   gap: var(--space-md);
+  padding: var(--space-card-padding);
 }
-.policy-review dl div {
+.policy-section h2 {
+  margin: 0;
+}
+.policy-section-empty {
+  margin: 0;
+  color: var(--color-muted);
+}
+.policy-stream {
+  display: grid;
+  gap: var(--space-sm);
+  padding-block-start: var(--space-md);
+  border-block-start: 1px solid var(--color-border);
+}
+.policy-section > h2 + .policy-stream {
+  padding-block-start: 0;
+  border-block-start: 0;
+}
+.policy-stream-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+.policy-stream-title {
+  margin: 0;
+  font-size: var(--font-card-title-size);
+  line-height: var(--font-card-title-line-height);
+  font-weight: var(--font-card-title-weight);
+}
+.policy-rule-list {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.policy-rule {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-xs) var(--space-md);
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-subtle);
+}
+.policy-rule-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.policy-rule-terms {
+  font-weight: 600;
+}
+.policy-rule-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  grid-column: 1;
+  color: var(--color-muted);
+  font-size: var(--font-caption-size);
+  line-height: var(--font-caption-line-height);
+}
+.policy-rule-remove {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.policy-earlier summary {
+  cursor: pointer;
+  color: var(--color-muted);
+}
+.policy-earlier[open] summary {
+  margin-block-end: var(--space-sm);
+}
+.policy-rule-editor {
+  display: grid;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+.policy-rule-editor-title {
+  margin: 0;
+  font-size: var(--font-card-title-size);
+  line-height: var(--font-card-title-line-height);
+  font-weight: var(--font-card-title-weight);
+}
+.policy-rule-editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+.policy-rule-editor-row .form-field {
+  flex: 1 1 12rem;
+}
+.policy-rule-editor .form-field {
   display: grid;
   gap: var(--space-xs);
 }
-.policy-review dt {
-  color: var(--color-muted);
+.policy-rule-editor input,
+.policy-rule-editor select {
+  inline-size: 100%;
 }
-.policy-review dd {
+.policy-impact {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+.policy-impact p {
   margin: 0;
-  font-weight: 600;
+}
+.policy-impact-title {
+  margin: 0;
+  font-size: var(--font-label-size);
+  line-height: var(--font-label-line-height);
+  font-weight: var(--font-label-weight);
+}
+.policy-impact-warnings {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  padding-inline-start: var(--space-xl);
+  border-radius: var(--radius-sm);
+  background: var(--color-status-pending-bg);
+  color: var(--color-status-pending-fg);
 }
 .policy-impact-list {
-  margin-block-start: var(--space-lg);
-}
-.policy-history ol {
   display: grid;
-  gap: var(--space-md);
+  gap: var(--space-xs);
+  margin: 0;
   padding-inline-start: var(--space-xl);
 }
-.policy-confirm-check {
+.policy-actions {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
   gap: var(--space-sm);
 }
 /* Plan RESTO: the carry-over rule, shown only for an annual allowance. */
@@ -89,12 +186,12 @@
   padding-inline: var(--space-xs);
   font-weight: 600;
 }
-.policy-editor .policy-carryover-check {
+.policy-rule-editor .policy-carryover-check {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
 }
-.policy-editor .policy-carryover-check input {
+.policy-rule-editor .policy-carryover-check input {
   inline-size: auto;
 }
 .policy-carryover-row {
@@ -112,18 +209,18 @@
   font-size: var(--font-caption-size);
   line-height: var(--font-caption-line-height);
 }
-@media (max-width: 900px) {
-  .policy-workspace {
+@media (max-width: 640px) {
+  .policy-page-header,
+  .policy-stream-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .policy-rule {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-.policy-conflict-list {
-  margin: 0;
-  padding-inline-start: var(--space-lg);
-  list-style: disc;
-}
-
-.policy-conflict-list li + li {
-  margin-block-start: var(--space-xs);
+  .policy-rule-remove {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
 }
