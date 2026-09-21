@@ -2,6 +2,7 @@
 import { defineConfig, type Plugin, type UserConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'node:path'
+import { mobileAppLinksPlugin } from './mobile-app-links'
 
 type Artifact = 'customer' | 'public' | 'public-render' | 'admin'
 
@@ -158,7 +159,13 @@ export default defineConfig(() => {
         : ['VITE_API_URL', 'VITE_APP_']
 
   return {
-    plugins: [react(), entryBoundaryRouter(artifact)],
+    plugins: [
+      react(),
+      // Ahead of the entry router, which would otherwise hand both well-known paths the
+      // app's document. The customer origin is the one the mobile app claims links on.
+      ...(artifact === 'customer' ? [mobileAppLinksPlugin()] : []),
+      entryBoundaryRouter(artifact),
+    ],
     envPrefix,
     build,
     server: {

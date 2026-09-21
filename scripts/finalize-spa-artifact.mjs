@@ -28,6 +28,19 @@ writeFileSync(
       artifact: artifact === 'app' ? 'leaveo-app' : 'leaveo-admin',
       entry: 'index.html',
       fallback: 'index.html',
+      ...(artifact === 'app'
+        ? {
+            // Apple and Google read these to decide whether the mobile app may open this
+            // origin's links (mobile-app-links.ts writes them). Both are JSON — the Apple one
+            // has no extension to say so — and a missing one is a 404: the fallback document
+            // there is a 200 neither platform can read.
+            fallbackExcludes: ['/.well-known/'],
+            contentTypes: {
+              '/.well-known/apple-app-site-association': 'application/json',
+              '/.well-known/assetlinks.json': 'application/json',
+            },
+          }
+        : {}),
       noindex: true,
       environmentAllowlist:
         artifact === 'app'
