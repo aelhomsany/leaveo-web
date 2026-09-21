@@ -71,6 +71,42 @@ for (const artifact of ['public', 'app', 'admin']) {
   }
 }
 
+// The mobile app's link association (mobile-app-links.ts) belongs to the customer origin
+// alone. Whatever is there must be JSON, the host contract must keep both paths JSON and out
+// of the fallback, and neither file may turn up in another artifact — which is exactly what
+// dropping them into public/ would do, since Vite copies public/ into all three.
+const wellKnownFiles = ['apple-app-site-association', 'assetlinks.json']
+for (const name of wellKnownFiles) {
+  const builtPath = join(dist, 'app', '.well-known', name)
+  if (existsSync(builtPath)) {
+    try {
+      JSON.parse(readFileSync(builtPath, 'utf8'))
+    } catch {
+      errors.push(`dist/app/.well-known/${name} is not JSON`)
+    }
+  }
+  for (const other of ['public', 'admin']) {
+    check(
+      !existsSync(join(dist, other, '.well-known', name)),
+      `dist/${other}/.well-known/${name}: the mobile app's links live on the customer origin only`,
+    )
+  }
+}
+const appContractPath = join(dist, 'app', 'deployment.json')
+if (existsSync(appContractPath)) {
+  const contract = JSON.parse(readFileSync(appContractPath, 'utf8'))
+  check(
+    (contract.fallbackExcludes ?? []).includes('/.well-known/'),
+    'dist/app/deployment.json: fallbackExcludes must keep /.well-known/ out of the fallback document',
+  )
+  for (const name of wellKnownFiles) {
+    check(
+      contract.contentTypes?.[`/.well-known/${name}`] === 'application/json',
+      `dist/app/deployment.json: contentTypes must serve /.well-known/${name} as application/json`,
+    )
+  }
+}
+
 const publicGraph = walk(join(dist, 'public'))
   .filter((path) => path.endsWith('.js'))
   .map((path) => readFileSync(path, 'utf8'))

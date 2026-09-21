@@ -25,6 +25,14 @@ const types = {
   '.woff2': 'font/woff2',
 }
 
+// Apple and Google read these to decide whether the mobile app may open this origin's links.
+// Both are JSON whatever their name says, and a missing one is a 404 rather than the fallback
+// document. Mirrors dist/app/deployment.json contentTypes and fallbackExcludes.
+const exactTypes = {
+  '/.well-known/apple-app-site-association': 'application/json',
+  '/.well-known/assetlinks.json': 'application/json',
+}
+
 for (const [label, root] of [
   ['dist/app', appRoot],
   ['dist/admin', adminRoot],
@@ -94,11 +102,19 @@ const server = createServer((request, response) => {
   }
 
   if (!candidate) {
+    if (pathname.startsWith('/.well-known/')) {
+      response.statusCode = 404
+      response.end()
+      return
+    }
     candidate = join(primaryRoot, 'index.html')
   }
 
   response.statusCode = 200
-  response.setHeader('Content-Type', types[extname(candidate)] ?? 'application/octet-stream')
+  response.setHeader(
+    'Content-Type',
+    exactTypes[pathname] ?? types[extname(candidate)] ?? 'application/octet-stream',
+  )
   response.setHeader('X-Content-Type-Options', 'nosniff')
   // Delivered as a header because <meta> CSP cannot carry frame-ancestors; the
   // authenticated shells must not be framable. Mirrors deployment.json

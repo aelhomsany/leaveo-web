@@ -132,6 +132,36 @@ npm run generate:api
 
 Commit updated generated files when API contracts change.
 
+### Mobile app links
+
+The mobile app (`net.leaveo.app`) opens `/reset-password` and `/accept-invitation` itself once
+this origin agrees to it, through `/.well-known/apple-app-site-association` (iOS) and
+`/.well-known/assetlinks.json` (Android). `mobile-app-links.ts` writes both: the dev server
+serves them — app-test.leaveo.net is that dev server behind nginx — and `npm run build:app`
+puts them in `dist/app/.well-known/`.
+
+Neither is served yet. Each waits on an identifier that does not exist yet:
+
+| File | Fill in | Where it comes from |
+|------|---------|---------------------|
+| `apple-app-site-association` | `ios.teamId` | Apple Developer → Membership details → Team ID |
+| `assetlinks.json` | `android.sha256CertFingerprints` | Play Console → App integrity → App signing: the app-signing certificate **and** the upload certificate |
+
+Until then both paths answer 404 and the links open in the browser, as they always have. Any
+other host serving `dist/app` must follow its `deployment.json`: both files as
+`application/json` (the Apple one has no extension to say so), and never the fallback document
+under `/.well-known/`.
+
+Once deployed, both platforms can be asked what they see:
+
+```bash
+curl -s "https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://app-test.leaveo.net&relation=delegate_permission/common.handle_all_urls"
+curl -s "https://app-site-association.cdn-apple.com/a/v1/app-test.leaveo.net"
+```
+
+Apple's CDN caches what it fetched and refreshes on its own schedule, so a change does not
+show there straight away.
+
 ### Platform organization regression journeys
 
 `tests/e2e/platform-create-organization.spec.ts` and
